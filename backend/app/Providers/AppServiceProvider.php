@@ -8,11 +8,15 @@ use App\Models\Employee;
 use App\Models\Finding;
 use App\Models\FindingDepartment;
 use App\Models\FindingDocument;
+use App\Models\ActionPlan;
+use App\Models\ActionPlanDocument;
 use App\Models\User;
 use App\Policies\DepartmentPolicy;
 use App\Policies\EmployeePolicy;
 use App\Policies\FindingDocumentPolicy;
 use App\Policies\FindingDepartmentPolicy;
+use App\Policies\ActionPlanPolicy;
+use App\Policies\ActionPlanDocumentPolicy;
 use App\Policies\FindingPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Gate;
@@ -35,6 +39,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Finding::class, FindingPolicy::class);
         Gate::policy(FindingDocument::class, FindingDocumentPolicy::class);
         Gate::policy(FindingDepartment::class, FindingDepartmentPolicy::class);
+        Gate::policy(ActionPlan::class, ActionPlanPolicy::class);
+        Gate::policy(ActionPlanDocument::class, ActionPlanDocumentPolicy::class);
 
         Route::get('/sanctum/csrf-cookie', function () {
             return response()->json(['message' => 'CSRF cookie set']);

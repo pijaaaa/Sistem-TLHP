@@ -12,9 +12,9 @@ import EmployeesPage from '@/pages/master/EmployeesPage'
 import UsersPage from '@/pages/master/UsersPage'
 import PermissionsPage from '@/pages/master/PermissionsPage'
 import FindingsReportsPage from '@/pages/findings/FindingsReportsPage'
-import FindingsPage from '@/pages/findings/FindingsPage'
 import FindingsDistributionPage from '@/pages/findings/FindingsDistributionPage'
 import FindingDepartmentsPage from '@/pages/findings/FindingDepartmentsPage'
+import ActionPlansPage from '@/pages/findings/ActionPlansPage'
 
 function App() {
   return (
@@ -95,6 +95,14 @@ function App() {
               element={
                 <PermissionRoute menu="findings.list" action="view">
                   <FindingDepartmentsPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="action-plans"
+              element={
+                <PermissionRoute menu="action_plans" action="view">
+                  <ActionPlansPage />
                 </PermissionRoute>
               }
             />

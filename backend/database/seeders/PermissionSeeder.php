@@ -29,8 +29,8 @@ class PermissionSeeder extends Seeder
                 'assessments' => ['view' => false, 'create' => false, 'update' => false, 'delete' => false],
                 'verifications' => ['view' => false, 'create' => false, 'update' => false, 'delete' => false],
                 'exports' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
-            ],
-            Role::ManagerIa->value => [
+             ],
+             Role::ManagerIa->value => [
                 'dashboard' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'master.departments' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'master.employees' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
@@ -71,7 +71,7 @@ class PermissionSeeder extends Seeder
                 'findings.reports' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'findings.distribution' => ['view' => false, 'create' => false, 'update' => false, 'delete' => false],
                 'findings.list' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
-                'action_plans' => ['view' => true, 'create' => true, 'update' => true, 'delete' => false],
+                'action_plans' => ['view' => true, 'create' => true, 'update' => true, 'delete' => true],
                 'action_plan_reviews' => ['view' => false, 'create' => false, 'update' => false, 'delete' => false],
                 'evidence' => ['view' => true, 'create' => true, 'update' => true, 'delete' => false],
                 'assessments' => ['view' => false, 'create' => false, 'update' => false, 'delete' => false],

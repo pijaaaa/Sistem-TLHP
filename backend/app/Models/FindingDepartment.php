@@ -79,4 +79,9 @@ class FindingDepartment extends Model
             ->withPivot('assigned_by')
             ->withTimestamps();
     }
+
+    public function actionPlans()
+    {
+        return $this->hasMany(ActionPlan::class);
+    }
 }

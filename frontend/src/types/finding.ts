@@ -117,3 +117,83 @@ export const FINDING_DEPARTMENT_STATUS_OPTIONS: { value: FindingDepartmentStatus
 export const getFindingDepartmentStatusLabel = (status: FindingDepartmentStatus | string): string => {
   return FINDING_DEPARTMENT_STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status
 }
+
+export type ActionPlanStatus =
+  | 'draft'
+  | 'diajukan'
+  | 'disetujui'
+  | 'ditolak'
+  | 'revisi'
+  | 'menunggu_evidence'
+  | 'evidence_diajukan'
+  | 'evidence_disetujui'
+  | 'evidence_revisi'
+
+export interface ActionPlanUser {
+  id: number
+  name: string
+  email: string
+  username: string
+  role: string
+  role_label: string | null
+}
+
+export interface ActionPlanDocument {
+  id: number
+  action_plan_id: number
+  name: string
+  mime: string
+  size: number
+  label: string | null
+  download_url: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ActionPlan {
+  id: number
+  finding_department_id: number
+  finding_department?: FindingDepartment
+  title: string
+  description: string | null
+  weight: string
+  status: ActionPlanStatus
+  status_label: string
+  created_by: number
+  creator?: ActionPlanUser
+  approved_by: number | null
+  approver?: ActionPlanUser
+  approved_at: string | null
+  rejection_reason: string | null
+  due_date: string | null
+  documents_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface ActionPlanForm {
+  title: string
+  description: string
+  weight: string
+  due_date: string
+}
+
+export const ACTION_PLAN_STATUS_OPTIONS: { value: ActionPlanStatus; label: string; variant: string }[] = [
+  { value: 'draft', label: 'Draft', variant: 'default' },
+  { value: 'diajukan', label: 'Diajukan', variant: 'info' },
+  { value: 'disetujui', label: 'Disetujui', variant: 'success' },
+  { value: 'ditolak', label: 'Ditolak', variant: 'danger' },
+  { value: 'revisi', label: 'Revisi', variant: 'warning' },
+  { value: 'menunggu_evidence', label: 'Menunggu Evidence', variant: 'info' },
+  { value: 'evidence_diajukan', label: 'Evidence Diajukan', variant: 'info' },
+  { value: 'evidence_disetujui', label: 'Evidence Disetujui', variant: 'success' },
+  { value: 'evidence_revisi', label: 'Evidence Revisi', variant: 'warning' },
+]
+
+export const getActionPlanStatusLabel = (status: ActionPlanStatus | string): string => {
+  return ACTION_PLAN_STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status
+}
+
+export const getActionPlanStatusVariant = (status: ActionPlanStatus | string): string => {
+  return ACTION_PLAN_STATUS_OPTIONS.find((o) => o.value === status)?.variant ?? 'default'
+}

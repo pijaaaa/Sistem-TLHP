@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Access\PermissionController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ActionPlanController;
 use App\Http\Controllers\Api\FindingController;
 use App\Http\Controllers\Api\FindingDepartmentController;
 use App\Http\Controllers\Api\FindingDocumentController;
@@ -107,4 +108,26 @@ Route::prefix('v1')->group(function () {
         Route::get('finding-departments/{findingDepartment}', [FindingDepartmentController::class, 'show']);
         Route::post('finding-departments/{findingDepartment}/assign-pics', [FindingDepartmentController::class, 'assignPics']);
     });
+
+    Route::middleware(['auth:sanctum', 'permission:action_plans,view'])->group(function () {
+        Route::get('action-plans', [ActionPlanController::class, 'index']);
+        Route::post('finding-departments/{findingDepartment}/action-plans', [ActionPlanController::class, 'store'])
+            ->middleware('permission:action_plans,create');
+        Route::get('action-plans/{actionPlan}', [ActionPlanController::class, 'show']);
+        Route::put('action-plans/{actionPlan}', [ActionPlanController::class, 'update'])
+            ->middleware('permission:action_plans,update');
+        Route::delete('action-plans/{actionPlan}', [ActionPlanController::class, 'destroy'])
+            ->middleware('permission:action_plans,delete');
+        Route::post('action-plans/{actionPlan}/submit', [ActionPlanController::class, 'submit'])
+            ->middleware('permission:action_plans,update');
+        Route::get('action-plans/{actionPlan}/documents', [ActionPlanController::class, 'documents']);
+        Route::post('action-plans/{actionPlan}/documents', [ActionPlanController::class, 'uploadDocument'])
+            ->middleware('permission:action_plans,create');
+        Route::delete('action-plans/{actionPlan}/documents/{document}', [ActionPlanController::class, 'deleteDocument'])
+            ->middleware('permission:action_plans,delete');
+    });
+
+    Route::get('action-plan-documents/{document}/download', [ActionPlanController::class, 'downloadDocument'])
+        ->name('action-plan-documents.download')
+        ->middleware(['auth:sanctum']);
 });
