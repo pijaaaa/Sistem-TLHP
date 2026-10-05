@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\FindingStatus;
 use App\Models\Finding;
 use App\Models\FindingDocument;
+use App\Support\AuditLogger;
 use App\Support\CacheService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -22,7 +23,7 @@ class FindingService
 
     public static function invalidate(): void
     {
-        // no-op: temuan tidak di-cache
+        CacheService::incrementGroupVersion('dashboard');
     }
 
     public static function create(array $data): Finding
@@ -30,6 +31,12 @@ class FindingService
         $data['created_by'] = $data['created_by'] ?? auth()->id();
         $finding = Finding::create($data);
         self::invalidate();
+
+        AuditLogger::log('finding.created', auth()->id(), request()->ip(), 'Temuan dibuat.', [
+            'finding_id' => $finding->id,
+            'code' => $finding->code,
+        ]);
+
         return $finding->fresh();
     }
 
@@ -38,6 +45,12 @@ class FindingService
         $finding->fill($data);
         $finding->save();
         self::invalidate();
+
+        AuditLogger::log('finding.updated', auth()->id(), request()->ip(), 'Temuan diperbarui.', [
+            'finding_id' => $finding->id,
+            'fields' => array_keys($data),
+        ]);
+
         return $finding->fresh();
     }
 
@@ -45,6 +58,11 @@ class FindingService
     {
         $finding->delete();
         self::invalidate();
+
+        AuditLogger::log('finding.deleted', auth()->id(), request()->ip(), 'Temuan dihapus.', [
+            'finding_id' => $finding->id,
+            'code' => $finding->code,
+        ]);
     }
 
     public static function sendToIA(Finding $finding): Finding
@@ -54,9 +72,15 @@ class FindingService
                 'status' => 'Hanya temuan dalam status Draft yang dapat dikirim ke IA.',
             ]);
         }
+
         $finding->status = FindingStatus::SentToIa;
         $finding->save();
         self::invalidate();
+
+        AuditLogger::log('finding.sent_to_ia', auth()->id(), request()->ip(), 'Temuan dikirim ke IA.', [
+            'finding_id' => $finding->id,
+        ]);
+
         return $finding->fresh();
     }
 

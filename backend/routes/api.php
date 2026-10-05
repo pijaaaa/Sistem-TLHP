@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Api\Access\PermissionController;
 use App\Http\Controllers\Api\AssessmentController;
+use App\Http\Controllers\Api\AuditController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\ExportController;
 use App\Http\Controllers\Api\VerificationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EvidenceController;
@@ -27,9 +30,8 @@ Route::prefix('v1')->group(function () {
         Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
     });
 
-    Route::get('/dashboard', function () {
-        return \App\Support\ApiResponse::success(['message' => 'Welcome']);
-    })->middleware(['auth:sanctum', 'permission:dashboard,view']);
+    Route::get('/dashboard', [DashboardController::class, '__invoke'])
+        ->middleware(['auth:sanctum', 'permission:dashboard,view']);
 
     Route::middleware(['auth:sanctum', 'permission:master.departments,view'])->group(function () {
         Route::get('master/departments', [DepartmentController::class, 'index']);
@@ -167,5 +169,16 @@ Route::post('action-plans/{actionPlan}/evidence/revision', [EvidenceController::
         Route::get('findings/{finding}/verifications', [VerificationController::class, 'show']);
         Route::post('findings/{finding}/verifications', [VerificationController::class, 'store'])
             ->middleware('permission:verifications,create');
+    });
+
+    Route::middleware(['auth:sanctum', 'permission:audit_trail,view'])->group(function () {
+        Route::get('audit-trail', [AuditController::class, 'index']);
+        Route::get('audit-trail/actions', [AuditController::class, 'actions']);
+    });
+
+    Route::middleware(['auth:sanctum', 'permission:exports,view'])->group(function () {
+        Route::get('exports/findings', [ExportController::class, 'findings']);
+        Route::get('exports/action-plans', [ExportController::class, 'actionPlans']);
+        Route::get('exports/audit-trail', [ExportController::class, 'auditTrail']);
     });
 });

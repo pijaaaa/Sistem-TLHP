@@ -19,6 +19,7 @@ import ActionPlanReviewsPage from '@/pages/findings/ActionPlanReviewsPage'
 import EvidencePage from '@/pages/findings/EvidencePage'
 import AssessmentsPage from '@/pages/findings/AssessmentsPage'
 import VerificationsPage from '@/pages/findings/VerificationsPage'
+import AuditTrailPage from '@/pages/AuditTrailPage'
 
 function App() {
   return (
@@ -139,6 +140,14 @@ function App() {
               element={
                 <PermissionRoute menu="verifications" action="view">
                   <VerificationsPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="audit-trail"
+              element={
+                <PermissionRoute menu="audit_trail" action="view">
+                  <AuditTrailPage />
                 </PermissionRoute>
               }
             />
