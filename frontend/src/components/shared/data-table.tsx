@@ -1,6 +1,8 @@
 import { type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { Spinner } from '@/components/ui/spinner'
+import { Can } from '@/components/shared'
+import type { Action } from '@/types/auth'
 
 interface Column<T> {
   key: string
@@ -25,6 +27,8 @@ interface DataTableProps<T> {
   }
   emptyMessage?: string
   className?: string
+  permissionMenu?: string
+  permissionAction?: Action
 }
 
 const DataTable = <T extends Record<string, unknown>>({
@@ -37,7 +41,53 @@ const DataTable = <T extends Record<string, unknown>>({
   pagination,
   emptyMessage = 'Tidak ada data',
   className,
+  permissionMenu,
+  permissionAction = 'view',
 }: DataTableProps<T>) => {
+  if (permissionMenu) {
+    return (
+      <Can menu={permissionMenu} action={permissionAction} fallback={<></>}>
+        <DataTableInner
+          data={data}
+          columns={columns}
+          loading={loading}
+          searchable={searchable}
+          onSearch={onSearch}
+          searchPlaceholder={searchPlaceholder}
+          pagination={pagination}
+          emptyMessage={emptyMessage}
+          className={className}
+        />
+      </Can>
+    )
+  }
+
+  return (
+    <DataTableInner
+      data={data}
+      columns={columns}
+      loading={loading}
+      searchable={searchable}
+      onSearch={onSearch}
+      searchPlaceholder={searchPlaceholder}
+      pagination={pagination}
+      emptyMessage={emptyMessage}
+      className={className}
+    />
+  )
+}
+
+const DataTableInner = <T extends Record<string, unknown>>({
+  data,
+  columns,
+  loading,
+  searchable,
+  onSearch,
+  searchPlaceholder,
+  pagination,
+  emptyMessage,
+  className,
+}: Omit<DataTableProps<T>, 'permissionMenu' | 'permissionAction'>) => {
   return (
     <div className={cn('w-full overflow-x-auto', className)}>
       {searchable && onSearch && (
@@ -80,7 +130,7 @@ const DataTable = <T extends Record<string, unknown>>({
               </tr>
             ) : (
               data.map((row, i) => (
-                <tr key={String(row.id ?? i)} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}> 
+                <tr key={String(row.id ?? i)} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                   {columns.map((col) => (
                     <td key={col.key} className="px-4 py-2 text-sm">
                       {col.body(row)}
@@ -108,7 +158,7 @@ const DataTable = <T extends Record<string, unknown>>({
                     'px-3 py-1 rounded',
                     page === pagination.current
                       ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 hover:bg-gray-300'
+                      : 'bg-gray-200 hover:bg-gray-300',
                   )}
                 >
                   {page}

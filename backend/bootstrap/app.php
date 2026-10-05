@@ -15,6 +15,15 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (Throwable $e, $request) {
             if ($request->is('api/*')) {
+                if ($e instanceof \Illuminate\Auth\AuthenticationException) {
+                    return \App\Support\ApiResponse::error($e->getMessage(), 401);
+                }
+                if ($e instanceof \Illuminate\Validation\ValidationException) {
+                    return \App\Support\ApiResponse::error($e->getMessage(), 422, $e->errors());
+                }
+                if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpException) {
+                    return \App\Support\ApiResponse::error($e->getMessage(), $e->getStatusCode());
+                }
                 return \App\Support\ApiResponse::error($e->getMessage(), 500);
             }
         });
