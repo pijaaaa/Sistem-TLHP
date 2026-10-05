@@ -48,4 +48,14 @@ class FindingPolicy
         return $user->role === Role::ManagerIa
             && PermissionService::can($user, 'assessments', 'update');
     }
+
+    public function verify(User $user, Finding $finding): bool
+    {
+        if ($user->role === Role::SuperAdmin) {
+            return true;
+        }
+
+        return $user->role === Role::ManagerSpi
+            && PermissionService::can($user, 'verifications', 'update');
+    }
 }

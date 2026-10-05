@@ -1,7 +1,12 @@
 import { apiClient } from '@/api/client'
 import type { ApiResponse, Paginated } from '@/api/master'
-import type { Finding, FindingDocument } from '@/types/finding'
+import type { Finding, FindingDocument, FindingVerification } from '@/types/finding'
 import type { AxiosResponse } from 'axios'
+
+export interface VerificationResult {
+  verification: FindingVerification
+  finding: Finding
+}
 
 function unwrap<T>(res: AxiosResponse<ApiResponse<T>>): T {
   return res.data.data
@@ -50,6 +55,25 @@ export const findingsApi = {
   ) =>
     apiClient
       .post<ApiResponse<Finding>>(`/findings/${id}/assess`, payload)
+      .then(unwrap),
+
+  pendingVerifications: (params?: { per_page?: number; page?: number }) =>
+    apiClient.get<ApiResponse<Paginated<Finding>>>('/verifications', { params }).then(unwrap),
+
+  recordVerification: (
+    id: number,
+    payload: {
+      auditor_conclusion: string
+      auditor_result?: string | null
+      verified_date?: string | null
+      notes?: string | null
+    },
+  ) =>
+    apiClient.post<ApiResponse<VerificationResult>>(`/findings/${id}/verifications`, payload).then(unwrap),
+
+  verifications: (id: number) =>
+    apiClient
+      .get<ApiResponse<FindingVerification[]>>(`/findings/${id}/verifications`)
       .then(unwrap),
 
   documents: (findingId: number) =>

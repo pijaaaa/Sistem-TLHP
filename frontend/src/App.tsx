@@ -18,6 +18,7 @@ import ActionPlansPage from '@/pages/findings/ActionPlansPage'
 import ActionPlanReviewsPage from '@/pages/findings/ActionPlanReviewsPage'
 import EvidencePage from '@/pages/findings/EvidencePage'
 import AssessmentsPage from '@/pages/findings/AssessmentsPage'
+import VerificationsPage from '@/pages/findings/VerificationsPage'
 
 function App() {
   return (
@@ -130,6 +131,14 @@ function App() {
               element={
                 <PermissionRoute menu="assessments" action="view">
                   <AssessmentsPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="verifications"
+              element={
+                <PermissionRoute menu="verifications" action="view">
+                  <VerificationsPage />
                 </PermissionRoute>
               }
             />

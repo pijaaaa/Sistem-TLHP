@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Access\PermissionController;
 use App\Http\Controllers\Api\AssessmentController;
+use App\Http\Controllers\Api\VerificationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EvidenceController;
 use App\Http\Controllers\Api\ActionPlanController;
@@ -159,5 +160,12 @@ Route::post('action-plans/{actionPlan}/evidence/revision', [EvidenceController::
         Route::get('assessments', [AssessmentController::class, 'index']);
         Route::post('findings/{finding}/assess', [AssessmentController::class, 'store'])
             ->middleware('permission:assessments,create');
+    });
+
+    Route::middleware(['auth:sanctum', 'permission:verifications,view'])->group(function () {
+        Route::get('verifications', [VerificationController::class, 'index']);
+        Route::get('findings/{finding}/verifications', [VerificationController::class, 'show']);
+        Route::post('findings/{finding}/verifications', [VerificationController::class, 'store'])
+            ->middleware('permission:verifications,create');
     });
 });

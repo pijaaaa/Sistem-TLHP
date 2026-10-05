@@ -83,6 +83,42 @@ export const useAssessFinding = () => {
   })
 }
 
+export const usePendingVerifications = (params?: { page?: number; per_page?: number }) =>
+  useQuery({
+    queryKey: ['pending-verifications', params],
+    queryFn: () => findingsApi.pendingVerifications(params),
+  })
+
+export const useRecordVerification = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      id,
+      ...payload
+    }: {
+      id: number
+      auditor_conclusion: string
+      auditor_result?: string | null
+      verified_date?: string | null
+      notes?: string | null
+    }) => findingsApi.recordVerification(id, payload),
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: ['pending-verifications'] })
+      qc.invalidateQueries({ queryKey: ['findings'] })
+      qc.invalidateQueries({ queryKey: ['findings', result.finding.id] })
+      qc.invalidateQueries({ queryKey: ['verifications', result.finding.id] })
+      qc.invalidateQueries({ queryKey: ['finding-departments'] })
+    },
+  })
+}
+
+export const useFindingVerifications = (id: number) =>
+  useQuery({
+    queryKey: ['verifications', id],
+    queryFn: () => findingsApi.verifications(id),
+    enabled: !!id,
+  })
+
 export const useFindingDocuments = (findingId: number) =>
   useQuery({
     queryKey: ['finding-documents', findingId],

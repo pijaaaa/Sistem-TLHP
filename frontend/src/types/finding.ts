@@ -289,3 +289,36 @@ export interface DepartmentProgress {
   status: FindingDepartmentStatus
   status_label: string
 }
+
+export type AuditorConclusion = 'ditutup' | 'perlu_perbaikan'
+
+export interface FindingVerification {
+  id: number
+  finding_id: number
+  round: number
+  auditor_result: string | null
+  auditor_conclusion: AuditorConclusion
+  auditor_conclusion_label: string | null
+  verified_date: string | null
+  notes: string | null
+  is_closed: boolean
+  created_by: number
+  created_at: string
+}
+
+export const AUDITOR_CONCLUSION_OPTIONS: {
+  value: AuditorConclusion
+  label: string
+  description: string
+}[] = [
+  {
+    value: 'ditutup',
+    label: 'Ditutup (Closed)',
+    description: 'Auditor eksternal puas; temuan ditutup.',
+  },
+  {
+    value: 'perlu_perbaikan',
+    label: 'Perlu Perbaikan (BSR)',
+    description: 'Dikembalikan ke Manager IA untuk ronde baru. Catatan wajib diisi.',
+  },
+]

@@ -81,11 +81,11 @@ class AssessmentService
     }
 
     /**
-     * Ronde baru: Findings mendapat round+1 dan kode baru (menjaga keunikan kode),
+     * Ronde baru: Finding mendapat round+1 dan kode baru (menjaga keunikan kode),
      * departemen dari ronde sebelumnya terbawa (Manager IA boleh mengubah subset),
      * riwayat ronde lama tetap read-only.
      */
-    protected static function startNewRound(Finding $finding, ?array $departmentIds): void
+    public static function startNewRound(Finding $finding, ?array $departmentIds): void
     {
         $newRound = $finding->current_round + 1;
 

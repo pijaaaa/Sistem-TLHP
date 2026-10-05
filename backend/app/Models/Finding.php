@@ -68,6 +68,7 @@ class Finding extends Model
 
         if ($user->role === Role::ManagerSpi) {
             return $query->whereIn('status', [
+                FindingStatus::PendingVerificationSpi->value,
                 FindingStatus::Closed->value,
                 FindingStatus::CaseClosed->value,
             ]);
@@ -101,6 +102,11 @@ class Finding extends Model
         return $this->findingDepartments()
             ->whereNull('deleted_at')
             ->where('round', $this->current_round);
+    }
+
+    public function verifications()
+    {
+        return $this->hasMany(FindingVerification::class);
     }
 
     public function assessor()
