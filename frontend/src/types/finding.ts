@@ -75,3 +75,45 @@ export const getFindingStatusLabel = (status: FindingStatus | string): string =>
 export const getFindingStatusVariant = (status: FindingStatus | string): string => {
   return FINDING_STATUS_OPTIONS.find((o) => o.value === status)?.variant ?? 'default'
 }
+
+export type FindingDepartmentStatus =
+  | 'diterima'
+  | 'pic_ditugaskan'
+  | 'dalam_proses'
+  | 'selesai_100'
+  | 'diteruskan_ke_ia'
+
+export interface FindingDepartmentPic {
+  id: number
+  name: string
+  email: string
+  username: string
+  role: string
+  role_label: string | null
+}
+
+export interface FindingDepartment {
+  id: number
+  finding_id: number
+  finding?: Finding
+  department_id: number
+  department?: { id: number; code: string; name: string; is_active: boolean }
+  status: FindingDepartmentStatus
+  status_label: string
+  assigned_by: number | null
+  pics: FindingDepartmentPic[]
+  created_at: string
+  updated_at: string
+}
+
+export const FINDING_DEPARTMENT_STATUS_OPTIONS: { value: FindingDepartmentStatus; label: string }[] = [
+  { value: 'diterima', label: 'Diterima' },
+  { value: 'pic_ditugaskan', label: 'PIC Di-tugaskan' },
+  { value: 'dalam_proses', label: 'Dalam Proses' },
+  { value: 'selesai_100', label: 'Selesai 100%' },
+  { value: 'diteruskan_ke_ia', label: 'Diteruskan ke IA' },
+]
+
+export const getFindingDepartmentStatusLabel = (status: FindingDepartmentStatus | string): string => {
+  return FINDING_DEPARTMENT_STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status
+}

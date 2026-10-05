@@ -27,9 +27,7 @@ class FindingController extends Controller
             ->getData(true);
 
         return ApiResponse::success($data);
-    }
-
-    public function store(StoreFindingRequest $request): JsonResponse
+    }    public function store(StoreFindingRequest $request): JsonResponse
     {
         $finding = FindingService::create($request->validated());
 

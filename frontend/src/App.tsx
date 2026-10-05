@@ -13,6 +13,8 @@ import UsersPage from '@/pages/master/UsersPage'
 import PermissionsPage from '@/pages/master/PermissionsPage'
 import FindingsReportsPage from '@/pages/findings/FindingsReportsPage'
 import FindingsPage from '@/pages/findings/FindingsPage'
+import FindingsDistributionPage from '@/pages/findings/FindingsDistributionPage'
+import FindingDepartmentsPage from '@/pages/findings/FindingDepartmentsPage'
 
 function App() {
   return (
@@ -77,6 +79,22 @@ function App() {
               element={
                 <PermissionRoute menu="findings.list" action="view">
                   <FindingsPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="findings/distribution"
+              element={
+                <PermissionRoute menu="findings.distribution" action="view">
+                  <FindingsDistributionPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="finding-departments"
+              element={
+                <PermissionRoute menu="findings.list" action="view">
+                  <FindingDepartmentsPage />
                 </PermissionRoute>
               }
             />

@@ -3,7 +3,9 @@
 use App\Http\Controllers\Api\Access\PermissionController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FindingController;
+use App\Http\Controllers\Api\FindingDepartmentController;
 use App\Http\Controllers\Api\FindingDocumentController;
+use App\Http\Controllers\Api\FindingDistributionController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\Master\DepartmentController;
 use App\Http\Controllers\Api\Master\EmployeeController;
@@ -68,6 +70,10 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:access.permissions,update');
     });
 
+    Route::middleware(['auth:sanctum', 'permission:findings.distribution,view'])->group(function () {
+        Route::get('findings/distribution', [FindingDistributionController::class, 'pending']);
+    });
+
     Route::middleware(['auth:sanctum', 'permission:findings.reports,view'])->group(function () {
         Route::get('findings', [FindingController::class, 'index']);
         Route::post('findings', [FindingController::class, 'store'])
@@ -81,6 +87,11 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:findings.reports,update');
     });
 
+    Route::middleware(['auth:sanctum', 'permission:findings.distribution,view'])->group(function () {
+        Route::post('findings/{finding}/distribute', [FindingDistributionController::class, 'distribute'])
+            ->middleware('permission:findings.distribution,create');
+    });
+
     Route::middleware(['auth:sanctum', 'permission:findings.reports,view'])->group(function () {
         Route::get('findings/{finding}/documents', [FindingController::class, 'documents']);
         Route::post('findings/{finding}/documents', [FindingController::class, 'uploadDocument'])
@@ -89,5 +100,11 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:findings.reports,delete');
         Route::get('findings/documents/{document}/download', [FindingDocumentController::class, 'download'])
             ->name('findings.documents.download');
+    });
+
+    Route::middleware(['auth:sanctum', 'permission:findings.list,view'])->group(function () {
+        Route::get('finding-departments', [FindingDepartmentController::class, 'index']);
+        Route::get('finding-departments/{findingDepartment}', [FindingDepartmentController::class, 'show']);
+        Route::post('finding-departments/{findingDepartment}/assign-pics', [FindingDepartmentController::class, 'assignPics']);
     });
 });
