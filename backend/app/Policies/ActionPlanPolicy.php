@@ -100,6 +100,22 @@ class ActionPlanPolicy
         return false;
     }
 
+    public function approve(User $user, ActionPlan $actionPlan): bool
+    {
+        if (in_array($user->role, [Role::AdminSpi, Role::SuperAdmin])) {
+            return true;
+        }
+
+        $actionPlan->loadMissing('findingDepartment');
+        $fd = $actionPlan->findingDepartment;
+
+        if ($user->role === Role::ManagerDept && $fd->department_id === $user->department_id) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function uploadDocument(User $user, ActionPlan $actionPlan): bool
     {
         return $this->update($user, $actionPlan);

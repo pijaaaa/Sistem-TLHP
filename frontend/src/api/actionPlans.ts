@@ -26,6 +26,20 @@ export const actionPlansApi = {
   submit: (id: number) =>
     apiClient.post<ApiResponse<ActionPlan>>(`/action-plans/${id}/submit`).then(unwrap),
 
+  approve: (id: number) =>
+    apiClient.post<ApiResponse<ActionPlan>>(`/action-plans/${id}/approve`).then(unwrap),
+
+  reject: (id: number, reason: string) =>
+    apiClient.post<ApiResponse<ActionPlan>>(`/action-plans/${id}/reject`, { reason }).then(unwrap),
+
+  requestRevision: (id: number, reason: string) =>
+    apiClient.post<ApiResponse<ActionPlan>>(`/action-plans/${id}/revision`, { reason }).then(unwrap),
+
+  overrideWeight: (id: number, weight: number) =>
+    apiClient
+      .post<ApiResponse<ActionPlan>>(`/action-plans/${id}/override-weight`, { weight })
+      .then(unwrap),
+
   documents: (actionPlanId: number) =>
     apiClient.get<ApiResponse<ActionPlanDocument[]>>(`/action-plans/${actionPlanId}/documents`).then(unwrap),
 

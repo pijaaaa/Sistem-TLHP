@@ -77,6 +77,45 @@ class ActionPlanController extends Controller
         return ApiResponse::success(new ActionPlanResource($ap), 'Rencana aksi berhasil diajukan.');
     }
 
+    public function approve(ActionPlan $actionPlan): JsonResponse
+    {
+        $this->authorize('approve', $actionPlan);
+
+        $ap = ActionPlanService::approve($actionPlan);
+
+        return ApiResponse::success(new ActionPlanResource($ap), 'Rencana aksi berhasil disetujui.');
+    }
+
+    public function reject(Request $request, ActionPlan $actionPlan): JsonResponse
+    {
+        $this->authorize('approve', $actionPlan);
+
+        $reason = (string) $request->input('reason', '');
+        $ap = ActionPlanService::reject($actionPlan, $reason);
+
+        return ApiResponse::success(new ActionPlanResource($ap), 'Rencana aksi berhasil ditolak.');
+    }
+
+    public function requestRevision(Request $request, ActionPlan $actionPlan): JsonResponse
+    {
+        $this->authorize('approve', $actionPlan);
+
+        $reason = (string) $request->input('reason', '');
+        $ap = ActionPlanService::requestRevision($actionPlan, $reason);
+
+        return ApiResponse::success(new ActionPlanResource($ap), 'Permintaan revisi berhasil dikirim.');
+    }
+
+    public function overrideWeight(Request $request, ActionPlan $actionPlan): JsonResponse
+    {
+        $this->authorize('update', $actionPlan);
+
+        $weight = (float) $request->input('weight');
+        $ap = ActionPlanService::overrideWeight($actionPlan, $weight);
+
+        return ApiResponse::success(new ActionPlanResource($ap), 'Bobot berhasil diubah.');
+    }
+
     public function documents(ActionPlan $actionPlan): JsonResponse
     {
         $this->authorize('view', $actionPlan);

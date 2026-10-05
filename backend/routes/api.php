@@ -120,6 +120,14 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:action_plans,delete');
         Route::post('action-plans/{actionPlan}/submit', [ActionPlanController::class, 'submit'])
             ->middleware('permission:action_plans,update');
+        Route::post('action-plans/{actionPlan}/approve', [ActionPlanController::class, 'approve'])
+            ->middleware('permission:action_plans,update');
+        Route::post('action-plans/{actionPlan}/reject', [ActionPlanController::class, 'reject'])
+            ->middleware('permission:action_plans,update');
+        Route::post('action-plans/{actionPlan}/revision', [ActionPlanController::class, 'requestRevision'])
+            ->middleware('permission:action_plans,update');
+        Route::post('action-plans/{actionPlan}/override-weight', [ActionPlanController::class, 'overrideWeight'])
+            ->middleware('permission:action_plans,update');
         Route::get('action-plans/{actionPlan}/documents', [ActionPlanController::class, 'documents']);
         Route::post('action-plans/{actionPlan}/documents', [ActionPlanController::class, 'uploadDocument'])
             ->middleware('permission:action_plans,create');

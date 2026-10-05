@@ -59,6 +59,51 @@ export const useSubmitActionPlan = () => {
   })
 }
 
+export const useApproveActionPlan = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: actionPlansApi.approve,
+    onSuccess: (ap: ActionPlan) => {
+      qc.invalidateQueries({ queryKey: ['action-plans'] })
+      qc.invalidateQueries({ queryKey: ['action-plans', ap.id] })
+      qc.invalidateQueries({ queryKey: ['finding-departments'] })
+    },
+  })
+}
+
+export const useRejectActionPlan = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason: string }) => actionPlansApi.reject(id, reason),
+    onSuccess: (ap: ActionPlan) => {
+      qc.invalidateQueries({ queryKey: ['action-plans'] })
+      qc.invalidateQueries({ queryKey: ['action-plans', ap.id] })
+    },
+  })
+}
+
+export const useRequestRevision = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason: string }) => actionPlansApi.requestRevision(id, reason),
+    onSuccess: (ap: ActionPlan) => {
+      qc.invalidateQueries({ queryKey: ['action-plans'] })
+      qc.invalidateQueries({ queryKey: ['action-plans', ap.id] })
+    },
+  })
+}
+
+export const useOverrideWeight = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, weight }: { id: number; weight: number }) => actionPlansApi.overrideWeight(id, weight),
+    onSuccess: (ap: ActionPlan) => {
+      qc.invalidateQueries({ queryKey: ['action-plans'] })
+      qc.invalidateQueries({ queryKey: ['action-plans', ap.id] })
+    },
+  })
+}
+
 export const useActionPlanDocuments = (actionPlanId: number) =>
   useQuery({
     queryKey: ['action-plan-documents', actionPlanId],
