@@ -15,13 +15,6 @@ class UserMenuPermission extends Model
         'can_delete',
     ];
 
-    protected $casts = [
-        'can_view' => 'boolean',
-        'can_create' => 'boolean',
-        'can_update' => 'boolean',
-        'can_delete' => 'boolean',
-    ];
-
     public function user()
     {
         return $this->belongsTo(User::class);

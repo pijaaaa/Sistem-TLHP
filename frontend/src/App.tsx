@@ -7,6 +7,10 @@ import DevComponentsPage from '@/pages/DevComponentsPage'
 import LoginPage from '@/pages/LoginPage'
 import Forbidden from '@/pages/Forbidden'
 import NotFound from '@/pages/NotFound'
+import DepartmentsPage from '@/pages/master/DepartmentsPage'
+import EmployeesPage from '@/pages/master/EmployeesPage'
+import UsersPage from '@/pages/master/UsersPage'
+import PermissionsPage from '@/pages/master/PermissionsPage'
 
 function App() {
   return (
@@ -23,6 +27,38 @@ function App() {
               element={
                 <PermissionRoute menu="dashboard" action="view">
                   <HomePage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="master/departments"
+              element={
+                <PermissionRoute menu="master.departments" action="view">
+                  <DepartmentsPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="master/employees"
+              element={
+                <PermissionRoute menu="master.employees" action="view">
+                  <EmployeesPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="master/users"
+              element={
+                <PermissionRoute menu="master.employees" action="view">
+                  <UsersPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="access/permissions"
+              element={
+                <PermissionRoute menu="access.permissions" action="view">
+                  <PermissionsPage />
                 </PermissionRoute>
               }
             />

@@ -7,13 +7,17 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class MenuResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'id' => $this->id,
+            'code' => $this->code,
+            'name' => $this->name,
+            'path' => $this->path,
+            'icon' => $this->icon,
+            'parent_id' => $this->parent_id,
+            'sort_order' => $this->sort_order,
+            'is_active' => $this->is_active,
+        ];
     }
 }

@@ -19,6 +19,7 @@ class User extends Authenticatable
         'password',
         'role',
         'department_id',
+        'employee_id',
         'is_active',
     ];
 
@@ -40,6 +41,11 @@ class User extends Authenticatable
     public function department()
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class);
     }
 
     public function userMenuPermissions()

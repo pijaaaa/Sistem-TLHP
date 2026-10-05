@@ -4,7 +4,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Can } from '@/components/shared'
 import type { Action } from '@/types/auth'
 
-interface Column<T> {
+export interface Column<T> {
   key: string
   header: string
   body: (row: T) => ReactNode
@@ -31,7 +31,7 @@ interface DataTableProps<T> {
   permissionAction?: Action
 }
 
-const DataTable = <T extends Record<string, unknown>>({
+const DataTable = <T extends { id?: unknown }>({
   data,
   columns,
   loading,
@@ -77,7 +77,7 @@ const DataTable = <T extends Record<string, unknown>>({
   )
 }
 
-const DataTableInner = <T extends Record<string, unknown>>({
+const DataTableInner = <T extends { id?: unknown }>({
   data,
   columns,
   loading,

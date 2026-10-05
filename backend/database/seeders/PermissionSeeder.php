@@ -14,10 +14,10 @@ class PermissionSeeder extends Seeder
         $menus = Menu::all()->keyBy('code');
 
         $permissions = [
-            Role::AdminSpi->value => [
+             Role::AdminSpi->value => [
                 'dashboard' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
-                'master.departments' => ['view' => true, 'create' => true, 'update' => true, 'delete' => false],
-                'master.employees' => ['view' => true, 'create' => true, 'update' => true, 'delete' => false],
+                'master.departments' => ['view' => true, 'create' => true, 'update' => true, 'delete' => true],
+                'master.employees' => ['view' => true, 'create' => true, 'update' => true, 'delete' => true],
                 'access.permissions' => ['view' => false, 'create' => false, 'update' => false, 'delete' => false],
                 'audit_trail' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'findings.reports' => ['view' => true, 'create' => true, 'update' => true, 'delete' => true],

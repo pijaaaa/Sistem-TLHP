@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Enums\Role;
 use App\Models\Menu;
+use App\Models\RoleMenuPermission;
 use App\Models\User;
+use App\Models\UserMenuPermission;
 use App\Support\CacheService;
 use Illuminate\Support\Facades\Cache;
 
@@ -105,6 +107,95 @@ class PermissionService
     public static function invalidateForRole(Role $role): void
     {
         CacheService::flushGroup('permissions');
+    }
+
+    public static function roleMatrix(Role $role): array
+    {
+        $menus = Menu::orderBy('sort_order')->get();
+        $perms = RoleMenuPermission::where('role', $role->value)->get()->keyBy('menu_id');
+
+        $matrix = [];
+        foreach ($menus as $menu) {
+            $p = $perms[$menu->id] ?? null;
+            $matrix[$menu->code] = $p
+                ? [
+                    'view' => (bool) $p->can_view,
+                    'create' => (bool) $p->can_create,
+                    'update' => (bool) $p->can_update,
+                    'delete' => (bool) $p->can_delete,
+                ]
+                : ['view' => false, 'create' => false, 'update' => false, 'delete' => false];
+        }
+
+        return $matrix;
+    }
+
+    public static function updateRolePermissions(Role $role, array $matrix): void
+    {
+        $menus = Menu::all()->keyBy('code');
+
+        foreach ($matrix as $menuCode => $perms) {
+            $menu = $menus[$menuCode] ?? null;
+            if (! $menu) {
+                continue;
+            }
+            $view = (bool) $perms['view'];
+            RoleMenuPermission::updateOrCreate(
+                ['role' => $role->value, 'menu_id' => $menu->id],
+                [
+                    'can_view' => $view,
+                    'can_create' => $view ? (bool) $perms['create'] : false,
+                    'can_update' => $view ? (bool) $perms['update'] : false,
+                    'can_delete' => $view ? (bool) $perms['delete'] : false,
+                ]
+            );
+        }
+
+        self::invalidateForRole($role);
+    }
+
+    public static function userOverrideMatrix(User $user): array
+    {
+        $menus = Menu::orderBy('sort_order')->get();
+        $overrides = UserMenuPermission::where('user_id', $user->id)->get()->keyBy('menu_id');
+
+        $matrix = [];
+        foreach ($menus as $menu) {
+            $o = $overrides[$menu->id] ?? null;
+            $matrix[$menu->code] = $o
+                ? [
+                    'view' => $o->can_view === null ? null : (bool) $o->can_view,
+                    'create' => $o->can_create === null ? null : (bool) $o->can_create,
+                    'update' => $o->can_update === null ? null : (bool) $o->can_update,
+                    'delete' => $o->can_delete === null ? null : (bool) $o->can_delete,
+                ]
+                : ['view' => null, 'create' => null, 'update' => null, 'delete' => null];
+        }
+
+        return $matrix;
+    }
+
+    public static function updateUserPermissions(User $user, array $matrix): void
+    {
+        $menus = Menu::all()->keyBy('code');
+
+        foreach ($matrix as $menuCode => $perms) {
+            $menu = $menus[$menuCode] ?? null;
+            if (! $menu) {
+                continue;
+            }
+            UserMenuPermission::updateOrCreate(
+                ['user_id' => $user->id, 'menu_id' => $menu->id],
+                [
+                    'can_view' => $perms['view'] ?? null,
+                    'can_create' => $perms['create'] ?? null,
+                    'can_update' => $perms['update'] ?? null,
+                    'can_delete' => $perms['delete'] ?? null,
+                ]
+            );
+        }
+
+        self::invalidateForUser($user);
     }
 
     public static function visibleMenus(User $user): array
