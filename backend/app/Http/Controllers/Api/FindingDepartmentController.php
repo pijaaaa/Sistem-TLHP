@@ -25,6 +25,8 @@ class FindingDepartmentController extends Controller
             ->orderBy('id', 'desc')
             ->paginate($perPage);
 
+        \App\Services\ActionPlanService::attachDepartmentProgress($paginator->items());
+
         $data = FindingDepartmentResource::collection($paginator)
             ->toResponse($request)
             ->getData(true);

@@ -28,7 +28,7 @@ class FindingResource extends JsonResource
             'assessment_note' => $this->assessment_note,
             'assessed_by' => $this->assessed_by,
             'assessed_at' => $this->assessed_at?->toDateTimeString(),
-            'progress' => \App\Services\ActionPlanService::findingProgress($this->id),
+            'progress' => $this->getAttribute('progress'),
             'is_active' => $this->is_active,
             'created_at' => $this->created_at?->toDateTimeString(),
             'updated_at' => $this->updated_at?->toDateTimeString(),

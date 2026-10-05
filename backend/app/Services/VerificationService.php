@@ -17,10 +17,14 @@ class VerificationService
 {
     public static function pending(int $perPage = 15): LengthAwarePaginator
     {
-        return Finding::where('status', FindingStatus::PendingVerificationSpi->value)
+        $paginator = Finding::where('status', FindingStatus::PendingVerificationSpi->value)
             ->withCount('documents')
             ->orderBy('id', 'desc')
             ->paginate($perPage);
+
+        ActionPlanService::attachFindingProgress($paginator->items());
+
+        return $paginator;
     }
 
     /**

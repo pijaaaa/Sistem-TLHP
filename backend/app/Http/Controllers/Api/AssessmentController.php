@@ -26,6 +26,8 @@ class AssessmentController extends Controller
             ->orderBy('id', 'desc')
             ->paginate($perPage);
 
+        \App\Services\ActionPlanService::attachFindingProgress($findings->items());
+
         $data = FindingResource::collection($findings)
             ->toResponse($request)
             ->getData(true);

@@ -23,7 +23,10 @@ use App\Policies\ActionPlanDocumentPolicy;
 use App\Policies\EvidenceFilePolicy;
 use App\Policies\FindingPolicy;
 use App\Policies\UserPolicy;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -36,6 +39,17 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Route::aliasMiddleware('permission', PermissionMiddleware::class);
+
+        // Batasi percobaan login untuk menahan brute force.
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute(5)->by(
+                strtolower((string) $request->input('email')).'|'.$request->ip(),
+            );
+        });
+
+        // Batas umum untuk endpoint yang menerima unggahan file.
+        RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)
+            ->by($request->user()?->id ?: $request->ip()));
 
         Gate::policy(Department::class, DepartmentPolicy::class);
         Gate::policy(Employee::class, EmployeePolicy::class);

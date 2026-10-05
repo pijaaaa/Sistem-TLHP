@@ -22,7 +22,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health', [HealthController::class, '__invoke']);
 
 Route::prefix('v1')->group(function () {
-    Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::post('/auth/login', [AuthController::class, 'login'])
+    ->middleware('throttle:login');
 
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/auth/me', [AuthController::class, 'me']);
@@ -146,7 +147,7 @@ Route::prefix('v1')->group(function () {
         ->name('action-plan-documents.download')
         ->middleware(['auth:sanctum']);
 
-    Route::middleware(['auth:sanctum', 'permission:evidence,view'])->group(function () {
+    Route::middleware(['auth:sanctum', 'permission:evidence,view', 'throttle:api'])->group(function () {
         Route::get('action-plans/{actionPlan}/evidence', [EvidenceController::class, 'index']);
         Route::post('action-plans/{actionPlan}/evidence', [EvidenceController::class, 'store'])
             ->middleware('permission:evidence,create');

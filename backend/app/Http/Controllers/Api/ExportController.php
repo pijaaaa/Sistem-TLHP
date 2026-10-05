@@ -22,12 +22,16 @@ class ExportController extends Controller
     {
         abort_unless(PermissionService::can(auth()->user(), 'exports', 'view'), 403);
 
-        $rows = Finding::query()
+        $findings = Finding::query()
             ->visible()
             ->withCount('documents')
             ->orderBy('id', 'desc')
-            ->get()
-            ->map(fn (Finding $f) => [
+            ->limit(5000)
+            ->get();
+
+        \App\Services\ActionPlanService::attachFindingProgress($findings);
+
+        $rows = $findings->map(fn (Finding $f) => [
                 $f->code,
                 $f->title,
                 $f->finding_date?->toDateString(),
@@ -35,7 +39,7 @@ class ExportController extends Controller
                 $f->status->label(),
                 'Ronde ' . $f->current_round,
                 $f->assessment_status?->label(),
-                number_format(\App\Services\ActionPlanService::findingProgress($f->id), 2) . '%',
+                number_format($f->getAttribute('progress'), 2) . '%',
                 $f->documents_count,
                 $f->created_at?->toDateString(),
             ]);

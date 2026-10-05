@@ -18,7 +18,14 @@ class FindingService
     // dan serializer cache merepotkan; cache hanya untuk master data (departemen/employees/permissions).
     public static function paginated(int $perPage = 15): LengthAwarePaginator
     {
-        return Finding::visible()->withCount('documents')->orderBy('id', 'desc')->paginate($perPage);
+        $paginator = Finding::visible()
+            ->withCount('documents')
+            ->orderBy('id', 'desc')
+            ->paginate($perPage);
+
+        ActionPlanService::attachFindingProgress($paginator->items());
+
+        return $paginator;
     }
 
     public static function invalidate(): void

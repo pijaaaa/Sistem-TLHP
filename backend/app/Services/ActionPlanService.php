@@ -9,6 +9,7 @@ use App\Enums\Role;
 use App\Models\ActionPlan;
 use App\Models\ActionPlanDocument;
 use App\Models\EvidenceSubmission;
+use App\Models\Finding;
 use App\Models\FindingDepartment;
 use App\Support\AuditLogger;
 use App\Support\CacheService;
@@ -43,7 +44,10 @@ class ActionPlanService
             });
         }
 
-        return $query->with(['findingDepartment', 'creator'])->orderBy('id', 'desc')->paginate($perPage);
+        return $query->withCount('documents')
+            ->with(['findingDepartment', 'creator'])
+            ->orderBy('id', 'desc')
+            ->paginate($perPage);
     }
 
     public static function invalidate(): void
@@ -479,20 +483,110 @@ class ActionPlanService
             ->sum('weight');
     }
 
-    /**
-     * Progress temuan = rata-rata progress seluruh departemen (tampilan).
-     */
-    public static function findingProgress(int $findingId): float
+/**
+ * Progress temuan = rata-rata progress seluruh departemen **ronde berjalan**
+ * (tampilan). Hanya ronde aktif yang diperhitungkan agar ronde lama tidak
+ * menggeser angka.
+ */
+public static function findingProgress(int $findingId): float
     {
-        $fds = FindingDepartment::where('finding_id', $findingId)->whereNull('deleted_at')->get();
+        $finding = Finding::find($findingId, ['id', 'current_round']);
 
-        if ($fds->isEmpty()) {
+        if (! $finding) {
             return 0.0;
         }
 
-        $sum = $fds->sum(fn (FindingDepartment $fd) => self::departmentProgress($fd->id));
+        $departments = FindingDepartment::where('finding_id', $findingId)
+            ->where('round', $finding->current_round)
+            ->whereNull('deleted_at')
+            ->count();
 
-        return (float) $sum / $fds->count();
+        if ($departments === 0) {
+            return 0.0;
+        }
+
+        $approved = (float) ActionPlan::query()
+            ->join('finding_departments', 'finding_departments.id', '=', 'action_plans.finding_department_id')
+            ->where('finding_departments.finding_id', $findingId)
+            ->where('finding_departments.round', $finding->current_round)
+            ->whereNull('finding_departments.deleted_at')
+            ->whereNull('action_plans.deleted_at')
+            ->where('action_plans.status', ActionPlanStatus::EvidenceApproved->value)
+            ->sum('action_plans.weight');
+
+        return $approved / $departments;
+    }
+
+    /**
+     * Tempelkan progress ke kumpulan temuan dalam satu halaman agar Resource
+     * tidak memicu query per baris (N+1).
+     *
+     * @param  iterable<Finding>  $findings
+     */
+    public static function attachFindingProgress($findings): void
+    {
+        $items = collect($findings)->values();
+        $ids = $items->pluck('id')->all();
+
+        if ($ids === []) {
+            return;
+        }
+
+        $rounds = $items->pluck('current_round', 'id')->all();
+
+        $approved = ActionPlan::query()
+            ->join('finding_departments', 'finding_departments.id', '=', 'action_plans.finding_department_id')
+            ->whereIn('finding_departments.finding_id', $ids)
+            ->whereNull('finding_departments.deleted_at')
+            ->whereNull('action_plans.deleted_at')
+            ->where('action_plans.status', ActionPlanStatus::EvidenceApproved->value)
+            ->groupBy('finding_departments.finding_id')
+            ->selectRaw('finding_departments.finding_id, SUM(action_plans.weight) as approved')
+            ->pluck('approved', 'finding_departments.finding_id');
+
+        $counts = FindingDepartment::query()
+            ->whereIn('finding_id', $ids)
+            ->whereNull('deleted_at')
+            ->selectRaw('finding_id, round, COUNT(*) as total')
+            ->groupBy('finding_id', 'round')
+            ->get()
+            ->mapWithKeys(fn ($row) => [$row->finding_id . ':' . $row->round => (int) $row->total]);
+
+        foreach ($items as $finding) {
+            $id = $finding->id;
+            $divisor = $counts[$id . ':' . ($rounds[$id] ?? 1)] ?? 0;
+            $finding->setAttribute(
+                'progress',
+                $divisor > 0 ? (float) ($approved[$id] ?? 0) / $divisor : 0.0,
+            );
+        }
+    }
+
+    /**
+     * Tempelkan progress ke kumpulan finding_department dalam satu query.
+     *
+     * @param  iterable<FindingDepartment>  $departments
+     */
+    public static function attachDepartmentProgress($departments): void
+    {
+        $items = collect($departments)->values();
+        $ids = $items->pluck('id')->all();
+
+        if ($ids === []) {
+            return;
+        }
+
+        $approved = ActionPlan::query()
+            ->whereIn('finding_department_id', $ids)
+            ->whereNull('deleted_at')
+            ->where('status', ActionPlanStatus::EvidenceApproved->value)
+            ->groupBy('finding_department_id')
+            ->selectRaw('finding_department_id, SUM(weight) as approved')
+            ->pluck('approved', 'finding_department_id');
+
+        foreach ($items as $fd) {
+            $fd->setAttribute('progress', (float) ($approved[$fd->id] ?? 0));
+        }
     }
 
     protected static function syncDepartmentCompletion(int $findingDepartmentId): void
