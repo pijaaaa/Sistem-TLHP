@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\Access\PermissionController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\FindingController;
+use App\Http\Controllers\Api\FindingDocumentController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\Master\DepartmentController;
 use App\Http\Controllers\Api\Master\EmployeeController;
@@ -23,7 +25,6 @@ Route::prefix('v1')->group(function () {
         return \App\Support\ApiResponse::success(['message' => 'Welcome']);
     })->middleware(['auth:sanctum', 'permission:dashboard,view']);
 
-    // Master data
     Route::middleware(['auth:sanctum', 'permission:master.departments,view'])->group(function () {
         Route::get('master/departments', [DepartmentController::class, 'index']);
         Route::post('master/departments', [DepartmentController::class, 'store'])
@@ -46,7 +47,6 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:master.employees,delete');
     });
 
-    // Account users reuse employee permission matrix
     Route::middleware(['auth:sanctum', 'permission:master.employees,view'])->group(function () {
         Route::get('master/users', [UserController::class, 'index']);
         Route::post('master/users', [UserController::class, 'store'])
@@ -58,7 +58,6 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:master.employees,delete');
     });
 
-    // Access / permission matrix
     Route::middleware(['auth:sanctum', 'permission:access.permissions,view'])->group(function () {
         Route::get('access/permissions', [PermissionController::class, 'index']);
         Route::get('access/permissions/roles/{role}', [PermissionController::class, 'roleMatrix']);
@@ -67,5 +66,28 @@ Route::prefix('v1')->group(function () {
         Route::get('access/permissions/users/{user}', [PermissionController::class, 'userMatrix']);
         Route::put('access/permissions/users/{user}', [PermissionController::class, 'updateUserPermission'])
             ->middleware('permission:access.permissions,update');
+    });
+
+    Route::middleware(['auth:sanctum', 'permission:findings.reports,view'])->group(function () {
+        Route::get('findings', [FindingController::class, 'index']);
+        Route::post('findings', [FindingController::class, 'store'])
+            ->middleware('permission:findings.reports,create');
+        Route::get('findings/{finding}', [FindingController::class, 'show']);
+        Route::put('findings/{finding}', [FindingController::class, 'update'])
+            ->middleware('permission:findings.reports,update');
+        Route::delete('findings/{finding}', [FindingController::class, 'destroy'])
+            ->middleware('permission:findings.reports,delete');
+        Route::post('findings/{finding}/send-to-ia', [FindingController::class, 'sendToIa'])
+            ->middleware('permission:findings.reports,update');
+    });
+
+    Route::middleware(['auth:sanctum', 'permission:findings.reports,view'])->group(function () {
+        Route::get('findings/{finding}/documents', [FindingController::class, 'documents']);
+        Route::post('findings/{finding}/documents', [FindingController::class, 'uploadDocument'])
+            ->middleware('permission:findings.reports,create');
+        Route::delete('findings/{finding}/documents/{document}', [FindingController::class, 'deleteDocument'])
+            ->middleware('permission:findings.reports,delete');
+        Route::get('findings/documents/{document}/download', [FindingDocumentController::class, 'download'])
+            ->name('findings.documents.download');
     });
 });

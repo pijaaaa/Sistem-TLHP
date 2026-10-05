@@ -35,11 +35,26 @@ expect()->extend('toBeOne', function () {
 | Functions
 |--------------------------------------------------------------------------
 |
-| While Pest is very powerful out-of-the-box, you may have some testing code specific to your
-| project that you don't want to repeat in every file. Here you can also expose helpers as
+| While Pest is very powerful out-of-the-box, you may want to write some testing code specific to your
+| project that you don't want to repeat in every test file. Here you can also expose helpers as
 | global functions to help you to reduce the number of lines of code in your test files.
 |
 */
+
+function createTestUser(\App\Enums\Role $role, string $deptCode = 'FINANCE_ICT'): \App\Models\User
+{
+    $dept = \App\Models\Department::where('code', $deptCode)->first();
+
+    return \App\Models\User::create([
+        'name' => 'User',
+        'email' => $role->value . '@' . \Illuminate\Support\Str::random(5) . '.com',
+        'username' => $role->value . '_' . \Illuminate\Support\Str::random(5),
+        'password' => \Illuminate\Support\Facades\Hash::make('password'),
+        'role' => $role->value,
+        'department_id' => $dept->id,
+        'is_active' => true,
+    ]);
+}
 
 function something()
 {

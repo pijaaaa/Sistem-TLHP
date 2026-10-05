@@ -9,9 +9,10 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class UserService
 {
+    // ponytail: paginator tidak di-cache; daftar user kecil & berubah saat write.
     public static function paginated(int $perPage = 15): LengthAwarePaginator
     {
-        return CacheService::remember('users', "page.{$perPage}", fn () => User::with(['department', 'employee'])->orderBy('name')->paginate($perPage), 600);
+        return User::with(['department', 'employee'])->orderBy('name')->paginate($perPage);
     }
 
     public static function invalidate(): void

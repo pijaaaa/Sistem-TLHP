@@ -11,6 +11,8 @@ import DepartmentsPage from '@/pages/master/DepartmentsPage'
 import EmployeesPage from '@/pages/master/EmployeesPage'
 import UsersPage from '@/pages/master/UsersPage'
 import PermissionsPage from '@/pages/master/PermissionsPage'
+import FindingsReportsPage from '@/pages/findings/FindingsReportsPage'
+import FindingsPage from '@/pages/findings/FindingsPage'
 
 function App() {
   return (
@@ -59,6 +61,22 @@ function App() {
               element={
                 <PermissionRoute menu="access.permissions" action="view">
                   <PermissionsPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="findings/reports"
+              element={
+                <PermissionRoute menu="findings.reports" action="view">
+                  <FindingsReportsPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="findings"
+              element={
+                <PermissionRoute menu="findings.list" action="view">
+                  <FindingsPage />
                 </PermissionRoute>
               }
             />

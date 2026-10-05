@@ -14,9 +14,10 @@ class EmployeeService
         return CacheService::remember('employees', 'all', fn () => Employee::with('department')->orderBy('name')->get(), 3600);
     }
 
+    // ponytail: paginator tidak di-cache; cache hanya untuk all().
     public static function paginated(int $perPage = 15): LengthAwarePaginator
     {
-        return CacheService::remember('employees', "page.{$perPage}", fn () => Employee::with('department')->orderBy('name')->paginate($perPage), 600);
+        return Employee::with('department')->orderBy('name')->paginate($perPage);
     }
 
     public static function invalidate(): void

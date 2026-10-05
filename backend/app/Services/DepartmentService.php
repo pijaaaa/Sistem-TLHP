@@ -14,9 +14,11 @@ class DepartmentService
         return CacheService::remember('departments', 'all', fn () => Department::orderBy('name')->get(), 3600);
     }
 
+    // ponytail: paginator tidak di-cache (stateful per-request, serializer rapuh);
+    // cache hanya untuk all() yang dipakai form select.
     public static function paginated(int $perPage = 15): LengthAwarePaginator
     {
-        return CacheService::remember('departments', "page.{$perPage}", fn () => Department::orderBy('name')->paginate($perPage), 600);
+        return Department::orderBy('name')->paginate($perPage);
     }
 
     public static function invalidate(): void
