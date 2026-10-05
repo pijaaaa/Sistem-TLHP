@@ -16,6 +16,7 @@ class FindingDepartment extends Model
 
     protected $fillable = [
         'finding_id',
+        'round',
         'department_id',
         'assigned_by',
         'status',
@@ -23,6 +24,7 @@ class FindingDepartment extends Model
 
     protected $casts = [
         'status' => FindingDepartmentStatus::class,
+        'round' => 'integer',
     ];
 
     public function scopeVisible(Builder $query): Builder

@@ -12,6 +12,7 @@ class EvidenceSubmission extends Model
 
     protected $fillable = [
         'action_plan_id',
+        'round',
         'status',
         'submitted_by',
         'reviewed_by',
@@ -20,6 +21,7 @@ class EvidenceSubmission extends Model
     ];
 
     protected $casts = [
+        'round' => 'integer',
         'status' => EvidenceStatus::class,
         'reviewed_at' => 'datetime',
     ];

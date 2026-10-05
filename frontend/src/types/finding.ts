@@ -4,6 +4,7 @@ export type FindingStatus =
   | 'didistribusikan'
   | 'dalam_proses'
   | 'menunggu_assessment_ia'
+  | 'menunggu_verifikasi_spi'
   | 'closed'
   | 'case_closed'
 
@@ -24,10 +25,55 @@ export interface Finding {
   recommendation: string | null
   auditor_action_plan: string | null
   documents_count: number
+  current_round: number
+  assessment_status: AssessmentStatus | null
+  assessment_status_label: string | null
+  assessment_note: string | null
+  assessed_by: number | null
+  assessed_at: string | null
+  progress: number
   is_active: boolean
   created_at: string
   updated_at: string
 }
+
+export type AssessmentStatus =
+  | 'ssr'
+  | 'bsr'
+  | 'belum_ditindaklanjuti'
+  | 'tidak_dapat_ditindaklanjuti'
+
+export const ASSESSMENT_OPTIONS: {
+  value: AssessmentStatus
+  label: string
+  description: string
+  requiresReason: boolean
+}[] = [
+  {
+    value: 'ssr',
+    label: 'SSR — Sudah Selesai dan Direkomendasikan',
+    description: 'Temuan diteruskan ke Manager SPI untuk verifikasi.',
+    requiresReason: false,
+  },
+  {
+    value: 'bsr',
+    label: 'BSR — Belum Selesai, Perlu Revisi',
+    description: 'Memulai ronde baru; departemen dapat disesuaikan.',
+    requiresReason: false,
+  },
+  {
+    value: 'belum_ditindaklanjuti',
+    label: 'Belum Ditindaklanjuti',
+    description: 'Status default, tidak memicu ronde baru.',
+    requiresReason: false,
+  },
+  {
+    value: 'tidak_dapat_ditindaklanjuti',
+    label: 'Tidak Dapat Ditindaklanjuti',
+    description: 'Menutup kasus (case closed). Alasan wajib diisi.',
+    requiresReason: true,
+  },
+]
 
 export interface FindingDocument {
   id: number
@@ -56,6 +102,7 @@ export const FINDING_STATUS_OPTIONS: FindingStatusOption[] = [
   { value: 'didistribusikan', label: 'Didistribusikan', variant: 'info' },
   { value: 'dalam_proses', label: 'Dalam Proses', variant: 'info' },
   { value: 'menunggu_assessment_ia', label: 'Menunggu Assessment IA', variant: 'warning' },
+  { value: 'menunggu_verifikasi_spi', label: 'Menunggu Verifikasi SPI', variant: 'info' },
   { value: 'closed', label: 'Closed', variant: 'success' },
   { value: 'case_closed', label: 'Tidak Dapat Ditindaklanjuti', variant: 'danger' },
 ]

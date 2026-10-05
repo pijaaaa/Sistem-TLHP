@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\AssessmentStatus;
 use App\Enums\FindingStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -21,6 +22,13 @@ class FindingResource extends JsonResource
             'recommendation' => $this->recommendation,
             'auditor_action_plan' => $this->auditor_action_plan,
             'documents_count' => $this->documents_count ?? $this->documents()->count(),
+            'current_round' => $this->current_round ?? 1,
+            'assessment_status' => $this->assessment_status instanceof AssessmentStatus ? $this->assessment_status->value : $this->assessment_status,
+            'assessment_status_label' => $this->assessment_status instanceof AssessmentStatus ? $this->assessment_status->label() : null,
+            'assessment_note' => $this->assessment_note,
+            'assessed_by' => $this->assessed_by,
+            'assessed_at' => $this->assessed_at?->toDateTimeString(),
+            'progress' => \App\Services\ActionPlanService::findingProgress($this->id),
             'is_active' => $this->is_active,
             'created_at' => $this->created_at?->toDateTimeString(),
             'updated_at' => $this->updated_at?->toDateTimeString(),

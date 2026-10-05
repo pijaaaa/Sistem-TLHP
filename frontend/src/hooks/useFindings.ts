@@ -56,6 +56,33 @@ export const useSendToIA = () => {
   })
 }
 
+export const usePendingAssessments = (params?: { page?: number; per_page?: number }) =>
+  useQuery({
+    queryKey: ['pending-assessments', params],
+    queryFn: () => findingsApi.pendingAssessment(params),
+  })
+
+export const useAssessFinding = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      id,
+      ...payload
+    }: {
+      id: number
+      assessment_status: string
+      note?: string | null
+      department_ids?: number[]
+    }) => findingsApi.assess(id, payload),
+    onSuccess: (finding: Finding) => {
+      qc.invalidateQueries({ queryKey: ['pending-assessments'] })
+      qc.invalidateQueries({ queryKey: ['findings'] })
+      qc.invalidateQueries({ queryKey: ['findings', finding.id] })
+      qc.invalidateQueries({ queryKey: ['finding-departments'] })
+    },
+  })
+}
+
 export const useFindingDocuments = (findingId: number) =>
   useQuery({
     queryKey: ['finding-documents', findingId],

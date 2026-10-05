@@ -12,6 +12,7 @@ class ActionPlan extends Model
 
     protected $fillable = [
         'finding_department_id',
+        'round',
         'title',
         'description',
         'weight',
@@ -25,6 +26,7 @@ class ActionPlan extends Model
 
     protected $casts = [
         'weight' => 'decimal:2',
+        'round' => 'integer',
         'status' => ActionPlanStatus::class,
         'approved_at' => 'datetime',
         'due_date' => 'date',

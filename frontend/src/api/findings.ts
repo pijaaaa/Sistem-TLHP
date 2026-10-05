@@ -41,6 +41,17 @@ export const findingsApi = {
   sendToIA: (id: number) =>
     apiClient.post<ApiResponse<Finding>>(`/findings/${id}/send-to-ia`).then(unwrap),
 
+  pendingAssessment: (params?: { per_page?: number; page?: number }) =>
+    apiClient.get<ApiResponse<Paginated<Finding>>>('/assessments', { params }).then(unwrap),
+
+  assess: (
+    id: number,
+    payload: { assessment_status: string; note?: string | null; department_ids?: number[] },
+  ) =>
+    apiClient
+      .post<ApiResponse<Finding>>(`/findings/${id}/assess`, payload)
+      .then(unwrap),
+
   documents: (findingId: number) =>
     apiClient.get<ApiResponse<FindingDocument[]>>(`/findings/${findingId}/documents`).then(unwrap),
 

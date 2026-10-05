@@ -9,6 +9,7 @@ enum FindingStatus: string
     case Distributed = 'didistribusikan';
     case InProgress = 'dalam_proses';
     case PendingIaAssessment = 'menunggu_assessment_ia';
+    case PendingVerificationSpi = 'menunggu_verifikasi_spi';
     case Closed = 'closed';
     case CaseClosed = 'case_closed';
 
@@ -20,6 +21,7 @@ enum FindingStatus: string
             self::Distributed => 'Didistribusikan',
             self::InProgress => 'Dalam Proses',
             self::PendingIaAssessment => 'Menunggu Assessment IA',
+            self::PendingVerificationSpi => 'Menunggu Verifikasi SPI',
             self::Closed => 'Closed',
             self::CaseClosed => 'Tidak Dapat Ditindaklanjuti',
         };

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Access\PermissionController;
+use App\Http\Controllers\Api\AssessmentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EvidenceController;
 use App\Http\Controllers\Api\ActionPlanController;
@@ -148,9 +149,15 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:evidence,create');
         Route::post('action-plans/{actionPlan}/evidence/approve', [EvidenceController::class, 'approve'])
             ->middleware('permission:evidence,update');
-        Route::post('action-plans/{actionPlan}/evidence/revision', [EvidenceController::class, 'requestRevision'])
+Route::post('action-plans/{actionPlan}/evidence/revision', [EvidenceController::class, 'requestRevision'])
             ->middleware('permission:evidence,update');
         Route::get('evidence-files/{file}/download', [EvidenceController::class, 'downloadFile'])
             ->name('evidence-files.download');
+    });
+
+    Route::middleware(['auth:sanctum', 'permission:assessments,view'])->group(function () {
+        Route::get('assessments', [AssessmentController::class, 'index']);
+        Route::post('findings/{finding}/assess', [AssessmentController::class, 'store'])
+            ->middleware('permission:assessments,create');
     });
 });

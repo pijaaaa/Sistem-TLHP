@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\Role;
 use App\Models\Finding;
 use App\Models\User;
 use App\Services\PermissionService;
@@ -36,5 +37,15 @@ class FindingPolicy
     public function delete(User $user, Finding $finding): bool
     {
         return PermissionService::can($user, 'findings.reports', 'delete');
+    }
+
+    public function assess(User $user, Finding $finding): bool
+    {
+        if ($user->role === Role::SuperAdmin) {
+            return true;
+        }
+
+        return $user->role === Role::ManagerIa
+            && PermissionService::can($user, 'assessments', 'update');
     }
 }
