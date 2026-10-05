@@ -101,6 +101,7 @@ export interface FindingDepartment {
   status: FindingDepartmentStatus
   status_label: string
   assigned_by: number | null
+  progress: number
   pics: FindingDepartmentPic[]
   created_at: string
   updated_at: string
@@ -167,6 +168,7 @@ export interface ActionPlan {
   rejection_reason: string | null
   due_date: string | null
   documents_count: number
+  latest_evidence?: EvidenceSubmission | null
   created_at: string
   updated_at: string
 }
@@ -196,4 +198,47 @@ export const getActionPlanStatusLabel = (status: ActionPlanStatus | string): str
 
 export const getActionPlanStatusVariant = (status: ActionPlanStatus | string): string => {
   return ACTION_PLAN_STATUS_OPTIONS.find((o) => o.value === status)?.variant ?? 'default'
+}
+
+export type EvidenceStatus = 'diajukan' | 'disetujui' | 'revisi'
+
+export interface EvidenceFile {
+  id: number
+  evidence_submission_id: number
+  name: string
+  mime: string
+  size: number
+  label: string | null
+  download_url: string
+  created_at: string
+}
+
+export interface EvidenceSubmission {
+  id: number
+  action_plan_id: number
+  status: EvidenceStatus
+  status_label: string
+  submitted_by: number | null
+  reviewed_by: number | null
+  reviewed_at: string | null
+  revision_note: string | null
+  files: EvidenceFile[]
+  created_at: string
+  updated_at: string
+}
+
+export const getEvidenceStatusLabel = (status: EvidenceStatus | string): string => {
+  const map: Record<string, string> = {
+    diajukan: 'Diajukan',
+    disetujui: 'Disetujui',
+    revisi: 'Revisi',
+  }
+  return map[status] ?? status
+}
+
+export interface DepartmentProgress {
+  finding_department_id: number
+  progress: number
+  status: FindingDepartmentStatus
+  status_label: string
 }

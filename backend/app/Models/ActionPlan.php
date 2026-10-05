@@ -49,4 +49,14 @@ class ActionPlan extends Model
     {
         return $this->hasMany(ActionPlanDocument::class);
     }
+
+    public function evidenceSubmissions()
+    {
+        return $this->hasMany(EvidenceSubmission::class);
+    }
+
+    public function latestEvidence()
+    {
+        return $this->hasOne(EvidenceSubmission::class)->latestOfMany();
+    }
 }

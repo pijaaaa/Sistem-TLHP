@@ -27,6 +27,9 @@ class ActionPlanResource extends JsonResource
             'rejection_reason' => $this->rejection_reason,
             'due_date' => $this->due_date?->toDateString(),
             'documents_count' => $this->documents_count ?? $this->documents()->count(),
+            'latest_evidence' => $this->whenLoaded('latestEvidence', fn () => $this->latestEvidence
+                ? new EvidenceSubmissionResource($this->latestEvidence)
+                : null),
             'created_at' => $this->created_at?->toDateTimeString(),
             'updated_at' => $this->updated_at?->toDateTimeString(),
         ];

@@ -120,4 +120,21 @@ class ActionPlanPolicy
     {
         return $this->update($user, $actionPlan);
     }
+
+    public function submitEvidence(User $user, ActionPlan $actionPlan): bool
+    {
+        return $this->update($user, $actionPlan);
+    }
+
+    public function reviewEvidence(User $user, ActionPlan $actionPlan): bool
+    {
+        if (in_array($user->role, [Role::AdminSpi, Role::SuperAdmin])) {
+            return true;
+        }
+
+        $actionPlan->loadMissing('findingDepartment');
+        $fd = $actionPlan->findingDepartment;
+
+        return $user->role === Role::ManagerDept && $fd->department_id === $user->department_id;
+    }
 }

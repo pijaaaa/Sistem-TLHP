@@ -19,6 +19,7 @@ class FindingDepartmentResource extends JsonResource
             'status' => $this->status instanceof FindingDepartmentStatus ? $this->status->value : $this->status,
             'status_label' => $this->status instanceof FindingDepartmentStatus ? $this->status->label() : null,
             'assigned_by' => $this->assigned_by,
+            'progress' => \App\Services\ActionPlanService::departmentProgress($this->id),
             'pics' => $this->whenLoaded('pics', function () {
                 return $this->pics->map(function ($pic) {
                     return [

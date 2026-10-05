@@ -27,4 +27,9 @@ export const findingDistributionApi = {
     apiClient
       .post<ApiResponse<null>>(`/finding-departments/${findingDepartmentId}/assign-pics`, { pic_ids: picIds })
       .then(unwrap),
+
+  forwardToIA: (findingDepartmentId: number) =>
+    apiClient
+      .post<ApiResponse<FindingDepartment>>(`/finding-departments/${findingDepartmentId}/forward-to-ia`)
+      .then(unwrap),
 }

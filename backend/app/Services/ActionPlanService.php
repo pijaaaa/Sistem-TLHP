@@ -3,10 +3,12 @@
 namespace App\Services;
 
 use App\Enums\ActionPlanStatus;
+use App\Enums\EvidenceStatus;
 use App\Enums\FindingDepartmentStatus;
 use App\Enums\Role;
 use App\Models\ActionPlan;
 use App\Models\ActionPlanDocument;
+use App\Models\EvidenceSubmission;
 use App\Models\FindingDepartment;
 use App\Support\AuditLogger;
 use App\Support\CacheService;
@@ -196,7 +198,7 @@ class ActionPlanService
         }
 
         return DB::transaction(function () use ($ap, $user) {
-            $ap->status = ActionPlanStatus::Approved;
+            $ap->status = ActionPlanStatus::WaitingEvidence;
             $ap->approved_by = $user->id;
             $ap->approved_at = now();
             $ap->rejection_reason = null;
@@ -305,6 +307,212 @@ class ActionPlanService
         });
     }
 
+    public static function submitEvidence(ActionPlan $ap, array $files): EvidenceSubmission
+    {
+        $user = auth()->user();
+
+        if ($ap->status !== ActionPlanStatus::WaitingEvidence && $ap->status !== ActionPlanStatus::EvidenceRevision) {
+            throw ValidationException::withMessages([
+                'status' => 'Evidence hanya dapat diajukan untuk rencana aksi yang disetujui atau diminta revisi.',
+            ]);
+        }
+
+        if ($user->role === Role::StaffDept && $ap->created_by !== $user->id) {
+            throw new AuthorizationException('Anda bukan PIC dari rencana aksi ini.');
+        }
+
+        if (empty($files)) {
+            throw ValidationException::withMessages([
+                'files' => 'Minimal satu file evidence wajib diunggah.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($ap, $files, $user) {
+            $submission = EvidenceSubmission::create([
+                'action_plan_id' => $ap->id,
+                'status' => EvidenceStatus::Diajukan,
+                'submitted_by' => $user->id,
+            ]);
+
+            foreach ($files as $file) {
+                $label = is_array($file) ? ($file['label'] ?? null) : null;
+                $uploaded = is_array($file) ? $file['file'] : $file;
+
+                $path = $uploaded->store('evidence/' . $submission->id, config('upload.disk'));
+
+                $submission->files()->create([
+                    'name' => $uploaded->getClientOriginalName(),
+                    'path' => $path,
+                    'mime' => $uploaded->getMimeType() ?? 'application/octet-stream',
+                    'size' => $uploaded->getSize(),
+                    'label' => $label,
+                ]);
+            }
+
+            $ap->status = ActionPlanStatus::EvidenceSubmitted;
+            $ap->save();
+
+            AuditLogger::log('evidence.submitted', $user->id, request()->ip(), 'Evidence diajukan.', [
+                'action_plan_id' => $ap->id,
+                'evidence_submission_id' => $submission->id,
+            ]);
+
+            self::invalidate();
+            return $submission->fresh();
+        });
+    }
+
+    public static function approveEvidence(ActionPlan $ap): ActionPlan
+    {
+        $user = auth()->user();
+
+        if (! in_array($user->role, [Role::ManagerDept, Role::AdminSpi, Role::SuperAdmin])) {
+            throw ValidationException::withMessages([
+                'role' => 'Hanya Manager Departemen yang dapat menyetujui evidence.',
+            ]);
+        }
+
+        $ap->load('findingDepartment');
+        if ($user->role === Role::ManagerDept && $ap->findingDepartment->department_id !== $user->department_id) {
+            throw ValidationException::withMessages([
+                'department' => 'Anda tidak berhak untuk departemen ini.',
+            ]);
+        }
+
+        if ($ap->status !== ActionPlanStatus::EvidenceSubmitted) {
+            throw ValidationException::withMessages([
+                'status' => 'Hanya rencana aksi dengan evidence diajukan yang dapat disetujui.',
+            ]);
+        }
+
+        $submission = $ap->evidenceSubmissions()->where('status', EvidenceStatus::Diajukan->value)->latest('id')->first();
+        if (! $submission) {
+            throw ValidationException::withMessages([
+                'evidence' => 'Tidak ada evidence yang diajukan untuk rencana aksi ini.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($ap, $submission, $user) {
+            $submission->status = EvidenceStatus::Disetujui;
+            $submission->reviewed_by = $user->id;
+            $submission->reviewed_at = now();
+            $submission->save();
+
+            $ap->status = ActionPlanStatus::EvidenceApproved;
+            $ap->save();
+
+            AuditLogger::log('evidence.approved', $user->id, request()->ip(), 'Evidence disetujui.', [
+                'action_plan_id' => $ap->id,
+                'evidence_submission_id' => $submission->id,
+            ]);
+
+            self::syncDepartmentCompletion($ap->finding_department_id);
+            self::invalidate();
+            return $ap->fresh();
+        });
+    }
+
+    public static function requestEvidenceRevision(ActionPlan $ap, string $note): ActionPlan
+    {
+        $user = auth()->user();
+
+        if (! in_array($user->role, [Role::ManagerDept, Role::AdminSpi, Role::SuperAdmin])) {
+            throw ValidationException::withMessages([
+                'role' => 'Hanya Manager Departemen yang dapat meminta revisi evidence.',
+            ]);
+        }
+
+        $ap->load('findingDepartment');
+        if ($user->role === Role::ManagerDept && $ap->findingDepartment->department_id !== $user->department_id) {
+            throw ValidationException::withMessages([
+                'department' => 'Anda tidak berhak untuk departemen ini.',
+            ]);
+        }
+
+        if ($ap->status !== ActionPlanStatus::EvidenceSubmitted) {
+            throw ValidationException::withMessages([
+                'status' => 'Hanya rencana aksi dengan evidence diajukan yang dapat diminta revisi.',
+            ]);
+        }
+
+        if (empty($note)) {
+            throw ValidationException::withMessages([
+                'note' => 'Catatan revisi wajib diisi.',
+            ]);
+        }
+
+        $submission = $ap->evidenceSubmissions()->where('status', EvidenceStatus::Diajukan->value)->latest('id')->first();
+        if (! $submission) {
+            throw ValidationException::withMessages([
+                'evidence' => 'Tidak ada evidence yang diajukan untuk rencana aksi ini.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($ap, $submission, $user, $note) {
+            $submission->status = EvidenceStatus::Revisi;
+            $submission->reviewed_by = $user->id;
+            $submission->reviewed_at = now();
+            $submission->revision_note = $note;
+            $submission->save();
+
+            $ap->status = ActionPlanStatus::EvidenceRevision;
+            $ap->save();
+
+            AuditLogger::log('evidence.revision_requested', $user->id, request()->ip(), 'Revisi evidence diminta.', [
+                'action_plan_id' => $ap->id,
+                'evidence_submission_id' => $submission->id,
+            ]);
+
+            self::invalidate();
+            return $ap->fresh();
+        });
+    }
+
+    /**
+     * Progress departemen = jumlah bobot tindak lanjut yang evidence-nya sudah disetujui.
+     */
+    public static function departmentProgress(int $findingDepartmentId): float
+    {
+        return (float) ActionPlan::where('finding_department_id', $findingDepartmentId)
+            ->whereNull('deleted_at')
+            ->where('status', ActionPlanStatus::EvidenceApproved->value)
+            ->sum('weight');
+    }
+
+    /**
+     * Progress temuan = rata-rata progress seluruh departemen (tampilan).
+     */
+    public static function findingProgress(int $findingId): float
+    {
+        $fds = FindingDepartment::where('finding_id', $findingId)->whereNull('deleted_at')->get();
+
+        if ($fds->isEmpty()) {
+            return 0.0;
+        }
+
+        $sum = $fds->sum(fn (FindingDepartment $fd) => self::departmentProgress($fd->id));
+
+        return (float) $sum / $fds->count();
+    }
+
+    protected static function syncDepartmentCompletion(int $findingDepartmentId): void
+    {
+        $fd = FindingDepartment::find($findingDepartmentId);
+        if (! $fd) {
+            return;
+        }
+
+        $activeTotal = self::activeWeightForDepartment($findingDepartmentId, null);
+        $approvedTotal = self::departmentProgress($findingDepartmentId);
+
+        if ($activeTotal > 0 && $activeTotal == $approvedTotal) {
+            $fd->status = FindingDepartmentStatus::Complete100;
+            $fd->save();
+        }
+
+        FindingDepartmentService::invalidate();
+    }
+
     public static function overrideWeight(ActionPlan $ap, float $weight): ActionPlan
     {
         $user = auth()->user();
@@ -374,9 +582,11 @@ class ActionPlanService
         return (float) $query->whereIn('status', [
             ActionPlanStatus::Draft->value,
             ActionPlanStatus::Submitted->value,
+            ActionPlanStatus::Approved->value,
             ActionPlanStatus::Revision->value,
             ActionPlanStatus::WaitingEvidence->value,
             ActionPlanStatus::EvidenceSubmitted->value,
+            ActionPlanStatus::EvidenceApproved->value,
             ActionPlanStatus::EvidenceRevision->value,
         ])->sum('weight');
     }

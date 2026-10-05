@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useFindingDepartments } from '@/hooks/useFindingDistribution'
+import { useFindingDepartments, useAssignPics } from '@/hooks/useFindingDistribution'
+import { useForwardToIA } from '@/hooks/useEvidence'
 import { useUsers } from '@/hooks/useUsers'
 import { DataTable, PageHeader, Can } from '@/components/shared'
 import type { Column } from '@/components/shared/data-table'
@@ -16,13 +17,32 @@ export default function FindingDepartmentsPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [assigningFd, setAssigningFd] = useState<FindingDepartment | null>(null)
   const [selectedPics, setSelectedPics] = useState<number[]>([])
+  const [busyId, setBusyId] = useState<number | null>(null)
 
   const { data, isLoading, refetch } = useFindingDepartments({ page, per_page: 15 })
+  const assignPics = useAssignPics()
+  const forwardToIA = useForwardToIA()
 
   const openAssignPics = (fd: FindingDepartment) => {
     setAssigningFd(fd)
     setSelectedPics([])
     setModalOpen(true)
+  }
+
+  const handleForward = async (fd: FindingDepartment) => {
+    setBusyId(fd.id)
+    try {
+      await forwardToIA.mutateAsync(fd.id)
+      showToast('Temuan berhasil diteruskan ke IA', 'success')
+      refetch()
+    } catch (e) {
+      showToast(
+        isAxiosError(e) ? e.response?.data?.message ?? 'Gagal meneruskan' : 'Gagal meneruskan',
+        'error',
+      )
+    } finally {
+      setBusyId(null)
+    }
   }
 
   const handleSubmit = async () => {
@@ -31,8 +51,7 @@ export default function FindingDepartmentsPage() {
       return
     }
     try {
-      const res = await import('@/hooks/useFindingDistribution').then((m) => m.useAssignPics())
-      await res.mutateAsync({ fdId: assigningFd.id, picIds: selectedPics })
+      await assignPics.mutateAsync({ fdId: assigningFd.id, picIds: selectedPics })
       showToast('PIC berhasil ditugaskan', 'success')
       setModalOpen(false)
       refetch()
@@ -61,6 +80,11 @@ export default function FindingDepartmentsPage() {
       body: (r) => <StatusBadge status={getFindingDepartmentStatusLabel(r.status)} />,
     },
     {
+      key: 'progress',
+      header: 'Progress',
+      body: (r) => `${Number(r.progress ?? 0).toFixed(2)}%`,
+    },
+    {
       key: 'pics',
       header: 'PIC',
       body: (r) => r.pics?.map((p) => p.name).join(', ') ?? '-',
@@ -69,13 +93,27 @@ export default function FindingDepartmentsPage() {
       key: 'actions',
       header: 'Aksi',
       body: (r) => (
-        <Can menu="findings.list" action="update">
-          {r.status === 'diterima' && (
-            <Button size="sm" variant="outline" onClick={() => openAssignPics(r)}>
-              Assign PIC
-            </Button>
-          )}
-        </Can>
+        <div className="flex gap-2 flex-wrap">
+          <Can menu="findings.list" action="update">
+            {r.status === 'diterima' && (
+              <Button size="sm" variant="outline" onClick={() => openAssignPics(r)}>
+                Assign PIC
+              </Button>
+            )}
+          </Can>
+          <Can menu="findings.list" action="update">
+            {r.status === 'selesai_100' && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleForward(r)}
+                disabled={busyId === r.id}
+              >
+                Teruskan ke IA
+              </Button>
+            )}
+          </Can>
+        </div>
       ),
     },
   ]

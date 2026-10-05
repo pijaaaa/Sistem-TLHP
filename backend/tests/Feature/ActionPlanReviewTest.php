@@ -60,7 +60,7 @@ test('manager dept bisa menyetujui rencana aksi yang diajukan', function () {
     $res = $this->actingAs($this->managerDept, 'sanctum')->postJson("/api/v1/action-plans/{$ap->id}/approve");
 
     $res->assertOk()
-        ->assertJsonPath('data.status', ActionPlanStatus::Approved->value)
+        ->assertJsonPath('data.status', ActionPlanStatus::WaitingEvidence->value)
         ->assertJsonPath('data.approved_by', $this->managerDept->id);
 
     expect($this->fd->fresh()->status)->toBe(FindingDepartmentStatus::InProgress);

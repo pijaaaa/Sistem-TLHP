@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Access\PermissionController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\EvidenceController;
 use App\Http\Controllers\Api\ActionPlanController;
 use App\Http\Controllers\Api\FindingController;
 use App\Http\Controllers\Api\FindingDepartmentController;
@@ -107,6 +108,8 @@ Route::prefix('v1')->group(function () {
         Route::get('finding-departments', [FindingDepartmentController::class, 'index']);
         Route::get('finding-departments/{findingDepartment}', [FindingDepartmentController::class, 'show']);
         Route::post('finding-departments/{findingDepartment}/assign-pics', [FindingDepartmentController::class, 'assignPics']);
+        Route::post('finding-departments/{findingDepartment}/forward-to-ia', [FindingDepartmentController::class, 'forwardToIa']);
+        Route::get('finding-departments/{findingDepartment}/progress', [EvidenceController::class, 'progress']);
     });
 
     Route::middleware(['auth:sanctum', 'permission:action_plans,view'])->group(function () {
@@ -138,4 +141,16 @@ Route::prefix('v1')->group(function () {
     Route::get('action-plan-documents/{document}/download', [ActionPlanController::class, 'downloadDocument'])
         ->name('action-plan-documents.download')
         ->middleware(['auth:sanctum']);
+
+    Route::middleware(['auth:sanctum', 'permission:evidence,view'])->group(function () {
+        Route::get('action-plans/{actionPlan}/evidence', [EvidenceController::class, 'index']);
+        Route::post('action-plans/{actionPlan}/evidence', [EvidenceController::class, 'store'])
+            ->middleware('permission:evidence,create');
+        Route::post('action-plans/{actionPlan}/evidence/approve', [EvidenceController::class, 'approve'])
+            ->middleware('permission:evidence,update');
+        Route::post('action-plans/{actionPlan}/evidence/revision', [EvidenceController::class, 'requestRevision'])
+            ->middleware('permission:evidence,update');
+        Route::get('evidence-files/{file}/download', [EvidenceController::class, 'downloadFile'])
+            ->name('evidence-files.download');
+    });
 });

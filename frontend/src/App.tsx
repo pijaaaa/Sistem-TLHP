@@ -16,6 +16,7 @@ import FindingsDistributionPage from '@/pages/findings/FindingsDistributionPage'
 import FindingDepartmentsPage from '@/pages/findings/FindingDepartmentsPage'
 import ActionPlansPage from '@/pages/findings/ActionPlansPage'
 import ActionPlanReviewsPage from '@/pages/findings/ActionPlanReviewsPage'
+import EvidencePage from '@/pages/findings/EvidencePage'
 
 function App() {
   return (
@@ -112,6 +113,14 @@ function App() {
               element={
                 <PermissionRoute menu="action_plan_reviews" action="view">
                   <ActionPlanReviewsPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="evidence"
+              element={
+                <PermissionRoute menu="evidence" action="view">
+                  <EvidencePage />
                 </PermissionRoute>
               }
             />

@@ -48,4 +48,13 @@ class FindingDepartmentController extends Controller
 
         return ApiResponse::success(null, 'PIC berhasil ditugaskan.');
     }
+
+    public function forwardToIa(FindingDepartment $findingDepartment): JsonResponse
+    {
+        $this->authorize('forwardToIa', $findingDepartment);
+
+        $fd = FindingDepartmentService::forwardToIA($findingDepartment);
+
+        return ApiResponse::success(new FindingDepartmentResource($fd), 'Temuan berhasil diteruskan ke IA.');
+    }
 }

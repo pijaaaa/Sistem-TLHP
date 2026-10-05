@@ -52,4 +52,17 @@ class FindingDepartmentPolicy
 
         return true;
     }
+
+    public function forwardToIa(User $user, FindingDepartment $findingDepartment): bool
+    {
+        if (! in_array($user->role, [Role::ManagerDept, Role::AdminSpi, Role::SuperAdmin])) {
+            return false;
+        }
+
+        if ($user->role === Role::ManagerDept && $findingDepartment->department_id !== $user->department_id) {
+            return false;
+        }
+
+        return true;
+    }
 }
