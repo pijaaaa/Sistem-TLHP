@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\ActionPlanVisibility;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -33,6 +34,11 @@ class ActionPlan extends Model
         'deadline' => 'date',
         'sent_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new ActionPlanVisibility());
+    }
 
     public function finding()
     {

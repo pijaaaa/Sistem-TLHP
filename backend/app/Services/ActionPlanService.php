@@ -68,7 +68,7 @@ class ActionPlanService
             ]);
         }
 
-        return $action_plans;
+        return $action_plans->toArray();
     }
 
     public function assignPics(ActionPlan $ap, array $user_ids): ActionPlan
