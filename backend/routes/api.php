@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FindingController;
 use App\Http\Controllers\Api\FindingDocumentController;
 use App\Http\Controllers\Api\HealthController;
+use App\Http\Controllers\Api\LookupController;
 use App\Http\Controllers\Api\Master\DepartmentController;
 use App\Http\Controllers\Api\Master\EmployeeController;
 use App\Http\Controllers\Api\Master\UserController;
@@ -23,6 +24,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/auth/me', [AuthController::class, 'me']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
+
+        Route::get('/lookups/departments', [LookupController::class, 'departments']);
     });
 
     Route::get('/dashboard', [DashboardController::class, '__invoke'])

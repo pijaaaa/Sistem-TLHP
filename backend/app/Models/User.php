@@ -21,6 +21,7 @@ class User extends Authenticatable
         'department_id',
         'employee_id',
         'is_active',
+        'active_until',
     ];
 
     protected $hidden = [
@@ -35,6 +36,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => Role::class,
             'is_active' => 'boolean',
+            'active_until' => 'date',
         ];
     }
 

@@ -20,6 +20,7 @@ class UserResource extends JsonResource
             'department' => $this->whenLoaded('department', fn () => new DepartmentResource($this->department)),
             'employee' => $this->whenLoaded('employee', fn () => new EmployeeResource($this->employee)),
             'is_active' => $this->is_active,
+            'active_until' => $this->active_until?->toDateString(),
             'created_at' => $this->created_at?->toDateTimeString(),
             'updated_at' => $this->updated_at?->toDateTimeString(),
         ];

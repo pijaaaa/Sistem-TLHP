@@ -12,17 +12,27 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $deptSpi = Department::where('code', 'FINANCE_ICT')->first();
-        $deptIa = Department::where('code', 'IA')->first();
-
         $users = [
             [
                 'name' => 'Admin SPI',
                 'email' => 'admin_spi@example.com',
                 'username' => 'admin_spi',
                 'role' => Role::AdminSpi,
-                'department_code' => 'FINANCE_ICT',
-                'is_manager' => true,
+                'department_code' => 'SPI',
+            ],
+            [
+                'name' => 'Kepala SPI',
+                'email' => 'kepala_spi@example.com',
+                'username' => 'kepala_spi',
+                'role' => Role::Kepala_spi,
+                'department_code' => 'SPI',
+            ],
+            [
+                'name' => 'Internal Audit',
+                'email' => 'internal_audit@example.com',
+                'username' => 'internal_audit',
+                'role' => Role::InternalAudit,
+                'department_code' => 'IA',
             ],
             [
                 'name' => 'Manager IA',
@@ -30,7 +40,20 @@ class UserSeeder extends Seeder
                 'username' => 'manager_ia',
                 'role' => Role::ManagerIa,
                 'department_code' => 'IA',
-                'is_manager' => true,
+            ],
+            [
+                'name' => 'Manager IA (IA Auditee)',
+                'email' => 'manager_ia_auditee@example.com',
+                'username' => 'manager_ia_auditee',
+                'role' => Role::ManagerDept,
+                'department_code' => 'IA',
+            ],
+            [
+                'name' => 'PIC IA',
+                'email' => 'pic_ia@example.com',
+                'username' => 'pic_ia',
+                'role' => Role::StaffDept,
+                'department_code' => 'IA',
             ],
             [
                 'name' => 'Manager FINANCE',
@@ -38,7 +61,6 @@ class UserSeeder extends Seeder
                 'username' => 'manager_finance',
                 'role' => Role::ManagerDept,
                 'department_code' => 'FINANCE_ICT',
-                'is_manager' => true,
             ],
             [
                 'name' => 'PIC FINANCE',
@@ -46,23 +68,20 @@ class UserSeeder extends Seeder
                 'username' => 'pic_finance',
                 'role' => Role::StaffDept,
                 'department_code' => 'FINANCE_ICT',
-                'is_manager' => false,
             ],
             [
-                'name' => 'Manager SPI',
-                'email' => 'manager_spi@example.com',
-                'username' => 'manager_spi',
-                'role' => Role::ManagerSpi,
-                'department_code' => 'FINANCE_ICT',
-                'is_manager' => true,
+                'name' => 'Direksi',
+                'email' => 'direksi@example.com',
+                'username' => 'direksi',
+                'role' => Role::Direksi,
+                'department_code' => 'DIREKSI',
             ],
             [
                 'name' => 'Super Admin',
                 'email' => 'superadmin@example.com',
                 'username' => 'superadmin',
                 'role' => Role::SuperAdmin,
-                'department_code' => 'FINANCE_ICT',
-                'is_manager' => true,
+                'department_code' => 'SPI',
             ],
         ];
 

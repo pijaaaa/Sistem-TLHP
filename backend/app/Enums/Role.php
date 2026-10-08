@@ -4,22 +4,26 @@ namespace App\Enums;
 
 enum Role: string
 {
-    case AdminSpi   = 'admin_spi';
-    case ManagerIa    = 'manager_ia';
-    case ManagerDept  = 'manager_dept';
-    case StaffDept    = 'staff_dept';
-    case ManagerSpi   = 'manager_spi';
-    case SuperAdmin   = 'super_admin';
+    case SuperAdmin = 'super_admin';
+    case AdminSpi = 'admin_spi';
+    case InternalAudit = 'internal_audit';
+    case ManagerDept = 'manager_dept';
+    case StaffDept = 'staff_dept';
+    case Kepala_spi = 'kepala_spi';
+    case ManagerIa = 'manager_ia';
+    case Direksi = 'direksi';
 
     public function label(): string
     {
         return match ($this) {
-            self::AdminSpi    => 'Admin SPI',
-            self::ManagerIa   => 'Manager IA',
+            self::SuperAdmin => 'Super Admin',
+            self::AdminSpi => 'Admin SPI',
+            self::InternalAudit => 'Internal Audit',
             self::ManagerDept => 'Manager Departemen',
-            self::StaffDept   => 'Staff Departemen / PIC',
-            self::ManagerSpi  => 'Manager SPI',
-            self::SuperAdmin  => 'Super Admin',
+            self::StaffDept => 'Staff Departemen / PIC',
+            self::Kepala_spi => 'Kepala SPI',
+            self::ManagerIa => 'Manager Internal Audit',
+            self::Direksi => 'Direksi',
         };
     }
 
@@ -28,13 +32,13 @@ enum Role: string
         return $this === self::SuperAdmin;
     }
 
-    public function isManager(): bool
+    public function isMonitor(): bool
     {
-        return in_array($this, [self::ManagerIa, self::ManagerDept, self::ManagerSpi], true);
+        return in_array($this, [self::AdminSpi, self::InternalAudit, self::Kepala_spi, self::ManagerIa, self::Direksi], true);
     }
 
-    public function isAdminSpi(): bool
+    public function isReadOnlyMonitor(): bool
     {
-        return $this === self::AdminSpi;
+        return in_array($this, [self::ManagerIa, self::Direksi], true);
     }
 }

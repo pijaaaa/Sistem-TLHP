@@ -14,7 +14,7 @@ class EmployeeUserSeeder extends Seeder
 {
     public function run(): void
     {
-        $departments = Department::all();
+        $departments = Department::where('is_auditee', true)->get();
         $password = Hash::make(env('DEV_USER_PASSWORD', 'password'));
         
         $nikCounter = 1000;
@@ -22,14 +22,7 @@ class EmployeeUserSeeder extends Seeder
         foreach ($departments as $dept) {
             $code = strtolower(str_replace([' & ', ' '], '_', $dept->code));
             
-            // 1. Create Manager
-            $managerRole = match($dept->code) {
-                'IA' => Role::ManagerIa,
-                'FINANCE_ICT' => Role::ManagerSpi, // For SPI, let's make the manager ManagerSpi. (Wait, FINANCE_ICT has AdminSpi, ManagerSpi, and ManagerDept. Let's handle special depts below)
-                default => Role::ManagerDept,
-            };
-
-            if ($dept->code !== 'FINANCE_ICT' && $dept->code !== 'IA') {
+            if (!in_array($dept->code, ['SPI', 'DIREKSI'])) {
                 $this->createEmployeeAndUser(
                     nik: 'MGR' . $nikCounter++,
                     name: 'Manager ' . $dept->name,
@@ -39,38 +32,43 @@ class EmployeeUserSeeder extends Seeder
                     username: 'mgr_' . $code,
                     password: $password
                 );
-            }
 
-            // 2. Create Staff (2 PIC per dept)
-            for ($i = 1; $i <= 2; $i++) {
-                $this->createEmployeeAndUser(
-                    nik: 'STF' . $nikCounter++,
-                    name: 'Staff ' . $i . ' ' . $dept->name,
-                    position: 'Staff',
-                    dept: $dept,
-                    role: Role::StaffDept,
-                    username: 'pic_' . $i . '_' . $code,
-                    password: $password
-                );
+                for ($i = 1; $i <= 2; $i++) {
+                    $this->createEmployeeAndUser(
+                        nik: 'STF' . $nikCounter++,
+                        name: 'Staff ' . $i . ' ' . $dept->name,
+                        position: 'Staff',
+                        dept: $dept,
+                        role: Role::StaffDept,
+                        username: 'pic_' . $i . '_' . $code,
+                        password: $password
+                    );
+                }
             }
         }
 
-        // Special Users (IA)
-        $deptIa = Department::where('code', 'IA')->first();
-        if ($deptIa) {
-            $this->createEmployeeAndUser('MGR_IA', 'Manager Internal Audit', 'VP Internal Audit', $deptIa, Role::ManagerIa, 'manager_ia', $password);
-        }
-
-        // Special Users (FINANCE_ICT / SPI)
-        $deptSpi = Department::where('code', 'FINANCE_ICT')->first();
+        $deptSpi = Department::where('code', 'SPI')->first();
         if ($deptSpi) {
             $this->createEmployeeAndUser('ADM_SPI', 'Admin SPI', 'Admin', $deptSpi, Role::AdminSpi, 'admin_spi', $password);
-            $this->createEmployeeAndUser('MGR_SPI', 'Manager SPI', 'Manager SPI', $deptSpi, Role::ManagerSpi, 'manager_spi', $password);
-            $this->createEmployeeAndUser('MGR_FIN', 'Manager Finance', 'Manager Finance', $deptSpi, Role::ManagerDept, 'manager_finance', $password);
+            $this->createEmployeeAndUser('KPL_SPI', 'Kepala SPI', 'Kepala', $deptSpi, Role::Kepala_spi, 'kepala_spi', $password);
+        }
+
+        $deptIa = Department::where('code', 'IA')->first();
+        if ($deptIa) {
+            $this->createEmployeeAndUser('INT_AUD', 'Internal Audit', 'Internal Audit', $deptIa, Role::InternalAudit, 'internal_audit', $password);
+            $this->createEmployeeAndUser('MGR_IA', 'Manager IA', 'VP Internal Audit', $deptIa, Role::ManagerIa, 'manager_ia', $password);
+            $this->createEmployeeAndUser('MGR_IA_AUD', 'Manager IA (Auditee)', 'Manager', $deptIa, Role::ManagerDept, 'manager_ia_auditee', $password);
+            $this->createEmployeeAndUser('PIC_IA', 'PIC IA', 'Staff', $deptIa, Role::StaffDept, 'pic_ia', $password);
+        }
+
+        $deptDir = Department::where('code', 'DIREKSI')->first();
+        if ($deptDir) {
+            $this->createEmployeeAndUser('DIR', 'Direksi', 'Direktur', $deptDir, Role::Direksi, 'direksi', $password);
+        }
+
+        $deptSpi = Department::where('code', 'SPI')->first();
+        if ($deptSpi) {
             $this->createEmployeeAndUser('SUP_ADM', 'Super Admin', 'Super Admin', $deptSpi, Role::SuperAdmin, 'superadmin', $password);
-            
-            // The 2 staff for FINANCE_ICT were already created in loop, but let's ensure pic_finance exists for DummyDataSeeder
-            $this->createEmployeeAndUser('STF_FIN', 'PIC Finance', 'Staff Finance', $deptSpi, Role::StaffDept, 'pic_finance', $password);
         }
     }
 

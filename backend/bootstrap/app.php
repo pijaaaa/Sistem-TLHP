@@ -11,7 +11,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         api: __DIR__.'/../routes/api.php',
     )
-    ->withMiddleware()
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->api(append: [
+            \App\Http\Middleware\CheckActiveUntil::class,
+        ]);
+    })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (Throwable $e, $request) {
             if ($request->is('api/*')) {

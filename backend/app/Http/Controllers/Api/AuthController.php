@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\LoginRequest;
@@ -30,8 +31,12 @@ class AuthController extends Controller
             return ApiResponse::error('Akun tidak aktif.', 403);
         }
 
-        // Sengaja tanpa Auth::attempt(): API ini berbasis token, sehingga tidak
-        // boleh membuat session web yang membuat logout tidak mencabut akses.
+        if ($user->role->value !== Role::SuperAdmin->value) {
+            if ($user->active_until && \Carbon\Carbon::parse($user->active_until)->startOfDay() < now()->startOfDay()) {
+                return ApiResponse::error('Akun Anda telah kadaluarsa.', 403);
+            }
+        }
+
         $token = $user->createToken('auth-token')->plainTextToken;
 
         return ApiResponse::success([
@@ -73,7 +78,9 @@ class AuthController extends Controller
         return ApiResponse::success([
             'user' => new UserResource($user),
             'role' => $user->role->value,
+            'role_label' => $user->role->label(),
             'department' => $user->department ? new \App\Http\Resources\DepartmentResource($user->department) : null,
+            'active_until' => $user->active_until?->toDateString(),
             'permissions' => $permissions,
             'menus' => $menus,
         ]);

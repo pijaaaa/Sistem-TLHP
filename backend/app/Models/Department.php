@@ -13,10 +13,12 @@ class Department extends Model
         'code',
         'name',
         'is_active',
+        'is_auditee',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_auditee' => 'boolean',
     ];
 
     public function users()
