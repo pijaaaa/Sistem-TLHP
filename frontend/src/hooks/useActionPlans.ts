@@ -106,3 +106,15 @@ export const useDeleteActionPlanDocument = () => {
     },
   })
 }
+
+export const useSubmitActionPlanToSpi = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: actionPlansApi.submitToSpi,
+    onSuccess: (ap: ActionPlan) => {
+      qc.invalidateQueries({ queryKey: ['action-plans'] })
+      qc.invalidateQueries({ queryKey: ['action-plans', ap.id] })
+      qc.invalidateQueries({ queryKey: ['findings'] })
+    },
+  })
+}

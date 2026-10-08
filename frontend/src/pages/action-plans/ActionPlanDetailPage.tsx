@@ -1,16 +1,16 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { useActionPlan, useSendActionPlans, useAssignPics, useChangeDeadline, useDeleteActionPlan, useActionPlanDocuments, useUploadActionPlanDocument, useDeleteActionPlanDocument } from '@/hooks/useActionPlans'
+import { useActionPlan, useSendActionPlans, useAssignPics, useChangeDeadline, useDeleteActionPlan, useActionPlanDocuments, useUploadActionPlanDocument, useDeleteActionPlanDocument, useSubmitActionPlanToSpi } from '@/hooks/useActionPlans'
 import { useFollowUpsByActionPlan, useSubmitFollowUps } from '@/hooks/useFollowUps'
 import { useStaffByDepartment } from '@/hooks/useLookups'
-import { PageHeader, Can, DocumentPanel, Tabs, FollowUpStatusBadge } from '@/components/shared'
+import { PageHeader, Can, DocumentPanel, Tabs, FollowUpStatusBadge, ProgressBar, FollowUpDetailModal } from '@/components/shared'
 import { Button, Spinner, StatusBadge, Modal, ConfirmDialog, InputField } from '@/components/ui'
 import { EmployeeMultiSelect } from '@/components/shared/employee-multi-select'
 import { useToast } from '@/components/ui/toast'
 import { usePermission } from '@/hooks/usePermission'
 import { useAuth } from '@/contexts/AuthContext'
 import { actionPlansApi } from '@/api/findings'
-import { getActionPlanStatusVariant, RISK_OPTIONS } from '@/types/finding'
+import { getActionPlanStatusVariant, RISK_OPTIONS, type FollowUp } from '@/types/finding'
 import { isAxiosError } from 'axios'
 
 const riskVariant = (risk?: string | null) =>
@@ -36,6 +36,8 @@ export default function ActionPlanDetailPage() {
 
   const { data: followUps } = useFollowUpsByActionPlan(apId)
   const submitFu = useSubmitFollowUps()
+  const submitToSpi = useSubmitActionPlanToSpi()
+  const [detailFu, setDetailFu] = useState<FollowUp | null>(null)
 
   const [tab, setTab] = useState<'ringkasan' | 'tindak-lanjut' | 'dokumen'>('ringkasan')
   const [pics, setPics] = useState<number[]>([])
@@ -94,6 +96,22 @@ export default function ActionPlanDetailPage() {
       navigate('/action-plan')
     } catch (e) {
       showToast(isAxiosError(e) ? e.response?.data?.message ?? 'Gagal menghapus' : 'Gagal menghapus', 'error')
+    }
+  }
+
+  const fups = followUps?.data ?? []
+  const activeFups = fups.filter((f) => f.status !== 'DITOLAK')
+  const allSelesai = activeFups.length > 0 && activeFups.every((f) => f.status === 'SELESAI')
+  const totalWeight = activeFups.reduce((s, f) => s + f.weight, 0)
+  const weightFits = activeFups.length > 0 && totalWeight === 100
+  const canSubmitToSpi = isManagerOfDept && ap?.status === 'PROSES_TINDAK_LANJUT' && allSelesai && weightFits
+
+  const submitApToSpi = async () => {
+    try {
+      await submitToSpi.mutateAsync(apId)
+      showToast('Action plan diajukan ke Admin SPI.', 'success')
+    } catch (e) {
+      showToast(isAxiosError(e) ? e.response?.data?.message ?? 'Gagal mengajukan' : 'Gagal mengajukan', 'error')
     }
   }
 
@@ -205,17 +223,33 @@ export default function ActionPlanDetailPage() {
 
       {tab === 'tindak-lanjut' && (
         <div className="bg-white rounded-lg shadow p-6 space-y-3">
-          <div className="flex justify-end">
-            <Can menu="follow_ups" action="create">
-              {ap.status === 'PROSES_TINDAK_LANJUT' && (
-                <Link
-                  to={`/action-plan/${apId}/tindak-lanjut/susun`}
-                  className="inline-flex items-center justify-center h-10 px-4 rounded-md bg-blue-600 text-white hover:bg-blue-700"
-                >
-                  + Susun Tindak Lanjut
-                </Link>
-              )}
-            </Can>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex gap-2">
+              <Can menu="follow_ups" action="create">
+                {ap.status === 'PROSES_TINDAK_LANJUT' && (
+                  <Link
+                    to={`/action-plan/${apId}/tindak-lanjut/susun`}
+                    className="inline-flex items-center justify-center h-10 px-4 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    + Susun Tindak Lanjut
+                  </Link>
+                )}
+              </Can>
+              <Can menu="action_plans" action="update">
+                {isManagerOfDept && ap.status === 'PROSES_TINDAK_LANJUT' && (
+                  <div>
+                    <Button onClick={submitApToSpi} disabled={!canSubmitToSpi || submitToSpi.isPending}>Ajukan ke Admin SPI</Button>
+                    {(!allSelesai || !weightFits) && (
+                      <p className="text-xs text-gray-500 mt-2 whitespace-pre-line">
+                        {activeFups.length === 0
+                          ? '· Belum ada tindak lanjut.\n'
+                          : (allSelesai ? '' : '· Semua tindak lanjut harus Selesai.\n') + (weightFits ? '' : `· Total bobot aktif harus tepat 100 (sekarang ${totalWeight}).`)}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </Can>
+            </div>
           </div>
 
           {(followUps?.data ?? []).length === 0 ? (
@@ -227,6 +261,7 @@ export default function ActionPlanDetailPage() {
                   <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Uraian</th>
                   <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Target</th>
                   <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Bobot</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Progres</th>
                   <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Status</th>
                   <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">PIC</th>
                   <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Aksi</th>
@@ -237,13 +272,17 @@ export default function ActionPlanDetailPage() {
                   <tr key={fu.id} className="border-t">
                     <td className="px-4 py-2 text-sm">{fu.description}</td>
                     <td className="px-4 py-2 text-sm whitespace-nowrap">{fu.target_date}</td>
-                    <td className="px-4 py-2 text-sm">{fu.weight} · {fu.progress}%</td>
+                    <td className="px-4 py-2 text-sm">{fu.weight}</td>
+                    <td className="px-4 py-2 w-36"><ProgressBar value={fu.progress} /></td>
                     <td className="px-4 py-2"><FollowUpStatusBadge status={fu.status} label={fu.status_label} /></td>
                     <td className="px-4 py-2 text-sm">{(fu.assignees ?? []).map((u) => u.name).join(', ') || '-'}</td>
                     <td className="px-4 py-2">
-                      {(fu.status === 'DRAFT' || fu.status === 'REVISI') && (
-                        <Button size="sm" variant="secondary" onClick={() => submitFu.mutateAsync([fu.id])}>Ajukan</Button>
-                      )}
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => setDetailFu(fu)}>Detail / Progres</Button>
+                        {(fu.status === 'DRAFT' || fu.status === 'REVISI') && (
+                          <Button size="sm" variant="secondary" onClick={() => submitFu.mutateAsync([fu.id])}>Ajukan</Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -290,6 +329,8 @@ export default function ActionPlanDetailPage() {
         onConfirm={doDelete}
         onClose={() => setDeleteOpen(false)}
       />
+
+      <FollowUpDetailModal followUp={detailFu} onClose={() => setDetailFu(null)} />
     </div>
   )
 }

@@ -116,3 +116,40 @@ export const useAddFollowUpComment = () => {
     },
   })
 }
+
+export const useFollowUpProgressReports = (followUpId: number) =>
+  useQuery({
+    queryKey: ['follow-up-progress', followUpId],
+    queryFn: () => followUpsApi.progressReports(followUpId),
+    enabled: !!followUpId,
+  })
+
+export const useReportFollowUpProgress = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: { id: number; value: number; note: string | null; files: { file: File; label: string }[] }) =>
+      followUpsApi.reportProgress(payload.id, payload.value, payload.note, payload.files),
+    onSuccess: (_r, vars) => {
+      qc.invalidateQueries({ queryKey: ['follow-up-progress', vars.id] })
+      qc.invalidateQueries({ queryKey: ['follow-ups'] })
+      qc.invalidateQueries({ queryKey: ['action-plans'] })
+      qc.invalidateQueries({ queryKey: ['findings'] })
+    },
+  })
+}
+
+export const useApproveCompletion = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: followUpsApi.approveCompletion,
+    onSuccess: (fu) => invalidateFu(qc, fu),
+  })
+}
+
+export const useCompletionRevision = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: { id: number; note: string }) => followUpsApi.completionRevision(payload.id, payload.note),
+    onSuccess: (fu) => invalidateFu(qc, fu),
+  })
+}

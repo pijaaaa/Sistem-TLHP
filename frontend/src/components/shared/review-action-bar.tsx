@@ -8,6 +8,8 @@ import {
   useRejectFollowUp,
   useReturnFollowUpToRevision,
   useOverrideFollowUpWeight,
+  useApproveCompletion,
+  useCompletionRevision,
 } from '@/hooks/useFollowUps'
 import type { FollowUp } from '@/types/finding'
 import { isAxiosError } from 'axios'
@@ -18,7 +20,7 @@ interface ReviewActionBarProps {
   canReturn?: boolean
 }
 
-type NoteAction = 'revision' | 'reject' | 'return' | null
+type NoteAction = 'revision' | 'reject' | 'return' | 'completion' | null
 type WeightAction = { open: boolean; weight: number }
 
 const ReviewActionBar = ({ followUp, canDecide = false, canReturn = false }: ReviewActionBarProps) => {
@@ -28,6 +30,8 @@ const ReviewActionBar = ({ followUp, canDecide = false, canReturn = false }: Rev
   const reject = useRejectFollowUp()
   const ret = useReturnFollowUpToRevision()
   const override = useOverrideFollowUpWeight()
+  const complete = useApproveCompletion()
+  const completionRevision = useCompletionRevision()
 
   const [noteAction, setNoteAction] = useState<NoteAction>(null)
   const [note, setNote] = useState('')
@@ -46,6 +50,7 @@ const ReviewActionBar = ({ followUp, canDecide = false, canReturn = false }: Rev
       if (noteAction === 'revision') await revision.mutateAsync({ id: followUp.id, note: note.trim() })
       if (noteAction === 'reject') await reject.mutateAsync({ id: followUp.id, note: note.trim() })
       if (noteAction === 'return') await ret.mutateAsync({ id: followUp.id, note: note.trim() })
+      if (noteAction === 'completion') await completionRevision.mutateAsync({ id: followUp.id, note: note.trim() })
       showToast('Keputusan berhasil disimpan.', 'success')
       setNoteAction(null)
       setNote('')
@@ -69,7 +74,7 @@ const ReviewActionBar = ({ followUp, canDecide = false, canReturn = false }: Rev
     }
   }
 
-  const busyAny = approve.isPending || revision.isPending || reject.isPending || ret.isPending || override.isPending
+  const busyAny = approve.isPending || revision.isPending || reject.isPending || ret.isPending || override.isPending || complete.isPending || completionRevision.isPending
 
   return (
     <div className="flex gap-2 flex-wrap">
@@ -82,6 +87,13 @@ const ReviewActionBar = ({ followUp, canDecide = false, canReturn = false }: Rev
       )}
 
       <Button size="sm" variant="outline" onClick={() => { setWeight({ open: true, weight: followUp.weight }) }}>Ubah Bobot</Button>
+
+      {canDecide && followUp.status === 'MENUNGGU_PERSETUJUAN_SELESAI' && (
+        <>
+          <Button size="sm" onClick={() => complete.mutateAsync(followUp.id).catch(err)}>Setujui Selesai</Button>
+          <Button size="sm" variant="outline" onClick={() => { setNoteAction('completion'); setNote('') }}>Minta Revisi Penyelesaian</Button>
+        </>
+      )}
 
       {canReturn && followUp.status === 'DISETUJUI' && (
         <Button size="sm" variant="secondary" onClick={() => { setNoteAction('return'); setNote('') }}>Kembalikan ke Revisi</Button>

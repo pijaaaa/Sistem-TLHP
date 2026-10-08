@@ -76,4 +76,9 @@ class FollowUp extends Model
     {
         return $this->hasMany(FollowUpComment::class)->latest('id');
     }
+
+    public function progress_reports()
+    {
+        return $this->hasMany(FollowUpProgressReport::class)->latest('id');
+    }
 }

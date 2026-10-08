@@ -9,15 +9,23 @@ use App\Http\Requests\SubmitFollowUpsRequest;
 use App\Http\Requests\UpdateFollowUpRequest;
 use App\Http\Requests\OverrideWeightRequest;
 use App\Http\Requests\ReviewNoteRequest;
+use App\Http\Requests\ReportProgressRequest;
+use App\Http\Requests\CompletionRevisionRequest;
 use App\Http\Resources\FollowUpResource;
 use App\Http\Resources\FollowUpReviewResource;
 use App\Http\Resources\FollowUpCommentResource;
+use App\Http\Resources\FollowUpProgressReportResource;
 use App\Enums\CommentKind;
 use App\Models\ActionPlan;
 use App\Models\FollowUp;
+use App\Models\FollowUpProgressReport;
+use App\Models\Document;
 use App\Services\FollowUpService;
 use App\Services\FollowUpReviewService;
+use App\Services\ProgressReportService;
 use App\Support\ApiResponse;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -169,5 +177,62 @@ class FollowUpController extends Controller
         );
 
         return ApiResponse::success(new FollowUpCommentResource($comment), 'Komentar ditambahkan.', 201);
+    }
+
+    public function reportProgress(ReportProgressRequest $request, FollowUp $follow_up): JsonResponse
+    {
+        $this->authorize('view', $follow_up);
+
+        $documents = collect($request->input('document', []))
+            ->map(fn ($doc) => ['file' => $doc['file'], 'label' => $doc['label']])
+            ->all();
+
+        $report = (new ProgressReportService())->report(
+            $follow_up,
+            (int) $request->input('progress_value'),
+            $request->input('note'),
+            $documents,
+        );
+
+        return ApiResponse::success(new FollowUpProgressReportResource($report), 'Progres berhasil dilaporkan.', 201);
+    }
+
+    public function progressReports(FollowUp $follow_up): JsonResponse
+    {
+        $this->authorize('view', $follow_up);
+
+        $reports = $follow_up->progress_reports()->with(['reporter', 'documents'])->get();
+
+        return ApiResponse::success(FollowUpProgressReportResource::collection($reports));
+    }
+
+    public function approveCompletion(FollowUp $follow_up): JsonResponse
+    {
+        $this->authorize('view', $follow_up);
+
+        $followUp = (new FollowUpReviewService())->approveCompletion($follow_up);
+
+        return ApiResponse::success(new FollowUpResource($followUp), 'Penyelesaian tindak lanjut disetujui.');
+    }
+
+    public function completionRevision(CompletionRevisionRequest $request, FollowUp $follow_up): JsonResponse
+    {
+        $this->authorize('view', $follow_up);
+
+        $followUp = (new FollowUpReviewService())->requestCompletionRevision($follow_up, $request->input('note'));
+
+        return ApiResponse::success(new FollowUpResource($followUp), 'Revisi penyelesaian diminta.');
+    }
+
+    public function downloadReportDocument(FollowUp $follow_up, FollowUpProgressReport $report, Document $document): StreamedResponse
+    {
+        $this->authorize('view', $follow_up);
+        abort_if($report->follow_up_id !== $follow_up->id, 404);
+        abort_if(
+            $document->documentable_type !== $report->getMorphClass() || $document->documentable_id !== $report->id,
+            404
+        );
+
+        return Storage::disk(config('upload.disk'))->download($document->path, $document->name);
     }
 }

@@ -194,7 +194,7 @@ export interface FollowUpRowInput {
   linked_follow_up_id?: number | null
 }
 
-export type ReviewDecision = 'SETUJUI' | 'REVISI' | 'TOLAK' | 'KEMBALI_REVISI' | 'OVERRIDE_BOBOT'
+export type ReviewDecision = 'SETUJUI' | 'REVISI' | 'TOLAK' | 'KEMBALI_REVISI' | 'OVERRIDE_BOBOT' | 'SELESAI' | 'REVISI_SELESAI'
 
 export interface FollowUpReview {
   id: number
@@ -220,6 +220,17 @@ export interface FollowUpComment {
   kind_label: string
   body: string
   created_at: string
+}
+
+export interface FollowUpProgressReport {
+  id: number
+  follow_up_id: number
+  progress_value: number
+  note: string | null
+  reported_by: number | null
+  reporter?: { id: number; name: string } | null
+  reported_at: string
+  documents: DocumentFile[]
 }
 
 export const FOLLOW_UP_STATUS_OPTIONS: { value: FollowUpStatus; label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'info' }[] = [

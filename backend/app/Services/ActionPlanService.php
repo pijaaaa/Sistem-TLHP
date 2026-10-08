@@ -5,9 +5,12 @@ namespace App\Services;
 use App\Enums\ActionPlanStatus;
 use App\Enums\FindingStatus;
 use App\Events\ActionPlanSent;
+use App\Events\ActionPlanSubmittedToSpi;
 use App\Events\PicAssigned;
 use App\Models\ActionPlan;
 use App\Models\Finding;
+use App\Models\FollowUp;
+use App\Services\FindingStatusService;
 use App\Support\AuditLogger;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
@@ -191,6 +194,57 @@ class ActionPlanService
             'action_plan_id' => $ap->id,
             'finding_id' => $ap->finding_id,
         ]);
+    }
+
+    public function submitToSpi(ActionPlan $ap): ActionPlan
+    {
+        if ($ap->status !== ActionPlanStatus::ProsesTindakLanjut) {
+            throw ValidationException::withMessages([
+                'status' => 'Hanya action plan berstatus Proses Tindak Lanjut yang dapat diajukan ke Admin SPI.',
+            ]);
+        }
+
+        $followUps = FollowUp::withoutGlobalScopes()
+            ->where('action_plan_id', $ap->id)
+            ->where('revision_no', $ap->current_revision)
+            ->where('status', '!=', \App\Enums\FollowUpStatus::Ditolak->value)
+            ->get(['status', 'weight']);
+
+        if ($followUps->isEmpty()) {
+            throw ValidationException::withMessages([
+                'follow_ups' => 'Belum ada tindak lanjut pada action plan ini.',
+            ]);
+        }
+
+        $notFinished = $followUps->filter(function ($fu) {
+            $status = $fu->status instanceof \App\Enums\FollowUpStatus ? $fu->status->value : $fu->status;
+            return $status !== \App\Enums\FollowUpStatus::Selesai->value;
+        });
+        if ($notFinished->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'follow_ups' => 'Semua tindak lanjut harus berstatus Selesai sebelum diajukan ke Admin SPI.',
+            ]);
+        }
+
+        $totalWeight = (int) $followUps->sum('weight');
+        if ($totalWeight !== 100) {
+            throw ValidationException::withMessages([
+                'weight' => "Total bobot harus tepat 100. Bobot saat ini: {$totalWeight}.",
+            ]);
+        }
+
+        $ap->update(['status' => ActionPlanStatus::DiajukanKeSpi]);
+
+        AuditLogger::log('action_plan.submitted_to_spi', auth()->id(), request()?->ip(), "Action plan {$ap->code} diajukan ke Admin SPI.", [
+            'action_plan_id' => $ap->id,
+            'finding_id' => $ap->finding_id,
+        ]);
+
+        ActionPlanSubmittedToSpi::dispatch($ap);
+
+        (new FindingStatusService())->recompute($ap->finding);
+
+        return $ap->refresh();
     }
 
     public function changeDeadline(ActionPlan $ap, string $deadline, ?string $reason = null): ActionPlan

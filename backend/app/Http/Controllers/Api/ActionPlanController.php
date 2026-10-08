@@ -133,6 +133,16 @@ class ActionPlanController extends Controller
         return ApiResponse::success(new ActionPlanResource($ap), 'Deadline action plan berhasil diubah.');
     }
 
+    public function submitToSpi(ActionPlan $action_plan): JsonResponse
+    {
+        $this->authorize('submitToSpi', $action_plan);
+
+        $ap = (new ActionPlanService())->submitToSpi($action_plan);
+        $ap->load(['finding', 'department', 'assignees']);
+
+        return ApiResponse::success(new ActionPlanResource($ap), 'Action plan diajukan ke Admin SPI.');
+    }
+
     public function documents(ActionPlan $action_plan): JsonResponse
     {
         $this->authorize('view', $action_plan);

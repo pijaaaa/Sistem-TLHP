@@ -27,7 +27,11 @@ const FollowUpRow = ({ fu, isManager }: { fu: FollowUp; isManager: boolean }) =>
       </div>
 
       {isManager && (
-        <ReviewActionBar followUp={fu} canDecide={fu.status === 'DIAJUKAN'} canReturn={fu.status === 'DISETUJUI'} />
+        <ReviewActionBar
+          followUp={fu}
+          canDecide={fu.status === 'DIAJUKAN' || fu.status === 'MENUNGGU_PERSETUJUAN_SELESAI'}
+          canReturn={fu.status === 'DISETUJUI'}
+        />
       )}
 
       <div className="flex gap-2">
@@ -62,6 +66,18 @@ export default function PersetujuanPage() {
     return [...map.entries()]
   }, [data])
 
+  const pendingParams = useMemo(() => ({ per_page: 100, status: 'MENUNGGU_PERSETUJUAN_SELESAI' }), [])
+  const { data: pendingData, isLoading: pendingLoading } = useFollowUps(pendingParams)
+
+  const pendingGroups = useMemo(() => {
+    const map = new Map<number, FollowUp[]>()
+    for (const fu of pendingData?.data ?? []) {
+      if (!map.has(fu.action_plan_id)) map.set(fu.action_plan_id, [])
+      map.get(fu.action_plan_id)!.push(fu)
+    }
+    return [...map.entries()]
+  }, [pendingData])
+
   const isManager = user?.role === 'manager_dept'
 
   return (
@@ -78,7 +94,28 @@ export default function PersetujuanPage() {
       />
 
       {tab === 'penyelesaian' && (
-        <p className="text-sm text-gray-500">Persetujuan penyelesaian tindak lanjut tersedia di milestone berikutnya (R6).</p>
+        pendingLoading ? (
+          <p className="text-sm text-gray-500">Memuat...</p>
+        ) : pendingGroups.length === 0 ? (
+          <p className="text-sm text-gray-500">Tidak ada tindak lanjut yang menunggu persetujuan penyelesaian.</p>
+        ) : (
+          pendingGroups.map(([apId, items]) => {
+            const ap = items[0].action_plan
+            return (
+              <div key={apId} className="bg-white rounded-lg shadow p-4 space-y-3">
+                <Link className="text-blue-600 hover:underline font-medium" to={`/action-plan/${apId}`}>
+                  {ap?.code ?? `AP #${apId}`}
+                </Link>
+                <span className="text-sm text-gray-500 ml-2">{ap?.title}</span>
+                <div className="space-y-3">
+                  {items.map((fu) => (
+                    <FollowUpRow key={fu.id} fu={fu} isManager={isManager} />
+                  ))}
+                </div>
+              </div>
+            )
+          })
+        )
       )}
 
       {tab === 'tindak-lanjut' && (

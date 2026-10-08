@@ -105,6 +105,8 @@ class FollowUpService
             'old' => $old,
         ]);
 
+        (new ProgressService())->persistApProgress($followUp->actionPlan);
+
         return $followUp->refresh();
     }
 

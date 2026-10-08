@@ -6,6 +6,7 @@ use App\Enums\CommentKind;
 use App\Enums\FollowUpStatus;
 use App\Enums\ReviewDecision;
 use App\Enums\Role;
+use App\Events\CompletionDecided;
 use App\Events\FollowUpDecided;
 use App\Events\FollowUpReturnedToRevision;
 use App\Events\IaCommentAdded;
@@ -32,6 +33,8 @@ class FollowUpReviewService
         $this->record($followUp, ReviewDecision::Setujui, null);
         $this->audit('follow_up.approved', $followUp, 'Tindak lanjut disetujui manager.');
         FollowUpDecided::dispatch($followUp, ReviewDecision::Setujui);
+
+        (new ProgressService())->persistApProgress($followUp->actionPlan);
 
         return $followUp->refresh();
     }
@@ -61,6 +64,8 @@ class FollowUpReviewService
         $this->audit('follow_up.rejected', $followUp, 'Tindak lanjut ditolak manager.');
         FollowUpDecided::dispatch($followUp, ReviewDecision::Tolak);
 
+        (new ProgressService())->persistApProgress($followUp->actionPlan);
+
         return $followUp->refresh();
     }
 
@@ -80,6 +85,8 @@ class FollowUpReviewService
         $this->record($followUp, ReviewDecision::KembaliRevisi, $note);
         $this->audit('follow_up.returned_to_revision', $followUp, 'Tindak lanjut dikembalikan ke revisi atas masukan IA.');
         FollowUpReturnedToRevision::dispatch($followUp);
+
+        (new ProgressService())->persistApProgress($followUp->actionPlan);
 
         return $followUp->refresh();
     }
@@ -111,6 +118,54 @@ class FollowUpReviewService
             'weight_after' => $weight,
         ]);
 
+        (new ProgressService())->persistApProgress($followUp->actionPlan);
+
+        return $followUp->refresh();
+    }
+
+    public function approveCompletion(FollowUp $followUp): FollowUp
+    {
+        $this->assertManager($followUp);
+
+        if ($followUp->status !== FollowUpStatus::MenungguPersetujuanSelesai) {
+            throw ValidationException::withMessages([
+                'status' => 'Hanya tindak lanjut berstatus Menunggu Persetujuan Selesai yang dapat diselesaikan.',
+            ]);
+        }
+
+        $followUp->update([
+            'status' => FollowUpStatus::Selesai,
+            'completed_at' => now(),
+        ]);
+
+        $this->record($followUp, ReviewDecision::Selesaikan, null);
+        $this->audit('follow_up.completion_approved', $followUp, 'Penyelesaian tindak lanjut disetujui.');
+        CompletionDecided::dispatch($followUp, true);
+
+        (new ProgressService())->persistApProgress($followUp->actionPlan);
+
+        return $followUp->refresh();
+    }
+
+    public function requestCompletionRevision(FollowUp $followUp, string $note): FollowUp
+    {
+        $this->assertManager($followUp);
+
+        if ($followUp->status !== FollowUpStatus::MenungguPersetujuanSelesai) {
+            throw ValidationException::withMessages([
+                'status' => 'Hanya tindak lanjut berstatus Menunggu Persetujuan Selesai yang dapat diminta revisi penyelesaian.',
+            ]);
+        }
+
+        // Progres tetap 100; PIC menambah laporan/dokumen lalu melapor 100 lagi.
+        $followUp->update(['status' => FollowUpStatus::Disetujui]);
+
+        $this->record($followUp, ReviewDecision::RevisiSelesai, $note);
+        $this->audit('follow_up.completion_revision_requested', $followUp, 'Manager meminta revisi penyelesaian tindak lanjut.');
+        CompletionDecided::dispatch($followUp, false);
+
+        (new ProgressService())->persistApProgress($followUp->actionPlan);
+
         return $followUp->refresh();
     }
 
@@ -134,7 +189,8 @@ class FollowUpReviewService
             $isPic = $followUp->assignees()->whereKey($user->id)->exists();
             $isManager = $user->role === Role::ManagerDept
                 && $followUp->actionPlan->department_id === $user->department_id;
-            if ($user->role !== Role::SuperAdmin && !$isPic && !$isManager) {
+            $isMonitorAfterApproval = $user->role->isMonitor() && $followUp->status->isVisibleToMonitor();
+            if ($user->role !== Role::SuperAdmin && !$isPic && !$isManager && !$isMonitorAfterApproval) {
                 throw ValidationException::withMessages([
                     'kind' => 'Tidak berhak menambah komentar pada tindak lanjut ini.',
                 ]);

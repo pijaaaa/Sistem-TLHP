@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useActionPlans, useSendActionPlans, useChangeDeadline, useDeleteActionPlan } from '@/hooks/useActionPlans'
 import { useFindings } from '@/hooks/useFindings'
 import { useAuditeeDepartments } from '@/hooks/useLookups'
-import { DataTable, PageHeader, Can } from '@/components/shared'
+import { DataTable, PageHeader, Can, ProgressBar } from '@/components/shared'
 import type { Column } from '@/components/shared/data-table'
 import { Button, StatusBadge, Select, Checkbox, Modal, ConfirmDialog, InputField } from '@/components/ui'
 import { useToast } from '@/components/ui/toast'
@@ -89,6 +89,7 @@ export default function ActionPlansPage() {
     { key: 'department', header: 'Departemen', body: (r) => r.department?.name ?? '-' },
     { key: 'deadline', header: 'Deadline', body: (r) => r.deadline ?? '-' },
     { key: 'risk', header: 'Risiko', body: (r) => r.risk_label ?? '-' },
+    { key: 'progress', header: 'Progres', body: (r) => <ProgressBar value={r.progress} /> },
     { key: 'status', header: 'Status', body: (r) => <StatusBadge status={r.status_label} variant={getActionPlanStatusVariant(r.status)} /> },
     {
       key: 'actions',

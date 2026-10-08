@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useFollowUps, useSubmitFollowUps } from '@/hooks/useFollowUps'
-import { PageHeader, Can, FollowUpStatusBadge } from '@/components/shared'
+import { PageHeader, Can, FollowUpStatusBadge, ProgressBar, FollowUpDetailModal } from '@/components/shared'
 import { Button, Select } from '@/components/ui'
 import { useToast } from '@/components/ui/toast'
 import { FOLLOW_UP_STATUS_OPTIONS, type FollowUp } from '@/types/finding'
@@ -10,6 +10,7 @@ import { isAxiosError } from 'axios'
 export default function FollowUpsPage() {
   const { showToast } = useToast()
   const [status, setStatus] = useState('')
+  const [detailFu, setDetailFu] = useState<FollowUp | null>(null)
 
   const params = useMemo(() => ({ per_page: 100, status: status || undefined }), [status])
   const { data, isLoading } = useFollowUps(params)
@@ -81,6 +82,7 @@ export default function FollowUpsPage() {
                     <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Uraian</th>
                     <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Target</th>
                     <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Bobot</th>
+                    <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Progres</th>
                     <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Status</th>
                     <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">PIC</th>
                     <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Aksi</th>
@@ -91,13 +93,17 @@ export default function FollowUpsPage() {
                     <tr key={fu.id} className="border-t">
                       <td className="px-4 py-2 text-sm">{fu.description}</td>
                       <td className="px-4 py-2 text-sm whitespace-nowrap">{fu.target_date}</td>
-                      <td className="px-4 py-2 text-sm">{fu.weight} / progress {fu.progress}%</td>
+                      <td className="px-4 py-2 text-sm">{fu.weight}</td>
+                      <td className="px-4 py-2 w-36"><ProgressBar value={fu.progress} /></td>
                       <td className="px-4 py-2"><FollowUpStatusBadge status={fu.status} label={fu.status_label} /></td>
                       <td className="px-4 py-2 text-sm">{(fu.assignees ?? []).map((u) => u.name).join(', ') || '-'}</td>
                       <td className="px-4 py-2">
-                        {(fu.status === 'DRAFT' || fu.status === 'REVISI') && (
-                          <Button size="sm" variant="secondary" onClick={() => doSubmit(fu)}>Ajukan</Button>
-                        )}
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" onClick={() => setDetailFu(fu)}>Detail / Progres</Button>
+                          {(fu.status === 'DRAFT' || fu.status === 'REVISI') && (
+                            <Button size="sm" variant="secondary" onClick={() => doSubmit(fu)}>Ajukan</Button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -107,6 +113,8 @@ export default function FollowUpsPage() {
           )
         })
       )}
+
+      <FollowUpDetailModal followUp={detailFu} onClose={() => setDetailFu(null)} />
     </div>
   )
 }

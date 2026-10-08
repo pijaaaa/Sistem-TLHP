@@ -75,6 +75,17 @@ class ActionPlanPolicy
             || ($user->role === Role::AdminSpi && $ap->status !== ActionPlanStatus::Closed);
     }
 
+    public function submitToSpi(User $user, ActionPlan $ap): bool
+    {
+        if ($user->role === Role::SuperAdmin) {
+            return true;
+        }
+
+        return $user->role === Role::ManagerDept
+            && $ap->department_id === $user->department_id
+            && $ap->status === ActionPlanStatus::ProsesTindakLanjut;
+    }
+
     public function uploadDocument(User $user, ActionPlan $ap): bool
     {
         return PermissionService::can($user, 'action_plans', 'update')

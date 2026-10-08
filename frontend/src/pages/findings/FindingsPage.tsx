@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useFindings, useDeleteFinding } from '@/hooks/useFindings'
 import { useAuditeeDepartments } from '@/hooks/useLookups'
-import { DataTable, PageHeader, Can } from '@/components/shared'
+import { DataTable, PageHeader, Can, ProgressBar } from '@/components/shared'
 import type { Column } from '@/components/shared/data-table'
 import { Button, StatusBadge, Select, ConfirmDialog, InputField } from '@/components/ui'
 import { useToast } from '@/components/ui/toast'
@@ -57,6 +57,7 @@ export default function FindingsPage() {
     { key: 'lhp_number', header: 'No. LHP', body: (r) => r.lhp_number ?? '-' },
     { key: 'fiscal_year', header: 'Tahun Buku', body: (r) => r.fiscal_year ?? '-' },
     { key: 'status', header: 'Status', body: (r) => <StatusBadge status={r.status_label} variant={getFindingStatusVariant(r.status)} /> },
+    { key: 'progress', header: 'Progres', body: (r) => <ProgressBar value={r.progress} /> },
     { key: 'age_days', header: 'Umur (hari)', body: (r) => r.age_days ?? '-' },
     {
       key: 'actions',

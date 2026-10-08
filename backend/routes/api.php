@@ -113,6 +113,8 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:action_plans,update');
         Route::post('action-plans/{action_plan}/assign-pics', [ActionPlanController::class, 'assignPics'])
             ->middleware('permission:action_plans,update');
+        Route::post('action-plans/{action_plan}/submit-to-spi', [ActionPlanController::class, 'submitToSpi'])
+            ->middleware('permission:action_plans,update');
         Route::get('action-plans/{action_plan}/documents', [ActionPlanController::class, 'documents']);
         Route::post('action-plans/{action_plan}/documents', [ActionPlanController::class, 'uploadDocument'])
             ->middleware('permission:action_plans,update');
@@ -133,6 +135,11 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:follow_ups,create');
         Route::get('follow-ups/{follow_up}/reviews', [FollowUpController::class, 'reviews']);
         Route::get('follow-ups/{follow_up}/comments', [FollowUpController::class, 'comments']);
+        Route::get('follow-ups/{follow_up}/progress-reports', [FollowUpController::class, 'progressReports']);
+        Route::get('follow-ups/{follow_up}/progress-reports/{report}/documents/{document}/download', [FollowUpController::class, 'downloadReportDocument'])
+            ->name('follow-ups.progress-reports.documents.download');
+        Route::post('follow-ups/{follow_up}/progress', [FollowUpController::class, 'reportProgress'])
+            ->middleware('permission:follow_ups,update');
     });
 
     Route::middleware(['auth:sanctum', 'permission:follow_up_reviews,view'])->group(function () {
@@ -146,10 +153,15 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:follow_up_reviews,update');
         Route::patch('follow-ups/{follow_up}/weight', [FollowUpController::class, 'overrideWeight'])
             ->middleware('permission:follow_up_reviews,update');
+        Route::post('follow-ups/{follow_up}/approve-completion', [FollowUpController::class, 'approveCompletion'])
+            ->middleware('permission:follow_up_reviews,update');
+        Route::post('follow-ups/{follow_up}/completion-revision', [FollowUpController::class, 'completionRevision'])
+            ->middleware('permission:follow_up_reviews,update');
     });
 
+    // Komentar lintas peran (PIC, manager, pemantau) diverifikasi di service; label hak akses per FollowUpVisibility.
     Route::post('follow-ups/{follow_up}/comments', [FollowUpController::class, 'addComment'])
-        ->middleware(['auth:sanctum', 'permission:ia_monitoring,create']);
+        ->middleware('auth:sanctum');
 
     Route::middleware(['auth:sanctum', 'permission:audit_trail,view'])->group(function () {
         Route::get('audit-trail', [AuditController::class, 'index']);

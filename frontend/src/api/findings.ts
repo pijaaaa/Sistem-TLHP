@@ -2,7 +2,7 @@ import { apiClient } from '@/api/client'
 import type { ApiResponse } from '@/api/client'
 import type { AxiosResponse } from 'axios'
 import type { Page } from '@/types/finding'
-import type { ActionPlan, ActionPlanPayload, ActionPlanUser, DocumentFile, Finding, FindingPayload, Department, FollowUp, FollowUpRowInput, FollowUpReview, FollowUpComment } from '@/types/finding'
+import type { ActionPlan, ActionPlanPayload, ActionPlanUser, DocumentFile, Finding, FindingPayload, Department, FollowUp, FollowUpRowInput, FollowUpReview, FollowUpComment, FollowUpProgressReport } from '@/types/finding'
 
 function unwrap<T>(res: AxiosResponse<ApiResponse<T>>): T {
   return res.data.data
@@ -78,6 +78,9 @@ export const actionPlansApi = {
   assignPics: (id: number, user_ids: number[]) =>
     apiClient.post<ApiResponse<ActionPlan>>(`/action-plans/${id}/assign-pics`, { user_ids }).then(unwrap),
 
+  submitToSpi: (id: number) =>
+    apiClient.post<ApiResponse<ActionPlan>>(`/action-plans/${id}/submit-to-spi`).then(unwrap),
+
   documents: (id: number) =>
     apiClient.get<ApiResponse<DocumentFile[]>>(`/action-plans/${id}/documents`).then(unwrap),
 
@@ -144,6 +147,33 @@ export const followUpsApi = {
 
   addComment: (id: number, kind: string, body: string) =>
     apiClient.post<ApiResponse<FollowUpComment>>(`/follow-ups/${id}/comments`, { kind, body }).then(unwrap),
+
+  approveCompletion: (id: number) =>
+    apiClient.post<ApiResponse<FollowUp>>(`/follow-ups/${id}/approve-completion`).then(unwrap),
+
+  completionRevision: (id: number, note: string) =>
+    apiClient.post<ApiResponse<FollowUp>>(`/follow-ups/${id}/completion-revision`, { note }).then(unwrap),
+
+  progressReports: (id: number) =>
+    apiClient.get<ApiResponse<FollowUpProgressReport[]>>(`/follow-ups/${id}/progress-reports`).then(unwrap),
+
+  reportProgress: (id: number, value: number, note: string | null, files: { file: File; label: string }[]) => {
+    const form = new FormData()
+    form.append('progress_value', String(value))
+    if (note) form.append('note', note)
+    files.forEach((f, i) => {
+      form.append(`document[${i}][file]`, f.file)
+      form.append(`document[${i}][label]`, f.label)
+    })
+    return apiClient
+      .post<ApiResponse<FollowUpProgressReport>>(`/follow-ups/${id}/progress`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then(unwrap)
+  },
+
+  progressReportDownload: (followUpId: number, reportId: number, docId: number) =>
+    `${apiClient.defaults.baseURL}/follow-ups/${followUpId}/progress-reports/${reportId}/documents/${docId}/download`,
 }
 
 export const lookupsApi = {
