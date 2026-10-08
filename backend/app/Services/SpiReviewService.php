@@ -132,6 +132,7 @@ class SpiReviewService
 
         (new FindingStatusService())->recompute($actionPlan->finding);
         CacheService::flushGroup('action_plans');
+        CacheService::flushGroup('reports');
         TaskDispatcher::completeForActor($actionPlan);
 
         return $actionPlan->refresh();

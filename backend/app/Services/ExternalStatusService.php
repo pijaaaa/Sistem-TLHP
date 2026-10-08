@@ -73,6 +73,8 @@ class ExternalStatusService
         TaskDispatcher::completeForActor($finding);
         ExternalStatusRecorded::dispatch($finding, $status);
 
+        CacheService::flushGroup('reports');
+
         AuditLogger::log('external_status.recorded', auth()->id(), request()?->ip(), "Status eksternal {$status->value} dicatat untuk temuan {$finding->registration_number}.", [
             'finding_id' => $finding->id,
             'status' => $status->value,

@@ -4,9 +4,13 @@ namespace App\Services;
 
 use App\Enums\ActionPlanStatus;
 use App\Enums\FindingStatus;
+use App\Enums\FollowUpStatus;
+use App\Enums\InboxTaskStatus;
 use App\Enums\Role;
 use App\Models\ActionPlan;
+use App\Models\FollowUp;
 use App\Models\Finding;
+use App\Models\InboxTask;
 use App\Models\User;
 use App\Support\CacheService;
 
@@ -40,7 +44,59 @@ class DashboardService
                 ->groupBy('status')
                 ->pluck('total', 'status')
                 ->all(),
+            'follow_ups_by_status' => FollowUp::query()
+                ->whereNull('deleted_at')
+                ->selectRaw('status, COUNT(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status')
+                ->all(),
+            'pending_tasks' => InboxTask::where('recipient_id', $user->id)
+                ->where('status', InboxTaskStatus::Open->value)
+                ->orderByDesc('received_at')
+                ->limit(10)
+                ->get()
+                ->map(fn ($t) => [
+                    'id' => $t->id,
+                    'task_type' => $t->task_type->value,
+                    'task_type_label' => $t->task_type->label(),
+                    'subject_type' => $t->subject_type,
+                    'subject_id' => $t->subject_id,
+                    'title' => $t->title,
+                    'received_at' => $t->received_at?->toDateTimeString(),
+                ])
+                ->values(),
+            'recent_notifications' => $user->notifications()->latest()->limit(5)->get()->map(fn ($n) => [
+                'id' => $n->getKey(),
+                'title' => $n->data['title'] ?? '',
+                'data' => $n->data['data'] ?? [],
+                'read_at' => $n->read_at?->toDateTimeString(),
+                'created_at' => $n->created_at?->toDateTimeString(),
+            ])->values(),
+            'widgets' => self::roleWidgets($user),
         ];
+    }
+
+    private static function roleWidgets(User $user): array
+    {
+        return match ($user->role) {
+            Role::ManagerDept => [
+                'antrian_persetujuan' => FollowUp::where('status', FollowUpStatus::Diajukan->value)->count(),
+                'tl_terlambat' => FollowUp::where('status', '!=', FollowUpStatus::Selesai->value)
+                    ->where('target_date', '<', now())
+                    ->count(),
+            ],
+            Role::StaffDept => [
+                'tl_menunggu_aksi' => FollowUp::whereIn('status', [FollowUpStatus::Draft->value, FollowUpStatus::Revisi->value])->count(),
+            ],
+            Role::Kepala_spi => [
+                'menunggu_status_eksternal' => Finding::where('status', FindingStatus::MenungguStatusEksternal->value)->count(),
+            ],
+            Role::AdminSpi, Role::InternalAudit => [
+                'ap_menunggu_pic' => ActionPlan::where('status', ActionPlanStatus::MenungguPenentuanPic->value)->count(),
+                'spi_queue' => ActionPlan::where('status', ActionPlanStatus::DiajukanKeSpi->value)->count(),
+            ],
+            default => [],
+        };
     }
 
     protected static function counters(User $user): array

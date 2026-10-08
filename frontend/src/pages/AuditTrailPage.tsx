@@ -53,7 +53,7 @@ export default function AuditTrailPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Audit Trail" subtitle="Riwayat seluruh perubahan data sistem" />
+      <PageHeader title="Log Aktivitas" subtitle="Riwayat seluruh perubahan data sistem (audit trail)" />
 
       <div className="bg-white rounded-lg shadow p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
         <div>

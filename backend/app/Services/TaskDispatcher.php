@@ -62,6 +62,9 @@ class TaskDispatcher
                 return ['title' => $this->title, 'data' => ['url' => $this->url]];
             }
         });
+
+        \App\Support\CacheService::flushGroup('dashboard');
+        \App\Support\CacheService::flushGroup('reports');
     }
 
     /** Tandai tugas penerima pada subjek selesai + acted_at (satu aksi menutup tugas menunggunya). */

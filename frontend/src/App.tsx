@@ -13,6 +13,7 @@ import UsersPage from '@/pages/master/UsersPage'
 import PermissionsPage from '@/pages/master/PermissionsPage'
 import AuditTrailPage from '@/pages/AuditTrailPage'
 import InboxPage from '@/pages/InboxPage'
+import ReportsPage from '@/pages/ReportsPage'
 import FindingsPage from '@/pages/findings/FindingsPage'
 import FindingFormPage from '@/pages/findings/FindingFormPage'
 import FindingDetailPage from '@/pages/findings/FindingDetailPage'
@@ -211,6 +212,14 @@ function App() {
               element={
                 <PermissionRoute menu="inbox" action="view">
                   <InboxPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="laporan"
+              element={
+                <PermissionRoute menu="reports" action="view">
+                  <ReportsPage />
                 </PermissionRoute>
               }
             />

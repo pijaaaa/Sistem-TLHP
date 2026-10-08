@@ -8,10 +8,13 @@ use App\Http\Requests\UpdateFindingRequest;
 use App\Http\Requests\UploadFindingDocumentRequest;
 use App\Http\Resources\DocumentResource;
 use App\Http\Resources\FindingResource;
+use App\Http\Resources\ActionPlanResource;
+use App\Models\ActionPlan;
 use App\Models\Document;
 use App\Models\Finding;
 use App\Services\FindingService;
 use App\Support\ApiResponse;
+use App\Support\CacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -66,6 +69,21 @@ class FindingController extends Controller
         $finding->load('auditee_departments')->loadCount('documents');
 
         return ApiResponse::success(new FindingResource($finding));
+    }
+
+    public function tree(Finding $finding): JsonResponse
+    {
+        $this->authorize('view', $finding);
+
+        $aps = CacheService::remember('action_plans', "tree.{$finding->id}", function () use ($finding) {
+            return ActionPlan::query()
+                ->where('finding_id', $finding->id)
+                ->with(['department'])
+                ->orderBy('id')
+                ->get();
+        }, 120);
+
+        return ApiResponse::success(ActionPlanResource::collection($aps));
     }
 
     public function update(UpdateFindingRequest $request, Finding $finding): JsonResponse

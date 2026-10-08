@@ -48,6 +48,9 @@ export const findingsApi = {
 
   downloadDocument: (id: number, documentId: number) =>
     `${apiClient.defaults.baseURL}/findings/${id}/documents/${documentId}/download`,
+
+  tree: (id: number) =>
+    apiClient.get<ApiResponse<ActionPlan[]>>(`/findings/${id}/tree`).then(unwrap),
 }
 
 export interface PaginatedActionPlan extends Page<ActionPlan> {}
@@ -269,6 +272,27 @@ export const inboxApi = {
 
   open: (subject_type: string, subject_id: number) =>
     apiClient.post<ApiResponse<{ opened: number }>>('/inbox/open', { subject_type, subject_id }).then(unwrap),
+}
+
+export interface ReportFilters {
+  fiscal_year?: number | string
+  source?: string
+  department_id?: number | string
+  status?: string
+}
+
+export const reportsApi = {
+  departments: (params?: ReportFilters) =>
+    apiClient.get<ApiResponse<{ data: Record<string, unknown>[] }>>('/reports/departments', { params }).then(unwrap),
+
+  late: (params?: ReportFilters) =>
+    apiClient.get<ApiResponse<{ data: Record<string, unknown>[] }>>('/reports/late', { params }).then(unwrap),
+
+  age: (params?: ReportFilters) =>
+    apiClient.get<ApiResponse<{ data: { group: string; count: number }[] }>>('/reports/finding-age', { params }).then(unwrap),
+
+  risk: (params?: ReportFilters) =>
+    apiClient.get<ApiResponse<{ data: { risk: string; risk_label: string; count: number; loss_idr: number; loss_usd: number }[] }>>('/reports/risk', { params }).then(unwrap),
 }
 
 export { unwrap }

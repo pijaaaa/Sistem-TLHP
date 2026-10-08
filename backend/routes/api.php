@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\SpiReviewController;
 use App\Http\Controllers\Api\ExternalStatusController;
 use App\Http\Controllers\Api\NotificationsController;
 use App\Http\Controllers\Api\InboxController;
+use App\Http\Controllers\Api\ReportsController;
 use App\Http\Controllers\Api\LookupController;
 use App\Http\Controllers\Api\Master\DepartmentController;
 use App\Http\Controllers\Api\Master\EmployeeController;
@@ -95,6 +96,7 @@ Route::prefix('v1')->group(function () {
         Route::post('findings', [FindingController::class, 'store'])
             ->middleware('permission:findings,create');
         Route::get('findings/{finding}', [FindingController::class, 'show']);
+        Route::get('findings/{finding}/tree', [FindingController::class, 'tree']);
         Route::put('findings/{finding}', [FindingController::class, 'update'])
             ->middleware('permission:findings,update');
         Route::post('findings/{finding}/register', [FindingController::class, 'register'])
@@ -206,5 +208,15 @@ Route::prefix('v1')->group(function () {
         Route::get('exports/findings', [ExportController::class, 'findings']);
         Route::get('exports/action-plans', [ExportController::class, 'actionPlans']);
         Route::get('exports/audit-trail', [ExportController::class, 'auditTrail']);
+        Route::get('exports/reports/departments', [ExportController::class, 'reportDepartments']);
+        Route::get('exports/reports/late', [ExportController::class, 'reportLate']);
+        Route::get('exports/reports/risk', [ExportController::class, 'reportRisk']);
+    });
+
+    Route::middleware(['auth:sanctum', 'permission:reports,view'])->group(function () {
+        Route::get('reports/departments', [ReportsController::class, 'departments']);
+        Route::get('reports/late', [ReportsController::class, 'late']);
+        Route::get('reports/finding-age', [ReportsController::class, 'findingAge']);
+        Route::get('reports/risk', [ReportsController::class, 'risk']);
     });
 });

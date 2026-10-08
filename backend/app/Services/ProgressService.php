@@ -46,6 +46,7 @@ class ProgressService
         CacheService::flushGroup('action_plans');
         CacheService::flushGroup('findings');
         CacheService::flushGroup('dashboard');
+        CacheService::flushGroup('reports');
 
         return $progress;
     }
