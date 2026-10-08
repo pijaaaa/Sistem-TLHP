@@ -20,46 +20,63 @@ class FindingController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = (int) $request->query('per_page', 15);
+        $findings = Finding::paginate($perPage);
 
-        $paginator = FindingService::paginated($perPage);
-        $data = FindingResource::collection($paginator)
-            ->toResponse($request)
-            ->getData(true);
+        return ApiResponse::success($findings);
+    }
 
-        return ApiResponse::success($data);
-    }    public function store(StoreFindingRequest $request): JsonResponse
+    public function store(StoreFindingRequest $request): JsonResponse
     {
-        $finding = FindingService::create($request->validated());
+        $service = new FindingService();
+        $finding = $service->createDraft($request->validated());
 
-        return ApiResponse::success(new FindingResource($finding), 'Temuan berhasil ditambahkan.', 201);
+        return ApiResponse::success(new FindingResource($finding), 'Temuan draft berhasil dibuat.', 201);
     }
 
     public function show(Finding $finding): JsonResponse
     {
-        $finding->load('documents');
+        $finding->load('auditee_departments');
 
         return ApiResponse::success(new FindingResource($finding));
     }
 
     public function update(UpdateFindingRequest $request, Finding $finding): JsonResponse
     {
-        $finding = FindingService::update($finding, $request->validated());
+        $service = new FindingService();
+        $finding = $service->update($finding, $request->validated());
 
         return ApiResponse::success(new FindingResource($finding), 'Temuan berhasil diperbarui.');
     }
 
-    public function destroy(Finding $finding): JsonResponse
+    public function register(Request $request, Finding $finding): JsonResponse
     {
-        FindingService::delete($finding);
+        $request->validate([
+            'department_ids' => 'required|array|min:1',
+            'department_ids.*' => 'integer|exists:departments,id',
+        ]);
 
-        return ApiResponse::success(null, 'Temuan berhasil dihapus.');
+        $service = new FindingService();
+        $finding = $service->register($finding, $request->input('department_ids'));
+
+        return ApiResponse::success(new FindingResource($finding), 'Temuan berhasil didaftarkan.');
     }
 
-    public function sendToIa(Finding $finding): JsonResponse
+    public function activate(Finding $finding): JsonResponse
     {
-        $finding = FindingService::sendToIA($finding);
+        $service = new FindingService();
+        $finding = $service->activate($finding);
 
-        return ApiResponse::success(new FindingResource($finding), 'Temuan berhasil dikirim ke IA.');
+        return ApiResponse::success(new FindingResource($finding), 'Temuan berhasil diaktifkan.');
+    }
+
+    public function destroy(Finding $finding): JsonResponse
+    {
+        if ($finding->status->value !== 'draft') {
+            return ApiResponse::error('Hanya temuan draft yang dapat dihapus.', 422);
+        }
+
+        $finding->delete();
+        return ApiResponse::success(null, 'Temuan berhasil dihapus.');
     }
 
     public function documents(Finding $finding): JsonResponse
@@ -69,15 +86,21 @@ class FindingController extends Controller
 
     public function uploadDocument(UploadFindingDocumentRequest $request, Finding $finding): JsonResponse
     {
-        $document = FindingService::uploadDocument($finding, $request->file('document'), $request->string('label'));
+        $doc = FindingDocument::create([
+            'finding_id' => $finding->id,
+            'label' => $request->input('label'),
+            'filename' => $request->file('document')->getClientOriginalName(),
+            'file_path' => $request->file('document')->store('findings'),
+            'mime_type' => $request->file('document')->getMimeType(),
+        ]);
 
-        return ApiResponse::success(new FindingDocumentResource($document), 'Dokumen berhasil diunggah.', 201);
+        return ApiResponse::success(new FindingDocumentResource($doc), 'Dokumen berhasil diunggah.', 201);
     }
 
     public function deleteDocument(Finding $finding, FindingDocument $document): JsonResponse
     {
         abort_if($document->finding_id !== $finding->id, 404);
-        FindingService::deleteDocument($document);
+        $document->delete();
 
         return ApiResponse::success(null, 'Dokumen berhasil dihapus.');
     }
