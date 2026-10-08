@@ -2,9 +2,10 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useFinding, useRegisterFinding, useActivateFinding, useDeleteFinding, useFindingDocuments, useUploadFindingDocument, useDeleteFindingDocument } from '@/hooks/useFindings'
 import { useActionPlans, useSendActionPlans } from '@/hooks/useActionPlans'
+import { useFollowUps } from '@/hooks/useFollowUps'
 import { useAuditeeDepartments } from '@/hooks/useLookups'
 import { findingsApi } from '@/api/findings'
-import { PageHeader, DataTable, Can, DocumentPanel, Tabs, DepartmentMultiSelect } from '@/components/shared'
+import { PageHeader, DataTable, Can, DocumentPanel, Tabs, DepartmentMultiSelect, FollowUpStatusBadge } from '@/components/shared'
 import type { Column } from '@/components/shared/data-table'
 import { Button, Spinner, StatusBadge, Modal, ConfirmDialog } from '@/components/ui'
 import { useToast } from '@/components/ui/toast'
@@ -38,10 +39,14 @@ export default function FindingDetailPage() {
   const { data: apPage } = useActionPlans(apParams)
   const sendAps = useSendActionPlans()
 
+  const fuParams = useMemo(() => ({ per_page: 100, finding_id: findingId }), [findingId])
+  const { data: fuPage } = useFollowUps(fuParams)
+
   const tabs = [
     { key: 'ringkasan', label: 'Ringkasan' },
     { key: 'dokumen', label: 'Dokumen', badge: finding?.documents_count ?? 0 },
     { key: 'action-plan', label: 'Action Plan', badge: apPage?.total ?? 0 },
+    { key: 'tindak-lanjut', label: 'Tindak Lanjut', badge: fuPage?.total ?? 0 },
     { key: 'riwayat', label: 'Riwayat' },
   ]
 
@@ -195,6 +200,37 @@ export default function FindingDetailPage() {
                 </Can>
               </div>
               <DataTable data={apPage?.data ?? []} columns={apColumns} loading={!apPage} emptyMessage="Belum ada action plan." />
+            </div>
+          )}
+
+          {tab === 'tindak-lanjut' && (
+            <div className="bg-white rounded-lg shadow p-6">
+              {(fuPage?.data ?? []).length === 0 ? (
+                <p className="text-sm text-gray-500">Belum ada tindak lanjut yang terlihat.</p>
+              ) : (
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Action Plan</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Uraian</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Target</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Bobot</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(fuPage?.data ?? []).map((fu) => (
+                      <tr key={fu.id} className="border-t">
+                        <td className="px-4 py-2 text-sm">{(fu.action_plan?.code as string) ?? `AP #${fu.action_plan_id}`}</td>
+                        <td className="px-4 py-2 text-sm">{fu.description}</td>
+                        <td className="px-4 py-2 text-sm whitespace-nowrap">{fu.target_date}</td>
+                        <td className="px-4 py-2 text-sm">{fu.weight}</td>
+                        <td className="px-4 py-2"><FollowUpStatusBadge status={fu.status} label={fu.status_label} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           )}
 

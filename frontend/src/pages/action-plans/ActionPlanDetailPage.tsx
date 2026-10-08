@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useActionPlan, useSendActionPlans, useAssignPics, useChangeDeadline, useDeleteActionPlan, useActionPlanDocuments, useUploadActionPlanDocument, useDeleteActionPlanDocument } from '@/hooks/useActionPlans'
+import { useFollowUpsByActionPlan, useSubmitFollowUps } from '@/hooks/useFollowUps'
 import { useStaffByDepartment } from '@/hooks/useLookups'
-import { PageHeader, Can, DocumentPanel } from '@/components/shared'
+import { PageHeader, Can, DocumentPanel, Tabs, FollowUpStatusBadge } from '@/components/shared'
 import { Button, Spinner, StatusBadge, Modal, ConfirmDialog, InputField } from '@/components/ui'
 import { EmployeeMultiSelect } from '@/components/shared/employee-multi-select'
 import { useToast } from '@/components/ui/toast'
@@ -33,6 +34,10 @@ export default function ActionPlanDetailPage() {
   const uploadDoc = useUploadActionPlanDocument()
   const deleteDoc = useDeleteActionPlanDocument()
 
+  const { data: followUps } = useFollowUpsByActionPlan(apId)
+  const submitFu = useSubmitFollowUps()
+
+  const [tab, setTab] = useState<'ringkasan' | 'tindak-lanjut' | 'dokumen'>('ringkasan')
   const [pics, setPics] = useState<number[]>([])
   const [assignOpen, setAssignOpen] = useState(false)
   const [deadlineOpen, setDeadlineOpen] = useState(false)
@@ -128,6 +133,17 @@ export default function ActionPlanDetailPage() {
         <span className="text-sm text-gray-500">Progress: {ap.progress ?? 0}%</span>
       </div>
 
+      <Tabs
+        tabs={[
+          { key: 'ringkasan', label: 'Ringkasan' },
+          { key: 'tindak-lanjut', label: 'Tindak Lanjut', badge: followUps?.data.length ?? 0 },
+          { key: 'dokumen', label: 'Dokumen', badge: docs?.length ?? 0 },
+        ]}
+        active={tab}
+        onChange={(k) => setTab(k as typeof tab)}
+      />
+
+      {tab === 'ringkasan' && (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-white rounded-lg shadow p-6 space-y-3">
           <Row label="Kondisi (condition)" value={ap.condition ?? '-'} />
@@ -170,20 +186,72 @@ export default function ActionPlanDetailPage() {
               )}
             </div>
           </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-sm font-semibold mb-3">Dokumen</h3>
-            <DocumentPanel
-              documents={docs}
-              loading={docsLoading}
-              canManage={!!perm.update && ap.status !== 'CLOSED'}
-              download={(docId) => actionPlansApi.downloadDocument(apId, docId)}
-              onUpload={async (file, label) => uploadDoc.mutateAsync({ id: apId, file, label })}
-              onDelete={async (docId) => deleteDoc.mutateAsync({ id: apId, documentId: docId })}
-            />
-          </div>
         </div>
       </div>
+      )}
+
+      {tab === 'dokumen' && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <DocumentPanel
+            documents={docs}
+            loading={docsLoading}
+            canManage={!!perm.update && ap.status !== 'CLOSED'}
+            download={(docId) => actionPlansApi.downloadDocument(apId, docId)}
+            onUpload={async (file, label) => uploadDoc.mutateAsync({ id: apId, file, label })}
+            onDelete={async (docId) => deleteDoc.mutateAsync({ id: apId, documentId: docId })}
+          />
+        </div>
+      )}
+
+      {tab === 'tindak-lanjut' && (
+        <div className="bg-white rounded-lg shadow p-6 space-y-3">
+          <div className="flex justify-end">
+            <Can menu="follow_ups" action="create">
+              {ap.status === 'PROSES_TINDAK_LANJUT' && (
+                <Link
+                  to={`/action-plan/${apId}/tindak-lanjut/susun`}
+                  className="inline-flex items-center justify-center h-10 px-4 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  + Susun Tindak Lanjut
+                </Link>
+              )}
+            </Can>
+          </div>
+
+          {(followUps?.data ?? []).length === 0 ? (
+            <p className="text-sm text-gray-500">Belum ada tindak lanjut untuk action plan ini.</p>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Uraian</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Target</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Bobot</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Status</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">PIC</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(followUps?.data ?? []).map((fu) => (
+                  <tr key={fu.id} className="border-t">
+                    <td className="px-4 py-2 text-sm">{fu.description}</td>
+                    <td className="px-4 py-2 text-sm whitespace-nowrap">{fu.target_date}</td>
+                    <td className="px-4 py-2 text-sm">{fu.weight} · {fu.progress}%</td>
+                    <td className="px-4 py-2"><FollowUpStatusBadge status={fu.status} label={fu.status_label} /></td>
+                    <td className="px-4 py-2 text-sm">{(fu.assignees ?? []).map((u) => u.name).join(', ') || '-'}</td>
+                    <td className="px-4 py-2">
+                      {(fu.status === 'DRAFT' || fu.status === 'REVISI') && (
+                        <Button size="sm" variant="secondary" onClick={() => submitFu.mutateAsync([fu.id])}>Ajukan</Button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
 
       <Modal open={assignOpen} onClose={() => setAssignOpen(false)} title="Tentukan PIC">
         <div className="space-y-4">

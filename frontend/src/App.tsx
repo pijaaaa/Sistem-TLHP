@@ -18,6 +18,8 @@ import FindingDetailPage from '@/pages/findings/FindingDetailPage'
 import ActionPlansPage from '@/pages/action-plans/ActionPlansPage'
 import ActionPlanFormPage from '@/pages/action-plans/ActionPlanFormPage'
 import ActionPlanDetailPage from '@/pages/action-plans/ActionPlanDetailPage'
+import FollowUpsPage from '@/pages/follow-ups/FollowUpsPage'
+import FollowUpBatchFormPage from '@/pages/follow-ups/FollowUpBatchFormPage'
 
 function App() {
   return (
@@ -122,6 +124,22 @@ function App() {
               element={
                 <PermissionRoute menu="action_plans" action="view">
                   <ActionPlanDetailPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="action-plan/:id/tindak-lanjut/susun"
+              element={
+                <PermissionRoute menu="follow_ups" action="create">
+                  <FollowUpBatchFormPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="tindak-lanjut"
+              element={
+                <PermissionRoute menu="follow_ups" action="view">
+                  <FollowUpsPage />
                 </PermissionRoute>
               }
             />

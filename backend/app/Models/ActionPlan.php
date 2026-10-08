@@ -74,4 +74,9 @@ class ActionPlan extends Model
     {
         return $this->morphMany(Document::class, 'documentable');
     }
+
+    public function follow_ups()
+    {
+        return $this->hasMany(FollowUp::class);
+    }
 }

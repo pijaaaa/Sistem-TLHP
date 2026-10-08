@@ -13,7 +13,7 @@ class MenuSeeder extends Seeder
             ['code' => 'dashboard', 'name' => 'Dashboard', 'path' => '/dashboard', 'icon' => 'layout-dashboard', 'parent_id' => null, 'sort_order' => 0, 'is_active' => true],
             ['code' => 'findings', 'name' => 'Temuan', 'path' => '/temuan', 'icon' => 'file-text', 'parent_id' => null, 'sort_order' => 1, 'is_active' => true],
             ['code' => 'action_plans', 'name' => 'Action Plan', 'path' => '/action-plan', 'icon' => 'clipboard-list', 'parent_id' => null, 'sort_order' => 2, 'is_active' => true],
-            ['code' => 'follow_ups', 'name' => 'Tindak Lanjut', 'path' => '/tindak-lanjut', 'icon' => 'check-circle', 'parent_id' => null, 'sort_order' => 3, 'is_active' => false],
+            ['code' => 'follow_ups', 'name' => 'Tindak Lanjut', 'path' => '/tindak-lanjut', 'icon' => 'check-circle', 'parent_id' => null, 'sort_order' => 3, 'is_active' => true],
             ['code' => 'follow_up_reviews', 'name' => 'Persetujuan Manager', 'path' => '/persetujuan', 'icon' => 'thumbs-up', 'parent_id' => null, 'sort_order' => 4, 'is_active' => false],
             ['code' => 'ia_monitoring', 'name' => 'Pemantauan IA', 'path' => '/pemantauan', 'icon' => 'eye', 'parent_id' => null, 'sort_order' => 5, 'is_active' => false],
             ['code' => 'spi_review', 'name' => 'Review SPI', 'path' => '/review-spi', 'icon' => 'search', 'parent_id' => null, 'sort_order' => 6, 'is_active' => false],

@@ -23,6 +23,7 @@ const getIcon = (iconName: string) => {
     'scale': LucideIcons.Scale,
     'search': LucideIcons.Search,
     'download': LucideIcons.Download,
+    'check-circle': LucideIcons.CheckCircle2,
     'logout': LucideIcons.LogOut,
   }
   return iconMap[iconName] || LucideIcons.FileQuestion

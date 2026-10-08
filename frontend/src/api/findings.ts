@@ -2,7 +2,7 @@ import { apiClient } from '@/api/client'
 import type { ApiResponse } from '@/api/client'
 import type { AxiosResponse } from 'axios'
 import type { Page } from '@/types/finding'
-import type { ActionPlan, ActionPlanPayload, ActionPlanUser, DocumentFile, Finding, FindingPayload, Department } from '@/types/finding'
+import type { ActionPlan, ActionPlanPayload, ActionPlanUser, DocumentFile, Finding, FindingPayload, Department, FollowUp, FollowUpRowInput } from '@/types/finding'
 
 function unwrap<T>(res: AxiosResponse<ApiResponse<T>>): T {
   return res.data.data
@@ -103,6 +103,23 @@ export interface LookupStaff {
   id: number
   name: string
   username: string
+}
+
+export const followUpsApi = {
+  list: (params?: { page?: number; per_page?: number; status?: string; action_plan_id?: number | string; finding_id?: number | string }) =>
+    apiClient.get<ApiResponse<Page<FollowUp>>>('/follow-ups', { params }).then(unwrap),
+
+  get: (id: number) =>
+    apiClient.get<ApiResponse<FollowUp>>(`/follow-ups/${id}`).then(unwrap),
+
+  create: (actionPlanId: number, rows: FollowUpRowInput[]) =>
+    apiClient.post<ApiResponse<FollowUp[]>>(`/action-plans/${actionPlanId}/follow-ups`, { rows }).then(unwrap),
+
+  update: (id: number, payload: Partial<FollowUpRowInput>) =>
+    apiClient.put<ApiResponse<FollowUp>>(`/follow-ups/${id}`, payload).then(unwrap),
+
+  submit: (ids: number[]) =>
+    apiClient.post<ApiResponse<FollowUp[]>>('/follow-ups/submit', { ids }).then(unwrap),
 }
 
 export const lookupsApi = {

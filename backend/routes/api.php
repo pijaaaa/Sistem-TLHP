@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FindingController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\ActionPlanController;
+use App\Http\Controllers\Api\FollowUpController;
 use App\Http\Controllers\Api\LookupController;
 use App\Http\Controllers\Api\Master\DepartmentController;
 use App\Http\Controllers\Api\Master\EmployeeController;
@@ -119,6 +120,17 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:action_plans,update');
         Route::get('action-plans/{action_plan}/documents/{document}/download', [ActionPlanController::class, 'downloadDocument'])
             ->name('action-plans.documents.download');
+    });
+
+    Route::middleware(['auth:sanctum', 'permission:follow_ups,view'])->group(function () {
+        Route::get('follow-ups', [FollowUpController::class, 'index']);
+        Route::get('follow-ups/{follow_up}', [FollowUpController::class, 'show']);
+        Route::put('follow-ups/{follow_up}', [FollowUpController::class, 'update'])
+            ->middleware('permission:follow_ups,update');
+        Route::post('follow-ups/submit', [FollowUpController::class, 'submit'])
+            ->middleware('permission:follow_ups,update');
+        Route::post('action-plans/{action_plan}/follow-ups', [FollowUpController::class, 'store'])
+            ->middleware('permission:follow_ups,create');
     });
 
     Route::middleware(['auth:sanctum', 'permission:audit_trail,view'])->group(function () {

@@ -18,6 +18,15 @@ export type ActionPlanStatus =
 export type RiskLevel = 'RENDAH' | 'SEDANG' | 'TINGGI' | 'KRITIS'
 export type FindingSource = 'BPK' | 'BPKP' | 'KAP' | 'LAINNYA'
 
+export type FollowUpStatus =
+  | 'DRAFT'
+  | 'DIAJUKAN'
+  | 'REVISI'
+  | 'DITOLAK'
+  | 'DISETUJUI'
+  | 'MENUNGGU_PERSETUJUAN_SELESAI'
+  | 'SELESAI'
+
 export interface Department {
   id: number
   code: string
@@ -155,6 +164,55 @@ export const ACTION_PLAN_STATUS_OPTIONS: { value: ActionPlanStatus; label: strin
   { value: 'SESUAI', label: 'Sesuai', variant: 'success' },
   { value: 'CLOSED', label: 'Closed', variant: 'success' },
 ]
+
+export interface FollowUp {
+  id: number
+  action_plan_id: number
+  revision_no: number
+  description: string
+  target_date: string
+  weight: number
+  progress: number
+  status: FollowUpStatus
+  status_label: string
+  linked_follow_up_id: number | null
+  created_by: number | null
+  approved_by: number | null
+  approved_at: string | null
+  completed_at: string | null
+  assignees?: ActionPlanUser[]
+  action_plan?: ActionPlan
+  created_at: string
+  updated_at: string
+}
+
+export interface FollowUpRowInput {
+  description: string
+  target_date: string
+  weight: number | ''
+  pic_ids: number[]
+  linked_follow_up_id?: number | null
+}
+
+export const FOLLOW_UP_STATUS_OPTIONS: { value: FollowUpStatus; label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'info' }[] = [
+  { value: 'DRAFT', label: 'Draft', variant: 'warning' },
+  { value: 'DIAJUKAN', label: 'Diajukan', variant: 'info' },
+  { value: 'REVISI', label: 'Revisi', variant: 'warning' },
+  { value: 'DITOLAK', label: 'Ditolak', variant: 'danger' },
+  { value: 'DISETUJUI', label: 'Disetujui', variant: 'success' },
+  { value: 'MENUNGGU_PERSETUJUAN_SELESAI', label: 'Menunggu Persetujuan Selesai', variant: 'info' },
+  { value: 'SELESAI', label: 'Selesai', variant: 'success' },
+]
+
+export const getFollowUpStatusVariant = (status?: string | null) =>
+  FOLLOW_UP_STATUS_OPTIONS.find((o) => o.value === status)?.variant ?? 'default'
+
+export const FOLLOW_UP_STATUS_LABEL: Record<string, string> = Object.fromEntries(
+  FOLLOW_UP_STATUS_OPTIONS.map((o) => [o.value, o.label]),
+)
+
+export const getFollowUpStatusLabel = (status?: string | null): string =>
+  FOLLOW_UP_STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status ?? '-'
 
 export const RISK_OPTIONS: { value: RiskLevel; label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'info' }[] = [
   { value: 'RENDAH', label: 'Rendah', variant: 'success' },

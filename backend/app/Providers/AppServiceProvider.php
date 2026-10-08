@@ -7,11 +7,13 @@ use App\Models\ActionPlan;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Finding;
+use App\Models\FollowUp;
 use App\Models\Audit;
 use App\Models\User;
 use App\Policies\ActionPlanPolicy;
 use App\Policies\DepartmentPolicy;
 use App\Policies\EmployeePolicy;
+use App\Policies\FollowUpPolicy;
 use App\Policies\AuditPolicy;
 use App\Policies\FindingPolicy;
 use App\Policies\UserPolicy;
@@ -48,6 +50,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Finding::class, FindingPolicy::class);
         Gate::policy(ActionPlan::class, ActionPlanPolicy::class);
+        Gate::policy(FollowUp::class, FollowUpPolicy::class);
         Gate::policy(Audit::class, AuditPolicy::class);
 
         Route::get('/sanctum/csrf-cookie', function () {
