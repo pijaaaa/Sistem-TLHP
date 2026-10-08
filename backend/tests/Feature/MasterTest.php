@@ -135,19 +135,19 @@ test('superadmin bisa read & update role permission matrix', function () {
     $matrix->assertOk();
     expect($matrix->json('data.matrix'))->toBeArray();
 
-    // Cabut semua view pada staff_dept untuk assessments, lalu restore via update
-    $updated = $this->actingAs($super, 'sanctum')->putJson('/api/v1/access/permissions/roles/' . Role::StaffDept->value, [
-        'permissions' => [
-            'assessments' => ['view' => false, 'create' => false, 'update' => false, 'delete' => false],
-        ],
-    ]);
-    $updated->assertOk();
-    expect(PermissionService::roleMatrix(Role::StaffDept)['assessments']['view'])->toBeFalse();
+    // Cabut semua view pada staff_dept untuk findings, lalu restore via update
+     $updated = $this->actingAs($super, 'sanctum')->putJson('/api/v1/access/permissions/roles/' . Role::StaffDept->value, [
+         'permissions' => [
+             'findings' => ['view' => false, 'create' => false, 'update' => false, 'delete' => false],
+         ],
+     ]);
+     $updated->assertOk();
+     expect(PermissionService::roleMatrix(Role::StaffDept)['findings']['view'])->toBeFalse();
 
-    // Cache user dengan role tersebut terinvalidasi otomatis; effective rebuild
-    $staff = makeUser(Role::StaffDept);
-    PermissionService::invalidateForUser($staff);
-    expect(PermissionService::effective($staff)['assessments']['view'])->toBeFalse();
+     // Cache user dengan role tersebut terinvalidasi otomatis; effective rebuild
+     $staff = makeUser(Role::StaffDept);
+     PermissionService::invalidateForUser($staff);
+     expect(PermissionService::effective($staff)['findings']['view'])->toBeFalse();
 });
 
 test('user menu override dapat dibaca & diupdate', function () {
@@ -156,13 +156,13 @@ test('user menu override dapat dibaca & diupdate', function () {
     $staff = makeUser(Role::StaffDept);
 
     $this->actingAs($super, 'sanctum')->putJson('/api/v1/access/permissions/users/' . $staff->id, [
-        'permissions' => [
-            'assessments' => ['view' => true, 'create' => true, 'update' => null, 'delete' => null],
-        ],
-    ])->assertOk();
+         'permissions' => [
+             'findings' => ['view' => true, 'create' => true, 'update' => null, 'delete' => null],
+         ],
+     ])->assertOk();
 
-    $matrix = $this->actingAs($super, 'sanctum')->getJson('/api/v1/access/permissions/users/' . $staff->id);
-    $matrix->assertOk();
-    expect($matrix->json('data.overrides.assessments.view'))->toBeTrue();
-    expect($matrix->json('data.effective.assessments.view'))->toBeTrue();
+     $matrix = $this->actingAs($super, 'sanctum')->getJson('/api/v1/access/permissions/users/' . $staff->id);
+     $matrix->assertOk();
+     expect($matrix->json('data.overrides.findings.view'))->toBeTrue();
+     expect($matrix->json('data.effective.findings.view'))->toBeTrue();
 });

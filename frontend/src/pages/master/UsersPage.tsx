@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useUsers, useCreateUser, useUpdateUser, useDeleteUser } from '@/hooks/useUsers'
 import { employeesApi } from '@/api/master'
@@ -34,7 +34,8 @@ export default function UsersPage() {
   })
   const [deleteItem, setDeleteItem] = useState<AccountUser | null>(null)
 
-  const { data, isLoading } = useUsers({ page, per_page: 15 })
+  const params = useMemo(() => ({ page, per_page: 15 }), [page])
+  const { data, isLoading } = useUsers(params)
   const create = useCreateUser()
   const update = useUpdateUser()
   const remove = useDeleteUser()
@@ -43,7 +44,7 @@ export default function UsersPage() {
     queryKey: ['employees-select'],
     queryFn: () => employeesApi.list({ per_page: 100 }),
   })
-  const employees: Employee[] = employeesRes?.data ?? []
+  const employees: Employee[] = Array.isArray(employeesRes) ? employeesRes : employeesRes?.data ?? []
 
   const openAdd = () => {
     setEditing(null)
@@ -125,15 +126,9 @@ export default function UsersPage() {
         action={<Button onClick={openAdd}>+ Tambah Pengguna</Button>}
       />
       <DataTable
-        data={data?.data ?? []}
+        data={Array.isArray(data) ? data : []}
         columns={columns}
         loading={isLoading}
-        pagination={data?.meta ? {
-          current: data.meta.current_page,
-          perPage: data.meta.per_page,
-          total: data.meta.total,
-          onChange: setPage,
-        } : undefined}
       />
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Edit Pengguna' : 'Tambah Pengguna'}>
         <div className="space-y-3">

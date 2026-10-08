@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\AssessmentStatus;
 use App\Enums\Role;
 use App\Enums\FindingStatus;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,11 +20,6 @@ class Finding extends Model
         'recommendation',
         'auditor_action_plan',
         'status',
-        'current_round',
-        'assessment_status',
-        'assessment_note',
-        'assessed_by',
-        'assessed_at',
         'created_by',
         'is_active',
     ];
@@ -33,9 +27,6 @@ class Finding extends Model
     protected $casts = [
         'finding_date' => 'date',
         'status' => FindingStatus::class,
-        'current_round' => 'integer',
-        'assessment_status' => AssessmentStatus::class,
-        'assessed_at' => 'datetime',
         'is_active' => 'boolean',
     ];
 

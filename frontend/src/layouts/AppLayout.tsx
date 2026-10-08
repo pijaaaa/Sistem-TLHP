@@ -4,6 +4,29 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import type { MenuItem } from '@/types/auth'
 import { Button } from '@/components/ui/button'
+import * as LucideIcons from 'lucide-react'
+
+// Icon mapper from backend icon names to Lucide components
+const getIcon = (iconName: string) => {
+  const iconMap: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+    'layout-dashboard': LucideIcons.LayoutDashboard,
+    'building': LucideIcons.Building2,
+    'users': LucideIcons.Users,
+    'shield': LucideIcons.Shield,
+    'clipboard-list': LucideIcons.ClipboardList,
+    'folder': LucideIcons.Folder,
+    'send': LucideIcons.Send,
+    'file-text': LucideIcons.FileText,
+    'clipboard-edit': LucideIcons.ClipboardEdit,
+    'clipboard-check': LucideIcons.ClipboardCheck,
+    'upload': LucideIcons.Upload,
+    'scale': LucideIcons.Scale,
+    'search': LucideIcons.Search,
+    'download': LucideIcons.Download,
+    'logout': LucideIcons.LogOut,
+  }
+  return iconMap[iconName] || LucideIcons.FileQuestion
+}
 
 const renderMenuTree = (
   menus: MenuItem[],
@@ -15,6 +38,7 @@ const renderMenuTree = (
   menus.forEach((menu) => {
     const isActive = location.pathname === menu.path
     const hasChildren = menu.children && menu.children.length > 0
+    const IconComponent = getIcon(menu.icon)
 
     list.push(
       <div key={menu.code}>
@@ -27,7 +51,7 @@ const renderMenuTree = (
               : 'text-gray-300 hover:bg-gray-800 hover:text-white',
           )}
         >
-          <span className="material-icons-outlined mr-3 text-lg">{menu.icon}</span>
+          <IconComponent size={18} className="mr-3" />
           {menu.name}
         </Link>
 
@@ -35,6 +59,7 @@ const renderMenuTree = (
           <div className="ml-6 mt-1 space-y-1">
             {menu.children!.map((child) => {
               const childActive = location.pathname === child.path
+              const ChildIconComponent = getIcon(child.icon)
               return (
                 <Link
                   key={child.code}
@@ -46,7 +71,7 @@ const renderMenuTree = (
                       : 'text-gray-300 hover:bg-gray-800 hover:text-white',
                   )}
                 >
-                  <span className="material-icons-outlined mr-3 text-sm">{child.icon}</span>
+                  <ChildIconComponent size={16} className="mr-3" />
                   {child.name}
                 </Link>
               )
@@ -57,6 +82,7 @@ const renderMenuTree = (
     )
   })
 
+  const LogoutIcon = LucideIcons.LogOut
   list.push(
     <Button
       key="logout"
@@ -64,7 +90,7 @@ const renderMenuTree = (
       onClick={() => logout()}
       className="w-full mt-4 text-left justify-start text-red-400 hover:bg-gray-800 hover:text-red-300"
     >
-      <span className="material-icons-outlined mr-3">logout</span>
+      <LogoutIcon size={18} className="mr-3" />
       Keluar
     </Button>,
   )

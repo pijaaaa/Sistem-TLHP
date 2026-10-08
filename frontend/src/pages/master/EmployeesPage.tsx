@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   useEmployees,
   useDepartmentsList,
@@ -29,7 +29,8 @@ export default function EmployeesPage() {
   const [form, setForm] = useState<FormState>({ nik: '', name: '', position: '', department_id: '', is_active: true })
   const [deleteItem, setDeleteItem] = useState<Employee | null>(null)
 
-  const { data, isLoading } = useEmployees({ page, per_page: 15 })
+  const params = useMemo(() => ({ page, per_page: 15 }), [page])
+  const { data, isLoading } = useEmployees(params)
   const { data: departments = [] } = useDepartmentsList()
   const create = useCreateEmployee()
   const update = useUpdateEmployee()
@@ -96,15 +97,9 @@ export default function EmployeesPage() {
         action={<Button onClick={openAdd}>+ Tambah Karyawan</Button>}
       />
       <DataTable
-        data={data?.data ?? []}
+        data={Array.isArray(data) ? data : []}
         columns={columns}
         loading={isLoading}
-        pagination={data?.meta ? {
-          current: data.meta.current_page,
-          perPage: data.meta.per_page,
-          total: data.meta.total,
-          onChange: setPage,
-        } : undefined}
       />
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Edit Karyawan' : 'Tambah Karyawan'}>
         <div className="space-y-3">

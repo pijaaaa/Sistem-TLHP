@@ -1,27 +1,41 @@
 import { apiClient } from '@/api/client'
-import type { ApiResponse, Paginated } from '@/api/master'
-import type { ActionPlan, ActionPlanDocument, ActionPlanForm } from '@/types/finding'
+import type { ApiResponse } from '@/api/client'
+import type { ActionPlan } from '@/types/finding'
 import type { AxiosResponse } from 'axios'
+
+export interface Paginated<T> {
+  data: T[]
+  meta: {
+    current_page: number
+    per_page: number
+    total: number
+    last_page: number
+  }
+}
 
 function unwrap<T>(res: AxiosResponse<ApiResponse<T>>): T {
   return res.data.data
 }
 
 export const actionPlansApi = {
-  list: (params?: { per_page?: number; page?: number }) =>
+  list: (params?: { page?: number; per_page?: number; status?: string; finding_id?: string }) =>
     apiClient.get<ApiResponse<Paginated<ActionPlan>>>('/action-plans', { params }).then(unwrap),
 
-  get: (id: number) => apiClient.get<ApiResponse<ActionPlan>>(`/action-plans/${id}`).then(unwrap),
+  get: (id: number) =>
+    apiClient.get<ApiResponse<ActionPlan>>(`/action-plans/${id}`).then(unwrap),
 
-  create: (findingDepartmentId: number, payload: ActionPlanForm) =>
+  create: (fdId: number, payload: { title: string; description?: string; weight: number }) =>
     apiClient
-      .post<ApiResponse<ActionPlan>>(`/finding-departments/${findingDepartmentId}/action-plans`, payload)
+      .post<ApiResponse<ActionPlan>>(`/finding-departments/${fdId}/action-plans`, payload)
       .then(unwrap),
 
-  update: (id: number, payload: ActionPlanForm) =>
-    apiClient.put<ApiResponse<ActionPlan>>(`/action-plans/${id}`, payload).then(unwrap),
+  update: (id: number, payload: { title?: string; description?: string; weight?: number }) =>
+    apiClient
+      .put<ApiResponse<ActionPlan>>(`/action-plans/${id}`, payload)
+      .then(unwrap),
 
-  remove: (id: number) => apiClient.delete<ApiResponse<null>>(`/action-plans/${id}`).then(unwrap),
+  delete: (id: number) =>
+    apiClient.delete<ApiResponse<null>>(`/action-plans/${id}`).then(unwrap),
 
   submit: (id: number) =>
     apiClient.post<ApiResponse<ActionPlan>>(`/action-plans/${id}/submit`).then(unwrap),
@@ -36,29 +50,19 @@ export const actionPlansApi = {
     apiClient.post<ApiResponse<ActionPlan>>(`/action-plans/${id}/revision`, { reason }).then(unwrap),
 
   overrideWeight: (id: number, weight: number) =>
-    apiClient
-      .post<ApiResponse<ActionPlan>>(`/action-plans/${id}/override-weight`, { weight })
-      .then(unwrap),
+    apiClient.post<ApiResponse<ActionPlan>>(`/action-plans/${id}/override-weight`, { weight }).then(unwrap),
 
-  documents: (actionPlanId: number) =>
-    apiClient.get<ApiResponse<ActionPlanDocument[]>>(`/action-plans/${actionPlanId}/documents`).then(unwrap),
-
-  uploadDocument: (actionPlanId: number, payload: { document: File; label?: string | null }) => {
-    const form = new FormData()
-    form.append('document', payload.document)
-    if (payload.label) form.append('label', payload.label)
+  uploadDocument: (id: number, file: File, label?: string) => {
+    const formData = new FormData()
+    formData.append('document', file)
+    if (label) formData.append('label', label)
     return apiClient
-      .post<ApiResponse<ActionPlanDocument>>(`/action-plans/${actionPlanId}/documents`, form, {
+      .post<ApiResponse<any>>(`/action-plans/${id}/documents`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       .then(unwrap)
   },
 
-  deleteDocument: (actionPlanId: number, documentId: number) =>
-    apiClient
-      .delete<ApiResponse<null>>(`/action-plans/${actionPlanId}/documents/${documentId}`)
-      .then(unwrap),
-
-  downloadDocument: (documentId: number) =>
-    `${apiClient.defaults.baseURL}/action-plan-documents/${documentId}/download`,
+  deleteDocument: (apId: number, docId: number) =>
+    apiClient.delete<ApiResponse<null>>(`/action-plans/${apId}/documents/${docId}`).then(unwrap),
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useDepartments, useCreateDepartment, useUpdateDepartment, useDeleteDepartment } from '@/hooks/useDepartments'
 import { DataTable, PageHeader, Can } from '@/components/shared'
 import type { Column } from '@/components/shared/data-table'
@@ -15,7 +15,8 @@ export default function DepartmentsPage() {
   const [form, setForm] = useState({ code: '', name: '', is_active: true })
   const [deleteItem, setDeleteItem] = useState<Department | null>(null)
 
-  const { data, isLoading } = useDepartments({ page, per_page: 15 })
+  const params = useMemo(() => ({ page, per_page: 15 }), [page])
+  const { data, isLoading } = useDepartments(params)
   const create = useCreateDepartment()
   const update = useUpdateDepartment()
   const remove = useDeleteDepartment()
@@ -78,15 +79,9 @@ export default function DepartmentsPage() {
         action={<Button onClick={openAdd}>+ Tambah Departemen</Button>}
       />
       <DataTable
-        data={data?.data ?? []}
+        data={Array.isArray(data) ? data : []}
         columns={columns}
         loading={isLoading}
-        pagination={data?.meta ? {
-          current: data.meta.current_page,
-          perPage: data.meta.per_page,
-          total: data.meta.total,
-          onChange: setPage,
-        } : undefined}
       />
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Edit Departemen' : 'Tambah Departemen'}>
         <div className="space-y-3">

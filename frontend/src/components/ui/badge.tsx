@@ -9,12 +9,13 @@ interface BadgeProps {
   children: ReactNode
 }
 
-function getStatusVariant(status: string): BadgeVariant {
+function getStatusVariant(status?: string | null): BadgeVariant {
+  if (!status) return 'default'
   const normalized = status.toLowerCase()
-  if (normalized.includes('close') || normalized.includes('approved') || normalized.includes('selesai')) return 'success'
-  if (normalized.includes('warning') || normalized.includes('pending')) return 'warning'
-  if (normalized.includes('reject') || normalized.includes('ditolak') || normalized.includes('error')) return 'danger'
-  if (normalized.includes('process') || normalized.includes('proses')) return 'info'
+  if (normalized.includes('close') || normalized.includes('approved') || normalized.includes('selesai') || normalized.includes('disetujui') || normalized.includes('ssr')) return 'success'
+  if (normalized.includes('warning') || normalized.includes('pending') || normalized.includes('menunggu') || normalized.includes('draft')) return 'warning'
+  if (normalized.includes('reject') || normalized.includes('ditolak') || normalized.includes('error') || normalized.includes('bsr') || normalized.includes('tidak dapat')) return 'danger'
+  if (normalized.includes('process') || normalized.includes('proses') || normalized.includes('diajukan') || normalized.includes('dikirim') || normalized.includes('didistribusikan')) return 'info'
   return 'default'
 }
 
@@ -33,9 +34,9 @@ const Badge = ({ variant = 'default', className, children }: BadgeProps) => {
   )
 }
 
-const StatusBadge = ({ status }: { status: string }) => {
+const StatusBadge = ({ status }: { status?: string | null }) => {
   const variant = getStatusVariant(status)
-  return <Badge variant={variant}>{status}</Badge>
+  return <Badge variant={variant}>{status ?? '-'}</Badge>
 }
 
 export { Badge, StatusBadge }

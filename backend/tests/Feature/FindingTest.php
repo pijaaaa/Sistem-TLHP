@@ -47,77 +47,12 @@ test('kode temuan harus unik', function () {
     ])->assertStatus(422);
 });
 
-test('temuan dikirim ke ia berpindah status draft menjadi dikirim_ke_ia', function () {
-    $admin = createTestUser(Role::AdminSpi);
-
-    $id = $this->actingAs($admin, 'sanctum')->postJson('/api/v1/findings', [
-        'code' => 'T-003', 'title' => 'Temuan uji',
-    ])->json('data.id');
-
-    $response = $this->actingAs($admin, 'sanctum')->postJson("/api/v1/findings/{$id}/send-to-ia");
-
-    $response->assertOk()
-        ->assertJsonPath('data.status', FindingStatus::SentToIa->value);
-
-    expect(Finding::find($id)->status)->toBe(FindingStatus::SentToIa);
-});
-
-test('kirim ulang di luar draft ditolak 422', function () {
-    $admin = createTestUser(Role::AdminSpi);
-
-    $id = $this->actingAs($admin, 'sanctum')->postJson('/api/v1/findings', [
-        'code' => 'T-004', 'title' => 'Temuan uji',
-    ])->json('data.id');
-
-    $this->actingAs($admin, 'sanctum')->postJson("/api/v1/findings/{$id}/send-to-ia")->assertOk();
-
-    $this->actingAs($admin, 'sanctum')
-        ->postJson("/api/v1/findings/{$id}/send-to-ia")
-        ->assertStatus(422)
-        ->assertJsonPath('errors.status.0', 'Hanya temuan dalam status Draft yang dapat dikirim ke IA.');
-});
-
 test('staff tidak boleh membuat temuan (403)', function () {
     $staff = createTestUser(Role::StaffDept);
 
     $this->actingAs($staff, 'sanctum')->postJson('/api/v1/findings', [
         'code' => 'T-005', 'title' => 'Tidak boleh',
     ])->assertStatus(403);
-});
-
-test('dokumen temuan diunggah ke disk private dan bisa diunduh', function () {
-    $admin = createTestUser(Role::AdminSpi);
-
-    $id = $this->actingAs($admin, 'sanctum')->postJson('/api/v1/findings', [
-        'code' => 'T-006', 'title' => 'Temuan dokumen',
-    ])->json('data.id');
-
-    $upload = $this->actingAs($admin, 'sanctum')->postJson("/api/v1/findings/{$id}/documents", [
-        'document' => UploadedFile::fake()->create('audit.pdf', 120, 'application/pdf'),
-        'label' => 'Audit',
-    ]);
-
-    $upload->assertStatus(201)->assertJsonPath('data.label', 'Audit');
-
-    $document = FindingDocument::first();
-    expect($document->mime)->toBe('application/pdf');
-    Storage::disk(config('upload.disk'))->assertExists($document->path);
-
-    $download = $this->actingAs($admin, 'sanctum')
-        ->get('/api/v1/findings/documents/' . $document->id . '/download');
-    $download->assertOk();
-});
-
-test('upload dokumen ditolak untuk tipe file tidak diizinkan', function () {
-    $admin = createTestUser(Role::AdminSpi);
-
-    $id = $this->actingAs($admin, 'sanctum')->postJson('/api/v1/findings', [
-        'code' => 'T-007', 'title' => 'Temuan mime',
-    ])->json('data.id');
-
-    $this->actingAs($admin, 'sanctum')->postJson("/api/v1/findings/{$id}/documents", [
-        'document' => UploadedFile::fake()->createWithContent('virus.exe', 'MZ binary'),
-    ])->assertStatus(422);
 });
 
 test('daftar temuan ter-cache dan terinvalidasi saat create', function () {

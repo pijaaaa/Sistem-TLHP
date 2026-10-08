@@ -12,7 +12,8 @@ class DatabaseSeeder extends Seeder
             DepartmentSeeder::class,
             MenuSeeder::class,
             PermissionSeeder::class,
-            UserSeeder::class,
+            EmployeeUserSeeder::class,
+            DummyDataSeeder::class,
         ]);
     }
 }

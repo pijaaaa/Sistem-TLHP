@@ -204,7 +204,7 @@ class PermissionService
         $menuTree = [];
 
         $menus = Menu::orderBy('sort_order')->get();
-        $menuMap = $menus->keyBy('code');
+        $menuMap = $menus->keyBy('id');
 
         foreach ($menus as $menu) {
             if (!isset($perms[$menu->code]['view']) || !$perms[$menu->code]['view']) {
@@ -212,9 +212,12 @@ class PermissionService
             }
 
             if ($menu->parent_id) {
-                $parentCode = $menuMap->firstWhere('id', $menu->parent_id)->code ?? null;
-                if ($parentCode && isset($menuTree[$parentCode])) {
-                    $menuTree[$parentCode]['children'][] = self::formatMenu($menu, $perms);
+                $parent = $menuMap->get($menu->parent_id);
+                if ($parent && isset($menuTree[$parent->code])) {
+                    if (!isset($menuTree[$parent->code]['children'])) {
+                        $menuTree[$parent->code]['children'] = [];
+                    }
+                    $menuTree[$parent->code]['children'][] = self::formatMenu($menu, $perms);
                 }
             } else {
                 $menuTree[$menu->code] = self::formatMenu($menu, $perms);
@@ -232,6 +235,7 @@ class PermissionService
             'path' => $menu->path,
             'icon' => $menu->icon,
             'permissions' => $perms[$menu->code],
+            'children' => [],
         ];
 
         $children = Menu::where('parent_id', $menu->id)->orderBy('sort_order')->get();

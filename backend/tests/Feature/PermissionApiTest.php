@@ -28,8 +28,8 @@ test('izin efektif role saja: admin_spi bisa view findings.reports', function ()
                      ->getJson('/api/v1/auth/me');
 
     $perms = $response->json('data.permissions');
-    expect($perms['findings.reports']['view'])->toBeTrue();
-    expect($perms['findings.reports']['create'])->toBeTrue();
+    expect($perms['findings']['view'])->toBeTrue();
+    expect($perms['findings']['create'])->toBeTrue();
 });
 
 test('override user bisa menambah akses', function () {
@@ -45,8 +45,8 @@ test('override user bisa menambah akses', function () {
         'is_active' => true,
     ]);
 
-    // Staff dept default tidak punya akses assessments
-    $menu = Menu::where('code', 'assessments')->first();
+    // Staff dept default tidak punya akses findings
+    $menu = Menu::where('code', 'findings')->first();
 
     UserMenuPermission::create([
         'user_id' => $user->id,
@@ -59,8 +59,8 @@ test('override user bisa menambah akses', function () {
                      ->getJson('/api/v1/auth/me');
 
     $perms = $response->json('data.permissions');
-    expect($perms['assessments']['view'])->toBeTrue();
-    expect($perms['assessments']['create'])->toBeTrue();
+    expect($perms['findings']['view'])->toBeTrue();
+    expect($perms['findings']['create'])->toBeTrue();
 });
 
 test('override user bisa mencabut akses', function () {
@@ -76,7 +76,7 @@ test('override user bisa mencabut akses', function () {
         'is_active' => true,
     ]);
 
-    $menu = Menu::where('code', 'findings.reports')->first();
+    $menu = Menu::where('code', 'findings')->first();
 
     UserMenuPermission::create([
         'user_id' => $user->id,
@@ -88,7 +88,7 @@ test('override user bisa mencabut akses', function () {
                      ->getJson('/api/v1/auth/me');
 
     $perms = $response->json('data.permissions');
-    expect($perms['findings.reports']['view'])->toBeFalse();
+    expect($perms['findings']['view'])->toBeFalse();
 });
 
 test('create tanpa view tidak efektif', function () {
@@ -104,7 +104,7 @@ test('create tanpa view tidak efektif', function () {
         'is_active' => true,
     ]);
 
-    $menu = Menu::where('code', 'assessments')->first();
+    $menu = Menu::where('code', 'findings')->first();
 
     UserMenuPermission::create([
         'user_id' => $user->id,
@@ -117,8 +117,8 @@ test('create tanpa view tidak efektif', function () {
                      ->getJson('/api/v1/auth/me');
 
     $perms = $response->json('data.permissions');
-    expect($perms['assessments']['view'])->toBeFalse();
-    expect($perms['assessments']['create'])->toBeFalse();
+    expect($perms['findings']['view'])->toBeFalse();
+    expect($perms['findings']['create'])->toBeFalse();
 });
 
 test('route ditolak 403 tanpa izin view', function () {
@@ -161,12 +161,12 @@ test('cache terinvalidasi saat izin user berubah', function () {
         'is_active' => true,
     ]);
 
-    // Hit pertama: hasil di-cache, staff dept tidak punya akses assessments
+    // Hit pertama: hasil di-cached, staff dept tidak punya akses findings
     $perms1 = PermissionService::effective($user);
-    expect($perms1['assessments']['view'])->toBeFalse();
+    expect($perms1['findings']['view'])->toBeFalse();
 
-    // Tambahkan override user agar dapat view assessments
-    $menu = Menu::where('code', 'assessments')->first();
+    // Tambahkan override user agar dapat view findings
+    $menu = Menu::where('code', 'findings')->first();
     UserMenuPermission::create([
         'user_id' => $user->id,
         'menu_id' => $menu->id,
@@ -176,13 +176,13 @@ test('cache terinvalidasi saat izin user berubah', function () {
 
     // Hit kedua: masih ter cache, nilai lama masih false
     $perms2 = PermissionService::effective($user);
-    expect($perms2['assessments']['view'])->toBeFalse();
+    expect($perms2['findings']['view'])->toBeFalse();
 
     // Invalidasi cache untuk user ini
     PermissionService::invalidateForUser($user);
 
     // Hit ketiga: di-rebuild dari DB, kini mencerminkan override
     $perms3 = PermissionService::effective($user);
-    expect($perms3['assessments']['view'])->toBeTrue();
-    expect($perms3['assessments']['create'])->toBeTrue();
+    expect($perms3['findings']['view'])->toBeTrue();
+    expect($perms3['findings']['create'])->toBeTrue();
 });

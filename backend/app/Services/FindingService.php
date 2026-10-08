@@ -23,8 +23,6 @@ class FindingService
             ->orderBy('id', 'desc')
             ->paginate($perPage);
 
-        ActionPlanService::attachFindingProgress($paginator->items());
-
         return $paginator;
     }
 

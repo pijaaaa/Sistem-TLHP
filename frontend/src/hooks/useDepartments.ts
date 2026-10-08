@@ -18,7 +18,7 @@ export const useCreateDepartment = () => {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: departmentsApi.create,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['departments'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['departments'], exact: false }),
   })
 }
 
@@ -27,7 +27,7 @@ export const useUpdateDepartment = () => {
   return useMutation({
     mutationFn: (payload: { id: number; code: string; name: string; is_active?: boolean }) =>
       departmentsApi.update(payload.id, payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['departments'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['departments'], exact: false }),
   })
 }
 
@@ -35,6 +35,6 @@ export const useDeleteDepartment = () => {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: departmentsApi.remove,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['departments'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['departments'], exact: false }),
   })
 }

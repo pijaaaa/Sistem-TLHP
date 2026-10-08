@@ -212,7 +212,7 @@ export interface ActionPlan {
   approved_by: number | null
   approver?: ActionPlanUser
   approved_at: string | null
-  rejection_reason: string | null
+  review_note: string | null
   due_date: string | null
   documents_count: number
   latest_evidence?: EvidenceSubmission | null

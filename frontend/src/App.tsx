@@ -12,9 +12,10 @@ import EmployeesPage from '@/pages/master/EmployeesPage'
 import UsersPage from '@/pages/master/UsersPage'
 import PermissionsPage from '@/pages/master/PermissionsPage'
 import FindingsReportsPage from '@/pages/findings/FindingsReportsPage'
+import FindingsPage from '@/pages/findings/FindingsPage'
 import FindingsDistributionPage from '@/pages/findings/FindingsDistributionPage'
 import FindingDepartmentsPage from '@/pages/findings/FindingDepartmentsPage'
-import ActionPlansPage from '@/pages/findings/ActionPlansPage'
+import ActionPlansPage from '@/pages/ActionPlansPage'
 import ActionPlanReviewsPage from '@/pages/findings/ActionPlanReviewsPage'
 import EvidencePage from '@/pages/findings/EvidencePage'
 import AssessmentsPage from '@/pages/findings/AssessmentsPage'
@@ -104,7 +105,7 @@ function App() {
               }
             />
             <Route
-              path="action-plans"
+              path="tindak-lanjut"
               element={
                 <PermissionRoute menu="action_plans" action="view">
                   <ActionPlansPage />
