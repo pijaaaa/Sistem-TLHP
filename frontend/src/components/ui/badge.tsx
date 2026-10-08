@@ -34,9 +34,8 @@ const Badge = ({ variant = 'default', className, children }: BadgeProps) => {
   )
 }
 
-const StatusBadge = ({ status }: { status?: string | null }) => {
-  const variant = getStatusVariant(status)
-  return <Badge variant={variant}>{status ?? '-'}</Badge>
+const StatusBadge = ({ status, variant }: { status?: string | null; variant?: BadgeVariant }) => {
+  return <Badge variant={variant ?? getStatusVariant(status)}>{status ?? '-'}</Badge>
 }
 
 export { Badge, StatusBadge }

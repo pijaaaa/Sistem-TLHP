@@ -6,7 +6,6 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ExportController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FindingController;
-use App\Http\Controllers\Api\FindingDocumentController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\ActionPlanController;
 use App\Http\Controllers\Api\LookupController;
@@ -27,6 +26,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
 
         Route::get('/lookups/departments', [LookupController::class, 'departments']);
+        Route::get('/lookups/staff', [LookupController::class, 'staff']);
     });
 
     Route::get('/dashboard', [DashboardController::class, '__invoke'])
@@ -93,17 +93,32 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:findings,create');
         Route::delete('findings/{finding}/documents/{document}', [FindingController::class, 'deleteDocument'])
             ->middleware('permission:findings,delete');
+        Route::get('findings/{finding}/documents/{document}/download', [FindingController::class, 'downloadDocument'])
+            ->name('findings.documents.download');
     });
 
     Route::middleware(['auth:sanctum', 'permission:action_plans,view'])->group(function () {
         Route::get('action-plans', [ActionPlanController::class, 'index']);
         Route::post('action-plans', [ActionPlanController::class, 'store'])
             ->middleware('permission:action_plans,create');
-        Route::get('action-plans/{action_plan}', [ActionPlanController::class, 'show']);
         Route::post('action-plans/send', [ActionPlanController::class, 'send'])
             ->middleware('permission:action_plans,create');
+        Route::get('action-plans/{action_plan}', [ActionPlanController::class, 'show']);
+        Route::put('action-plans/{action_plan}', [ActionPlanController::class, 'update'])
+            ->middleware('permission:action_plans,update');
+        Route::delete('action-plans/{action_plan}', [ActionPlanController::class, 'destroy'])
+            ->middleware('permission:action_plans,delete');
+        Route::put('action-plans/{action_plan}/deadline', [ActionPlanController::class, 'changeDeadline'])
+            ->middleware('permission:action_plans,update');
         Route::post('action-plans/{action_plan}/assign-pics', [ActionPlanController::class, 'assignPics'])
             ->middleware('permission:action_plans,update');
+        Route::get('action-plans/{action_plan}/documents', [ActionPlanController::class, 'documents']);
+        Route::post('action-plans/{action_plan}/documents', [ActionPlanController::class, 'uploadDocument'])
+            ->middleware('permission:action_plans,update');
+        Route::delete('action-plans/{action_plan}/documents/{document}', [ActionPlanController::class, 'deleteDocument'])
+            ->middleware('permission:action_plans,update');
+        Route::get('action-plans/{action_plan}/documents/{document}/download', [ActionPlanController::class, 'downloadDocument'])
+            ->name('action-plans.documents.download');
     });
 
     Route::middleware(['auth:sanctum', 'permission:audit_trail,view'])->group(function () {

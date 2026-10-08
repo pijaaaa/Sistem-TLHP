@@ -4,27 +4,19 @@ import { PageHeader } from '@/components/shared'
 import { StatusBadge, Spinner } from '@/components/ui'
 import { exportApi } from '@/api/audit'
 import { usePermission } from '@/hooks/usePermission'
-import { FINDING_STATUS_OPTIONS, getFindingStatusLabel } from '@/types/finding'
+import { getFindingStatusLabel } from '@/types/finding'
 
 const COUNTER_LABELS: Record<string, string> = {
   total_temuan: 'Total Temuan',
   draft: 'Draft',
-  diajukan_ke_ia: 'Diajukan ke IA',
+  terdaftar: 'Terdaftar',
+  proses_tindak_lanjut: 'Proses Tindak Lanjut',
+  review_spi: 'Review SPI',
+  menunggu_status_eksternal: 'Menunggu Status Eksternal',
   closed: 'Closed',
-  case_closed: 'Case Closed',
-  menunggu_distribusi: 'Menunggu Distribusi',
-  menunggu_assessment: 'Menunggu Assessment',
-  menunggu_verifikasi: 'Menunggu Verifikasi SPI',
-  dalam_proses: 'Dalam Proses',
-  selesai_100: 'Selesai 100%',
-  menunggu_review_tindak_lanjut: 'Menunggu Review Tindak Lanjut',
-  menunggu_review_evidence: 'Menunggu Review Evidence',
-  diajukan: 'Diajukan',
-  revisi: 'Revisi',
-  menunggu_evidence: 'Menunggu Evidence',
-  evidence_revisi: 'Evidence Revisi',
-  selesai: 'Selesai',
-  assessment_ssr: 'Assessment SSR',
+  total_action_plan: 'Total Action Plan',
+  menunggu_penentuan_pic: 'Menunggu Penentuan PIC',
+  diajukan_ke_spi: 'Diajukan ke SPI',
 }
 
 const humanize = (key: string) =>

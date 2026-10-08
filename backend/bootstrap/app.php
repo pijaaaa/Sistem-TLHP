@@ -25,6 +25,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 if ($e instanceof \Illuminate\Validation\ValidationException) {
                     return \App\Support\ApiResponse::error($e->getMessage(), 422, $e->errors());
                 }
+                if ($e instanceof \Illuminate\Auth\Access\AuthorizationException) {
+                    return \App\Support\ApiResponse::error($e->getMessage(), 403);
+                }
                 if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpException) {
                     return \App\Support\ApiResponse::error($e->getMessage(), $e->getStatusCode());
                 }

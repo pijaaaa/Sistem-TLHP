@@ -4,12 +4,12 @@ namespace App\Enums;
 
 enum FindingStatus: string
 {
-    case Draft = 'draft';
-    case Terdaftar = 'terdaftar';
-    case ProsessTindakLanjut = 'proses_tindak_lanjut';
-    case ReviewSpi = 'review_spi';
-    case MenungguStatusEksternal = 'menunggu_status_eksternal';
-    case Closed = 'closed';
+    case Draft = 'DRAFT';
+    case Terdaftar = 'TERDAFTAR';
+    case ProsessTindakLanjut = 'PROSES_TINDAK_LANJUT';
+    case ReviewSpi = 'REVIEW_SPI';
+    case MenungguStatusEksternal = 'MENUNGGU_STATUS_EKSTERNAL';
+    case Closed = 'CLOSED';
 
     public function label(): string
     {

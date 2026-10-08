@@ -1,35 +1,16 @@
 import { apiClient } from '@/api/client'
-import type { ApiResponse, Paginated } from '@/api/master'
-import type { Finding, FindingDocument, FindingVerification } from '@/types/finding'
+import type { ApiResponse } from '@/api/client'
 import type { AxiosResponse } from 'axios'
-
-export interface VerificationResult {
-  verification: FindingVerification
-  finding: Finding
-}
+import type { Page } from '@/types/finding'
+import type { ActionPlan, ActionPlanPayload, ActionPlanUser, DocumentFile, Finding, FindingPayload, Department } from '@/types/finding'
 
 function unwrap<T>(res: AxiosResponse<ApiResponse<T>>): T {
   return res.data.data
 }
 
-export interface FindingPayload {
-  code: string
-  title: string
-  finding_date?: string | null
-  severity?: string | null
-  recommendation?: string | null
-  auditor_action_plan?: string | null
-  is_active?: boolean
-}
-
-export interface FindingDocumentPayload {
-  document: File
-  label?: string | null
-}
-
 export const findingsApi = {
-  list: (params?: { per_page?: number; page?: number }) =>
-    apiClient.get<ApiResponse<Paginated<Finding>>>('/findings', { params }).then(unwrap),
+  list: (params?: { page?: number; per_page?: number; status?: string; fiscal_year?: number | string; source?: string; department_id?: number | string; q?: string }) =>
+    apiClient.get<ApiResponse<Page<Finding>>>('/findings', { params }).then(unwrap),
 
   get: (id: number) =>
     apiClient.get<ApiResponse<Finding>>(`/findings/${id}`).then(unwrap),
@@ -43,56 +24,94 @@ export const findingsApi = {
   remove: (id: number) =>
     apiClient.delete<ApiResponse<null>>(`/findings/${id}`).then(unwrap),
 
-  sendToIA: (id: number) =>
-    apiClient.post<ApiResponse<Finding>>(`/findings/${id}/send-to-ia`).then(unwrap),
+  register: (id: number, department_ids: number[]) =>
+    apiClient.post<ApiResponse<Finding>>(`/findings/${id}/register`, { department_ids }).then(unwrap),
 
-  pendingAssessment: (params?: { per_page?: number; page?: number }) =>
-    apiClient.get<ApiResponse<Paginated<Finding>>>('/assessments', { params }).then(unwrap),
+  activate: (id: number) =>
+    apiClient.post<ApiResponse<Finding>>(`/findings/${id}/activate`).then(unwrap),
 
-  assess: (
-    id: number,
-    payload: { assessment_status: string; note?: string | null; department_ids?: number[] },
-  ) =>
-    apiClient
-      .post<ApiResponse<Finding>>(`/findings/${id}/assess`, payload)
-      .then(unwrap),
+  documents: (id: number) =>
+    apiClient.get<ApiResponse<DocumentFile[]>>(`/findings/${id}/documents`).then(unwrap),
 
-  pendingVerifications: (params?: { per_page?: number; page?: number }) =>
-    apiClient.get<ApiResponse<Paginated<Finding>>>('/verifications', { params }).then(unwrap),
-
-  recordVerification: (
-    id: number,
-    payload: {
-      auditor_conclusion: string
-      auditor_result?: string | null
-      verified_date?: string | null
-      notes?: string | null
-    },
-  ) =>
-    apiClient.post<ApiResponse<VerificationResult>>(`/findings/${id}/verifications`, payload).then(unwrap),
-
-  verifications: (id: number) =>
-    apiClient
-      .get<ApiResponse<FindingVerification[]>>(`/findings/${id}/verifications`)
-      .then(unwrap),
-
-  documents: (findingId: number) =>
-    apiClient.get<ApiResponse<FindingDocument[]>>(`/findings/${findingId}/documents`).then(unwrap),
-
-  uploadDocument: (findingId: number, payload: FindingDocumentPayload) => {
+  uploadDocument: (id: number, file: File, label: string) => {
     const form = new FormData()
-    form.append('document', payload.document)
-    if (payload.label) form.append('label', payload.label)
+    form.append('document', file)
+    form.append('label', label)
     return apiClient
-      .post<ApiResponse<FindingDocument>>(`/findings/${findingId}/documents`, form, {
+      .post<ApiResponse<DocumentFile>>(`/findings/${id}/documents`, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       .then(unwrap)
   },
 
-  deleteDocument: (findingId: number, documentId: number) =>
-    apiClient.delete<ApiResponse<null>>(`/findings/${findingId}/documents/${documentId}`).then(unwrap),
+  deleteDocument: (id: number, documentId: number) =>
+    apiClient.delete<ApiResponse<null>>(`/findings/${id}/documents/${documentId}`).then(unwrap),
 
-  downloadDocument: (documentId: number) =>
-    `${apiClient.defaults.baseURL}/findings/documents/${documentId}/download`,
+  downloadDocument: (id: number, documentId: number) =>
+    `${apiClient.defaults.baseURL}/findings/${id}/documents/${documentId}/download`,
 }
+
+export interface PaginatedActionPlan extends Page<ActionPlan> {}
+
+export const actionPlansApi = {
+  list: (params?: { page?: number; per_page?: number; status?: string; finding_id?: number | string; department_id?: number | string }) =>
+    apiClient.get<ApiResponse<Page<ActionPlan>>>('/action-plans', { params }).then(unwrap),
+
+  get: (id: number) =>
+    apiClient.get<ApiResponse<ActionPlan>>(`/action-plans/${id}`).then(unwrap),
+
+  create: (payload: ActionPlanPayload) =>
+    apiClient.post<ApiResponse<ActionPlan[]>>('/action-plans', payload).then(unwrap),
+
+  update: (id: number, payload: Partial<ActionPlanPayload>) =>
+    apiClient.put<ApiResponse<ActionPlan>>(`/action-plans/${id}`, payload).then(unwrap),
+
+  remove: (id: number) =>
+    apiClient.delete<ApiResponse<null>>(`/action-plans/${id}`).then(unwrap),
+
+  send: (ids: number[]) =>
+    apiClient.post<ApiResponse<ActionPlan[]>>('/action-plans/send', { ids }).then(unwrap),
+
+  changeDeadline: (id: number, deadline: string, reason?: string) =>
+    apiClient.put<ApiResponse<ActionPlan>>(`/action-plans/${id}/deadline`, { deadline, reason }).then(unwrap),
+
+  assignPics: (id: number, user_ids: number[]) =>
+    apiClient.post<ApiResponse<ActionPlan>>(`/action-plans/${id}/assign-pics`, { user_ids }).then(unwrap),
+
+  documents: (id: number) =>
+    apiClient.get<ApiResponse<DocumentFile[]>>(`/action-plans/${id}/documents`).then(unwrap),
+
+  uploadDocument: (id: number, file: File, label: string) => {
+    const form = new FormData()
+    form.append('document', file)
+    form.append('label', label)
+    return apiClient
+      .post<ApiResponse<DocumentFile>>(`/action-plans/${id}/documents`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then(unwrap)
+  },
+
+  deleteDocument: (id: number, documentId: number) =>
+    apiClient.delete<ApiResponse<null>>(`/action-plans/${id}/documents/${documentId}`).then(unwrap),
+
+  downloadDocument: (id: number, documentId: number) =>
+    `${apiClient.defaults.baseURL}/action-plans/${id}/documents/${documentId}/download`,
+}
+
+export interface LookupStaff {
+  id: number
+  name: string
+  username: string
+}
+
+export const lookupsApi = {
+  auditeeDepartments: () =>
+    apiClient.get<ApiResponse<{ data: Department[] }>>('/lookups/departments', { params: { auditee: 1 } }).then(unwrap),
+
+  staffByDepartment: (departmentId: number) =>
+    apiClient.get<ApiResponse<{ data: LookupStaff[] }>>('/lookups/staff', { params: { department_id: departmentId } }).then(unwrap),
+}
+
+export { unwrap }
+export type { ActionPlanUser }

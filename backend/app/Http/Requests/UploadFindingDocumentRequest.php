@@ -18,7 +18,7 @@ class UploadFindingDocumentRequest extends FormRequest
 
         return [
             'document' => ['required', 'file', 'mimes:' . $mimes, 'max:' . $max],
-            'label' => ['nullable', 'string', 'max:100'],
+            'label' => ['required', 'string', 'max:100'],
         ];
     }
 }

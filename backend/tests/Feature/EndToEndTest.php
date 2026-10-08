@@ -1,152 +1,98 @@
 <?php
 
-use App\Enums\AuditorConclusion;
 use App\Enums\FindingStatus;
 use App\Enums\Role;
-use App\Models\ActionPlan;
 use App\Models\Audit;
 use App\Models\Department;
 use App\Models\Finding;
-use App\Models\FindingDepartment;
+use App\Models\User;
 use Database\Seeders\DepartmentSeeder;
 use Database\Seeders\MenuSeeder;
 use Database\Seeders\PermissionSeeder;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 
-/**
- * Ujung ke ujung: seluruh alur temuan hingga CLOSED, memakai role nyata.
- * Autentikasi token nyata diuji terpisah di test autentikasi.
- */
 beforeEach(function () {
-    $this->seed([DepartmentSeeder::class, MenuSeeder::class, PermissionSeeder::class]);
-    Storage::fake(config('upload.disk'));
+    $this->seed([DepartmentSeeder::class, MenuSeeder::class, PermissionSeeder::class, \Database\Seeders\EmployeeUserSeeder::class]);
 
-    $this->admin = createTestUser(Role::AdminSpi);
-    $this->managerIa = createTestUser(Role::ManagerIa, 'IA');
-    $this->managerDept = createTestUser(Role::ManagerDept, 'FINANCE_ICT');
-    $this->pic = createTestUser(Role::StaffDept, 'FINANCE_ICT');
-    $this->managerEks = createTestUser(Role::ManagerDept, 'EKS');
-    $this->picEks = createTestUser(Role::StaffDept, 'EKS');
-    $this->managerSpi = createTestUser(Role::ManagerSpi);
+    $this->admin = User::where('username', 'admin_spi')->first();
+    $this->managerIa = User::where('username', 'manager_ia')->first();
+    $this->managerDept = User::where('username', 'mgr_finance_ict')->first();
+    $this->pic = User::where('username', 'pic_1_finance_ict')->first();
+    $this->managerDeptEks = User::where('username', 'mgr_eks')->first();
+    $this->picEks = User::where('username', 'pic_1_eks')->first();
+    $this->kepalaSpi = User::where('username', 'kepala_spi')->first();
 });
 
-function fdFor(int $findingId, string $deptCode): FindingDepartment
+function seedFindingAsAdmin(): Finding
 {
-    return FindingDepartment::where('finding_id', $findingId)
-        ->whereHas('department', fn ($q) => $q->where('code', $deptCode))
-        ->firstOrFail();
+    $service = new \App\Services\FindingService();
+    $finding = $service->createDraft([
+        'title' => 'Kelemahan kontrol persetujuan',
+        'source' => 'BPK',
+        'lhp_number' => 'LHP/2026/E2E',
+        'lhp_date' => '2026-06-01',
+        'finding_date' => '2026-06-01',
+        'response_period_start' => '2026-07-01',
+        'response_period_end' => '2026-12-31',
+        'scope' => 'Persetujuan pengadaan',
+    ]);
+
+    $finding->documents()->create([
+        'label' => 'LHP',
+        'name' => 'e2e.pdf',
+        'path' => 'findings/e2e.pdf',
+        'mime' => 'application/pdf',
+        'size' => 1024,
+    ]);
+
+    return $service->register($finding, Department::whereIn('code', ['FINANCE_ICT', 'EKS'])->pluck('id')->all());
 }
 
-test('alur lengkap temuan eksternal dari input hingga closing', function () {
-    // 1. Admin SPI membuat temuan dan mengirim ke IA.
-    $findingId = $this->actingAs($this->admin, 'sanctum')->postJson('/api/v1/findings', [
-        'code' => 'E2E-2026-001',
-        'title' => 'Kelemahan kontrol persetujuan',
-        'severity' => 'high',
-        'recommendation' => 'Perkuat segregasi tugas',
-    ])->assertCreated()->json('data.id');
 
-    $this->actingAs($this->admin, 'sanctum')
-        ->postJson("/api/v1/findings/{$findingId}/send-to-ia")->assertOk();
+test('alur lengkap dari input hingga penunjukan PIC', function () {
+    $admin = $this->admin;
+    $this->actingAs($admin);
 
-    expect(Finding::find($findingId)->status)->toBe(FindingStatus::SentToIa);
+    $finding = seedFindingAsAdmin();
 
-    // 2. Manager IA mendistribusikan ke dua departemen.
-    $deptIds = Department::whereIn('code', ['FINANCE_ICT', 'EKS'])->pluck('id')->all();
+    // 1. Keaktifkan temuan, lalu buat action plan multi-departemen.
+    $finding = (new \App\Services\FindingService())->activate($finding);
+    expect($finding->status)->toEqual(FindingStatus::ProsessTindakLanjut);
 
-    $this->actingAs($this->managerIa, 'sanctum')
-        ->postJson("/api/v1/findings/{$findingId}/distribute", ['department_ids' => $deptIds])
-        ->assertOk();
+    $aps = $this->actingAs($admin, 'sanctum')->postJson('/api/v1/action-plans', [
+        'finding_id' => $finding->id,
+        'department_ids' => [$this->managerDept->department_id, $this->managerDeptEks->department_id],
+        'title' => 'Tindak lanjut',
+        'condition' => 'Kondisi',
+        'criteria' => 'Kriteria',
+        'cause' => 'Sebab',
+        'impact' => 'Dampak',
+        'risk' => 'TINGGI',
+        'deadline' => '2026-11-30',
+    ])->assertCreated()->json('data');
 
-    expect(FindingDepartment::where('finding_id', $findingId)->count())->toBe(2);
+    $apIds = collect($aps)->pluck('id')->all();
 
-    // 3. Masing-masing Manager Dept menugaskan PIC.
-    $this->actingAs($this->managerDept, 'sanctum')
-        ->postJson('/api/v1/finding-departments/' . fdFor($findingId, 'FINANCE_ICT')->id . '/assign-pics', [
-            'pic_ids' => [$this->pic->id],
-        ])->assertOk();
+    // 2. Kirim kedua action plan.
+    $this->actingAs($admin, 'sanctum')->postJson('/api/v1/action-plans/send', ['ids' => $apIds])->assertOk();
 
-    $this->actingAs($this->managerEks, 'sanctum')
-        ->postJson('/api/v1/finding-departments/' . fdFor($findingId, 'EKS')->id . '/assign-pics', [
-            'pic_ids' => [$this->picEks->id],
-        ])->assertOk();
+    // 3. Masing-masing manager menentukan PIC.
+    foreach ($aps as $ap) {
+        $manager = $ap['department_id'] === $this->managerDept->department_id ? $this->managerDept : $this->managerDeptEks;
+        $pic = $ap['department_id'] === $this->managerDept->department_id ? $this->pic : $this->picEks;
 
-    // 4. PIC membuat rencana aksi, mengajukan; Manager Dept menyetujui.
-    $departments = [
-        ['code' => 'FINANCE_ICT', 'pic' => $this->pic, 'manager' => $this->managerDept],
-        ['code' => 'EKS', 'pic' => $this->picEks, 'manager' => $this->managerEks],
-    ];
-
-    foreach ($departments as $d) {
-        $fdId = fdFor($findingId, $d['code'])->id;
-
-        $apId = $this->actingAs($d['pic'], 'sanctum')
-            ->postJson("/api/v1/finding-departments/{$fdId}/action-plans", [
-                'title' => "Tindak lanjut {$d['code']}",
-                'weight' => 100,
-            ])->assertCreated()->json('data.id');
-
-        $this->actingAs($d['pic'], 'sanctum')
-            ->postJson("/api/v1/action-plans/{$apId}/submit")->assertOk();
-
-        $this->actingAs($d['manager'], 'sanctum')
-            ->postJson("/api/v1/action-plans/{$apId}/approve")->assertOk();
+        $this->actingAs($manager, 'sanctum')
+            ->postJson("/api/v1/action-plans/{$ap['id']}/assign-pics", ['user_ids' => [$pic->id]])
+            ->assertOk();
     }
 
-    // 5. Evidence diunggah PIC dan disetujui Manager Dept.
-    foreach ($departments as $d) {
-        $apId = ActionPlan::where('finding_department_id', fdFor($findingId, $d['code'])->id)
-            ->firstOrFail()->id;
-
-        $this->actingAs($d['pic'], 'sanctum')
-            ->post("/api/v1/action-plans/{$apId}/evidence", [
-                'files' => [['file' => UploadedFile::fake()->create('bukti.pdf', 200, 'application/pdf')]],
-            ])->assertCreated();
-
-        $this->actingAs($d['manager'], 'sanctum')
-            ->postJson("/api/v1/action-plans/{$apId}/evidence/approve")->assertOk();
-    }
-
-    // 6. Kedua departemen selesai 100% lalu teruskan ke IA.
-    foreach ($departments as $d) {
-        $fd = fdFor($findingId, $d['code']);
-        expect($fd->fresh()->status->value)->toBe('selesai_100');
-
-        $this->actingAs($d['manager'], 'sanctum')
-            ->postJson("/api/v1/finding-departments/{$fd->id}/forward-to-ia")->assertOk();
-    }
-
-    expect(Finding::find($findingId)->status)->toBe(FindingStatus::PendingIaAssessment);
-
-    // 7. Manager IA assess SSR, Manager SPI menutup temuan.
-    $this->actingAs($this->managerIa, 'sanctum')
-        ->postJson("/api/v1/findings/{$findingId}/assess", [
-            'assessment_status' => 'ssr',
-            'note' => 'Sudah memadai',
-        ])->assertOk();
-
-    expect(Finding::find($findingId)->status)->toBe(FindingStatus::PendingVerificationSpi);
-
-    $this->actingAs($this->managerSpi, 'sanctum')
-        ->postJson("/api/v1/findings/{$findingId}/verifications", [
-            'auditor_conclusion' => AuditorConclusion::Closed->value,
-            'auditor_result' => 'Sesuai rekomendasi',
-            'notes' => 'Tidak ada temuan lanjutan',
-        ])->assertCreated();
-
-    expect(Finding::find($findingId)->status)->toBe(FindingStatus::Closed);
-
-    // 8. Jejak audit lengkap untuk setiap langkah penting.
-    $actions = Audit::where('entity_type', 'finding')
-        ->where('entity_id', $findingId)
-        ->pluck('action')
-        ->unique();
-
-    expect($actions->all())->toContain('finding.created');
-    expect($actions->all())->toContain('finding.sent_to_ia');
-    expect($actions->all())->toContain('finding.assessed');
-    expect($actions->all())->toContain('finding.verified');
+    // 4. Jejak audit mencatat tiap langkah penting.
+    $actions = Audit::query()->pluck('action')->unique()->all();
+    expect($actions)->toContain('finding.created')
+        ->toContain('finding.registered')
+        ->toContain('finding.activated')
+        ->toContain('action_plan.created')
+        ->toContain('action_plan.sent')
+        ->toContain('action_plan.pics_assigned');
 });
 
 test('token hasil login dipakai untuk akses API', function () {
@@ -157,7 +103,6 @@ test('token hasil login dipakai untuk akses API', function () {
 
     expect($token)->toBeString();
 
-    // Header Authorization dibaca langsung oleh Sanctum.
     $response = $this->withHeader('Authorization', 'Bearer ' . $token)
         ->getJson('/api/v1/auth/me');
 

@@ -32,7 +32,7 @@ test('staff_dept cannot see draft action plan', function () {
     ], [$dept->id]);
 
     $this->assertCount(1, $aps);
-    expect($aps[0]->status)->toEqual('DRAFT');
+    expect($aps[0]->status->value)->toBe('DRAFT');
 
     $pic = User::where('username', 'pic_ia')->first();
     $this->actingAs($pic);

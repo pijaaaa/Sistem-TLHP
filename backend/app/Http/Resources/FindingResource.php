@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Enums\AssessmentStatus;
 use App\Enums\FindingStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -13,23 +12,28 @@ class FindingResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'code' => $this->code,
-            'title' => $this->title,
+            'registration_number' => $this->registration_number,
+            'source' => $this->source,
+            'source_name' => $this->source_name,
+            'lhp_number' => $this->lhp_number,
+            'lhp_date' => $this->lhp_date?->toDateString(),
             'finding_date' => $this->finding_date?->toDateString(),
-            'severity' => $this->severity,
+            'response_period_start' => $this->response_period_start?->toDateString(),
+            'response_period_end' => $this->response_period_end?->toDateString(),
+            'fiscal_year' => $this->fiscal_year,
+            'scope' => $this->scope,
+            'title' => $this->title,
             'status' => $this->status instanceof FindingStatus ? $this->status->value : $this->status,
             'status_label' => $this->status instanceof FindingStatus ? $this->status->label() : null,
-            'recommendation' => $this->recommendation,
-            'auditor_action_plan' => $this->auditor_action_plan,
-            'documents_count' => $this->documents_count ?? $this->documents()->count(),
-            'current_round' => $this->current_round ?? 1,
-            'assessment_status' => $this->assessment_status instanceof AssessmentStatus ? $this->assessment_status->value : $this->assessment_status,
-            'assessment_status_label' => $this->assessment_status instanceof AssessmentStatus ? $this->assessment_status->label() : null,
-            'assessment_note' => $this->assessment_note,
-            'assessed_by' => $this->assessed_by,
-            'assessed_at' => $this->assessed_at?->toDateTimeString(),
+            'age_days' => $this->age_days,
             'progress' => $this->getAttribute('progress'),
-            'is_active' => $this->is_active,
+            'activated_at' => $this->activated_at?->toDateTimeString(),
+            'closed_at' => $this->closed_at?->toDateTimeString(),
+            'closed_by' => $this->closed_by,
+            'created_by' => $this->created_by,
+            'documents_count' => (int) ($this->documents_count ?? 0),
+            'auditee_departments' => DepartmentResource::collection($this->whenLoaded('auditee_departments')),
+            'action_plans_count' => $this->whenCounted('action_plans'),
             'created_at' => $this->created_at?->toDateTimeString(),
             'updated_at' => $this->updated_at?->toDateTimeString(),
         ];

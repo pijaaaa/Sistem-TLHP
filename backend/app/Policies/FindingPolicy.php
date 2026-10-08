@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\FindingStatus;
 use App\Enums\Role;
 use App\Models\Finding;
 use App\Models\User;
@@ -12,10 +13,11 @@ class FindingPolicy
 {
     use HandlesAuthorization;
 
+    private const WRITERS = [Role::AdminSpi, Role::InternalAudit];
+
     public function viewAny(User $user): bool
     {
-        return PermissionService::can($user, 'findings.reports', 'view')
-            || PermissionService::can($user, 'findings.list', 'view');
+        return PermissionService::can($user, 'findings', 'view');
     }
 
     public function view(User $user, Finding $finding): bool
@@ -25,37 +27,33 @@ class FindingPolicy
 
     public function create(User $user): bool
     {
-        return PermissionService::can($user, 'findings.reports', 'create');
+        return $this->isWriter($user) && PermissionService::can($user, 'findings', 'create');
     }
 
     public function update(User $user, Finding $finding): bool
     {
-        return PermissionService::can($user, 'findings.reports', 'update')
-            || $finding->isEditableByAdmin();
+        return $this->isWriter($user) && PermissionService::can($user, 'findings', 'update');
+    }
+
+    public function register(User $user, Finding $finding): bool
+    {
+        return $this->update($user, $finding) && $finding->status === FindingStatus::Draft;
+    }
+
+    public function activate(User $user, Finding $finding): bool
+    {
+        return $this->update($user, $finding) && $finding->status === FindingStatus::Terdaftar;
     }
 
     public function delete(User $user, Finding $finding): bool
     {
-        return PermissionService::can($user, 'findings.reports', 'delete');
+        return $this->isWriter($user)
+            && PermissionService::can($user, 'findings', 'delete')
+            && $finding->status === FindingStatus::Draft;
     }
 
-    public function assess(User $user, Finding $finding): bool
+    private function isWriter(User $user): bool
     {
-        if ($user->role === Role::SuperAdmin) {
-            return true;
-        }
-
-        return $user->role === Role::ManagerIa
-            && PermissionService::can($user, 'assessments', 'update');
-    }
-
-    public function verify(User $user, Finding $finding): bool
-    {
-        if ($user->role === Role::SuperAdmin) {
-            return true;
-        }
-
-        return $user->role === Role::ManagerSpi
-            && PermissionService::can($user, 'verifications', 'update');
+        return $user->role === Role::SuperAdmin || in_array($user->role, self::WRITERS, true);
     }
 }

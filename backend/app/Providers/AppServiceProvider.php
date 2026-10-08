@@ -3,15 +3,15 @@
 namespace App\Providers;
 
 use App\Http\Middleware\PermissionMiddleware;
+use App\Models\ActionPlan;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Finding;
-use App\Models\FindingDocument;
 use App\Models\Audit;
 use App\Models\User;
+use App\Policies\ActionPlanPolicy;
 use App\Policies\DepartmentPolicy;
 use App\Policies\EmployeePolicy;
-use App\Policies\FindingDocumentPolicy;
 use App\Policies\AuditPolicy;
 use App\Policies\FindingPolicy;
 use App\Policies\UserPolicy;
@@ -47,7 +47,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Employee::class, EmployeePolicy::class);
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Finding::class, FindingPolicy::class);
-        Gate::policy(FindingDocument::class, FindingDocumentPolicy::class);
+        Gate::policy(ActionPlan::class, ActionPlanPolicy::class);
         Gate::policy(Audit::class, AuditPolicy::class);
 
         Route::get('/sanctum/csrf-cookie', function () {

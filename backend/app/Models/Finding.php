@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\FindingStatus;
+use App\Scopes\FindingVisibility;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -40,6 +41,11 @@ class Finding extends Model
         'closed_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new FindingVisibility());
+    }
+
     public function getAgeDaysAttribute(): int
     {
         return $this->finding_date ? now()->diffInDays($this->finding_date) : 0;
@@ -63,6 +69,11 @@ class Finding extends Model
     public function documents()
     {
         return $this->morphMany(Document::class, 'documentable');
+    }
+
+    public function action_plans()
+    {
+        return $this->hasMany(ActionPlan::class);
     }
 }
 

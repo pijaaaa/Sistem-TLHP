@@ -8,21 +8,22 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('finding_documents', function (Blueprint $table) {
+        Schema::create('documents', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('finding_id')->constrained()->cascadeOnDelete();
+            $table->morphs('documentable');
+            $table->string('label')->nullable();
             $table->string('name');
             $table->string('path');
             $table->string('mime');
             $table->unsignedBigInteger('size')->default(0);
-            $table->string('label')->nullable();
             $table->foreignId('uploaded_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->softDeletes();
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('finding_documents');
+        Schema::dropIfExists('documents');
     }
 };

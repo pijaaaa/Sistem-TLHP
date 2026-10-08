@@ -3,76 +3,183 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AssignPicsRequest;
+use App\Http\Requests\SendActionPlanRequest;
+use App\Http\Requests\StoreActionPlanRequest;
+use App\Http\Requests\UpdateActionPlanDeadlineRequest;
+use App\Http\Requests\UpdateActionPlanRequest;
+use App\Http\Requests\UploadActionPlanDocumentRequest;
+use App\Http\Resources\ActionPlanResource;
+use App\Http\Resources\DocumentResource;
 use App\Models\ActionPlan;
+use App\Models\Document;
 use App\Models\Finding;
 use App\Services\ActionPlanService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ActionPlanController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $perPage = (int) $request->query('per_page', 15);
-        $aps = ActionPlan::paginate($perPage);
+        $this->authorize('viewAny', ActionPlan::class);
 
-        return ApiResponse::success($aps);
+        $perPage = min((int) $request->query('per_page', 15), 100);
+
+        $query = ActionPlan::query()->with(['finding', 'department', 'assignees'])
+            ->orderBy('id', 'desc');
+
+        if ($findingId = $request->query('finding_id')) {
+            $query->where('finding_id', (int) $findingId);
+        }
+
+        if ($deptId = $request->query('department_id')) {
+            $query->where('department_id', (int) $deptId);
+        }
+
+        if ($status = $request->query('status')) {
+            $query->where('status', $status);
+        }
+
+        $pagination = $query->paginate($perPage);
+
+        return ApiResponse::success([
+            'data' => ActionPlanResource::collection($pagination->items())->resolve(),
+            'current_page' => $pagination->currentPage(),
+            'last_page' => $pagination->lastPage(),
+            'per_page' => $pagination->perPage(),
+            'total' => $pagination->total(),
+        ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreActionPlanRequest $request): JsonResponse
     {
-        $request->validate([
-            'finding_id' => 'required|exists:findings,id',
-            'department_ids' => 'required|array|min:1',
-            'title' => 'required|string',
-            'condition' => 'nullable|string',
-            'criteria' => 'nullable|string',
-            'cause' => 'nullable|string',
-            'impact' => 'nullable|string',
-            'risk' => 'nullable|in:RENDAH,SEDANG,TINGGI,KRITIS',
-            'deadline' => 'nullable|date',
-            'loss_idr' => 'nullable|numeric',
-            'loss_usd' => 'nullable|numeric',
-        ]);
+        $this->authorize('create', ActionPlan::class);
 
         $finding = Finding::findOrFail($request->input('finding_id'));
+
         $service = new ActionPlanService();
         $aps = $service->createForDepartments($finding, $request->validated(), $request->input('department_ids'));
 
-        return ApiResponse::success($aps, 'Action plan berhasil dibuat.', 201);
+        return ApiResponse::success(ActionPlanResource::collection($aps), 'Action plan berhasil dibuat.', 201);
     }
 
-    public function show(ActionPlan $ap): JsonResponse
+    public function show(ActionPlan $action_plan): JsonResponse
     {
-        $ap->load('finding', 'department', 'assignees');
+        $this->authorize('view', $action_plan);
 
-        return ApiResponse::success($ap);
+        $action_plan->load(['finding', 'department', 'assignees', 'documents']);
+
+        return ApiResponse::success(new ActionPlanResource($action_plan));
     }
 
-    public function send(Request $request): JsonResponse
+    public function update(UpdateActionPlanRequest $request, ActionPlan $action_plan): JsonResponse
     {
-        $request->validate([
-            'ids' => 'required|array|min:1',
-            'ids.*' => 'integer|exists:action_plans,id',
-        ]);
+        $this->authorize('update', $action_plan);
 
         $service = new ActionPlanService();
+        $ap = $service->update($action_plan, $request->validated());
+
+        $ap->load(['finding', 'department', 'assignees']);
+
+        return ApiResponse::success(new ActionPlanResource($ap), 'Action plan berhasil diperbarui.');
+    }
+
+    public function destroy(ActionPlan $action_plan): JsonResponse
+    {
+        $this->authorize('delete', $action_plan);
+
+        (new ActionPlanService())->destroy($action_plan);
+
+        return ApiResponse::success(null, 'Action plan berhasil dihapus.');
+    }
+
+    public function send(SendActionPlanRequest $request): JsonResponse
+    {
+        $service = new ActionPlanService();
+
+        foreach ($request->input('ids') as $id) {
+            $ap = ActionPlan::findOrFail($id);
+            $this->authorize('send', $ap);
+        }
+
         $aps = $service->send($request->input('ids'));
 
-        return ApiResponse::success($aps, 'Action plan berhasil dikirim.');
+        return ApiResponse::success(ActionPlanResource::collection($aps), 'Action plan berhasil dikirim.');
     }
 
-    public function assignPics(Request $request, ActionPlan $ap): JsonResponse
+    public function assignPics(AssignPicsRequest $request, ActionPlan $action_plan): JsonResponse
     {
-        $request->validate([
-            'user_ids' => 'required|array|min:1',
-            'user_ids.*' => 'integer|exists:users,id',
-        ]);
+        $this->authorize('assignPics', $action_plan);
 
         $service = new ActionPlanService();
-        $ap = $service->assignPics($ap, $request->input('user_ids'));
+        $ap = $service->assignPics($action_plan, $request->input('user_ids'));
 
-        return ApiResponse::success($ap, 'PIC berhasil ditunjuk.');
+        $ap->load(['finding', 'department', 'assignees']);
+
+        return ApiResponse::success(new ActionPlanResource($ap), 'PIC berhasil ditunjuk.');
+    }
+
+    public function changeDeadline(UpdateActionPlanDeadlineRequest $request, ActionPlan $action_plan): JsonResponse
+    {
+        $this->authorize('changeDeadline', $action_plan);
+
+        $service = new ActionPlanService();
+        $ap = $service->changeDeadline($action_plan, $request->input('deadline'), $request->input('reason'));
+
+        return ApiResponse::success(new ActionPlanResource($ap), 'Deadline action plan berhasil diubah.');
+    }
+
+    public function documents(ActionPlan $action_plan): JsonResponse
+    {
+        $this->authorize('view', $action_plan);
+
+        return ApiResponse::success(DocumentResource::collection($action_plan->documents));
+    }
+
+    public function uploadDocument(UploadActionPlanDocumentRequest $request, ActionPlan $action_plan): JsonResponse
+    {
+        $this->authorize('uploadDocument', $action_plan);
+
+        $file = $request->file('document');
+        $path = $file->store('action-plans', config('upload.disk'));
+
+        $document = $action_plan->documents()->create([
+            'label' => $request->input('label'),
+            'name' => $file->getClientOriginalName(),
+            'path' => $path,
+            'mime' => $file->getMimeType(),
+            'size' => $file->getSize(),
+            'uploaded_by' => auth()->id(),
+        ]);
+
+        return ApiResponse::success(new DocumentResource($document), 'Dokumen berhasil diunggah.', 201);
+    }
+
+    public function deleteDocument(ActionPlan $action_plan, Document $document): JsonResponse
+    {
+        $this->authorize('uploadDocument', $action_plan);
+        abort_if(
+            $document->documentable_type !== $action_plan->getMorphClass() || $document->documentable_id !== $action_plan->id,
+            404
+        );
+
+        $document->delete();
+
+        return ApiResponse::success(null, 'Dokumen berhasil dihapus.');
+    }
+
+    public function downloadDocument(ActionPlan $action_plan, Document $document): StreamedResponse
+    {
+        $this->authorize('view', $action_plan);
+        abort_if(
+            $document->documentable_type !== $action_plan->getMorphClass() || $document->documentable_id !== $action_plan->id,
+            404
+        );
+
+        return Storage::disk(config('upload.disk'))->download($document->path, $document->name);
     }
 }

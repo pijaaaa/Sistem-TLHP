@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\FindingSource;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreFindingRequest extends FormRequest
 {
@@ -14,13 +16,15 @@ class StoreFindingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => ['required', 'string', 'max:50', 'unique:findings,code'],
             'title' => ['required', 'string', 'max:255'],
+            'source' => ['nullable', Rule::enum(FindingSource::class)],
+            'source_name' => ['nullable', 'string', 'max:255'],
+            'lhp_number' => ['nullable', 'string', 'max:100'],
+            'lhp_date' => ['nullable', 'date'],
             'finding_date' => ['nullable', 'date'],
-            'severity' => ['nullable', 'string', 'max:50'],
-            'recommendation' => ['nullable', 'string'],
-            'auditor_action_plan' => ['nullable', 'string'],
-            'is_active' => ['boolean'],
+            'response_period_start' => ['nullable', 'date'],
+            'response_period_end' => ['nullable', 'date', 'after_or_equal:response_period_start'],
+            'scope' => ['nullable', 'string'],
         ];
     }
 }

@@ -43,8 +43,8 @@ class ActionPlanVisibility implements Scope
                     ->where('user_id', $user->id);
             })
             ->where('sent_at', '!=', null)
-            ->where(function ($q) {
-                $q->whereNotIn('status', [FindingStatus::Closed->value]);
+            ->whereHas('finding', function ($q) {
+                $q->where('status', '!=', FindingStatus::Closed->value);
             });
             return;
         }

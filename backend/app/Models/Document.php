@@ -4,21 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class FindingDocument extends Model
+class Document extends Model
 {
     protected $fillable = [
-        'finding_id',
+        'documentable_type',
+        'documentable_id',
+        'label',
         'name',
         'path',
         'mime',
         'size',
-        'label',
         'uploaded_by',
     ];
 
-    public function finding()
+    public function documentable()
     {
-        return $this->belongsTo(Finding::class);
+        return $this->morphTo();
     }
 
     public function uploader()

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\ActionPlanStatus;
+use App\Enums\RiskLevel;
 use App\Scopes\ActionPlanVisibility;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -33,6 +35,12 @@ class ActionPlan extends Model
     protected $casts = [
         'deadline' => 'date',
         'sent_at' => 'datetime',
+        'status' => ActionPlanStatus::class,
+        'risk' => RiskLevel::class,
+        'current_revision' => 'integer',
+        'progress' => 'decimal:2',
+        'loss_idr' => 'decimal:0',
+        'loss_usd' => 'decimal:2',
     ];
 
     protected static function booted(): void

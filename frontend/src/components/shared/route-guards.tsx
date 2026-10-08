@@ -10,13 +10,14 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ fallback }: ProtectedRouteProps) => {
   const { user, isReady } = useAuth()
+  const location = useLocation()
 
   if (!isReady) {
     return fallback ?? <div className="flex h-screen items-center justify-center">Memuat...</div>
   }
 
   if (!user) {
-    return <Navigate to="/login" state={{ from: useLocation() }} replace />
+    return <Navigate to="/login" state={{ from: location }} replace />
   }
 
   return <Outlet />
@@ -31,12 +32,11 @@ interface PermissionRouteProps {
 
 const PermissionRoute = ({ menu, action, children, fallback }: PermissionRouteProps) => {
   const { isReady } = useAuth()
+  const perm = usePermission(menu)
 
   if (!isReady) {
     return fallback ?? <div className="flex h-screen items-center justify-center">Memuat...</div>
   }
-
-  const perm = usePermission(menu)
 
   if (!perm[action]) {
     return <Navigate to="/403" replace />

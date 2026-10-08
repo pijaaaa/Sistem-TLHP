@@ -11,16 +11,13 @@ import DepartmentsPage from '@/pages/master/DepartmentsPage'
 import EmployeesPage from '@/pages/master/EmployeesPage'
 import UsersPage from '@/pages/master/UsersPage'
 import PermissionsPage from '@/pages/master/PermissionsPage'
-import FindingsReportsPage from '@/pages/findings/FindingsReportsPage'
-import FindingsPage from '@/pages/findings/FindingsPage'
-import FindingsDistributionPage from '@/pages/findings/FindingsDistributionPage'
-import FindingDepartmentsPage from '@/pages/findings/FindingDepartmentsPage'
-import ActionPlansPage from '@/pages/ActionPlansPage'
-import ActionPlanReviewsPage from '@/pages/findings/ActionPlanReviewsPage'
-import EvidencePage from '@/pages/findings/EvidencePage'
-import AssessmentsPage from '@/pages/findings/AssessmentsPage'
-import VerificationsPage from '@/pages/findings/VerificationsPage'
 import AuditTrailPage from '@/pages/AuditTrailPage'
+import FindingsPage from '@/pages/findings/FindingsPage'
+import FindingFormPage from '@/pages/findings/FindingFormPage'
+import FindingDetailPage from '@/pages/findings/FindingDetailPage'
+import ActionPlansPage from '@/pages/action-plans/ActionPlansPage'
+import ActionPlanFormPage from '@/pages/action-plans/ActionPlanFormPage'
+import ActionPlanDetailPage from '@/pages/action-plans/ActionPlanDetailPage'
 
 function App() {
   return (
@@ -73,39 +70,39 @@ function App() {
               }
             />
             <Route
-              path="findings/reports"
+              path="temuan"
               element={
-                <PermissionRoute menu="findings.reports" action="view">
-                  <FindingsReportsPage />
-                </PermissionRoute>
-              }
-            />
-            <Route
-              path="findings"
-              element={
-                <PermissionRoute menu="findings.list" action="view">
+                <PermissionRoute menu="findings" action="view">
                   <FindingsPage />
                 </PermissionRoute>
               }
             />
             <Route
-              path="findings/distribution"
+              path="temuan/baru"
               element={
-                <PermissionRoute menu="findings.distribution" action="view">
-                  <FindingsDistributionPage />
+                <PermissionRoute menu="findings" action="create">
+                  <FindingFormPage />
                 </PermissionRoute>
               }
             />
             <Route
-              path="finding-departments"
+              path="temuan/:id/edit"
               element={
-                <PermissionRoute menu="findings.list" action="view">
-                  <FindingDepartmentsPage />
+                <PermissionRoute menu="findings" action="update">
+                  <FindingFormPage />
                 </PermissionRoute>
               }
             />
             <Route
-              path="tindak-lanjut"
+              path="temuan/:id"
+              element={
+                <PermissionRoute menu="findings" action="view">
+                  <FindingDetailPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="action-plan"
               element={
                 <PermissionRoute menu="action_plans" action="view">
                   <ActionPlansPage />
@@ -113,34 +110,18 @@ function App() {
               }
             />
             <Route
-              path="action-plan-reviews"
+              path="action-plan/baru"
               element={
-                <PermissionRoute menu="action_plan_reviews" action="view">
-                  <ActionPlanReviewsPage />
+                <PermissionRoute menu="action_plans" action="create">
+                  <ActionPlanFormPage />
                 </PermissionRoute>
               }
             />
             <Route
-              path="evidence"
+              path="action-plan/:id"
               element={
-                <PermissionRoute menu="evidence" action="view">
-                  <EvidencePage />
-                </PermissionRoute>
-              }
-            />
-            <Route
-              path="assessments"
-              element={
-                <PermissionRoute menu="assessments" action="view">
-                  <AssessmentsPage />
-                </PermissionRoute>
-              }
-            />
-            <Route
-              path="verifications"
-              element={
-                <PermissionRoute menu="verifications" action="view">
-                  <VerificationsPage />
+                <PermissionRoute menu="action_plans" action="view">
+                  <ActionPlanDetailPage />
                 </PermissionRoute>
               }
             />

@@ -30,5 +30,19 @@ class LookupController extends Controller
             'data' => DepartmentResource::collection($departments),
         ]);
     }
+
+    public function staff(Request $request)
+    {
+        $departmentId = (int) $request->query('department_id');
+        abort_if($departmentId === 0, 422, 'department_id wajib diisi.');
+
+        $staff = \App\Models\User::where('department_id', $departmentId)
+            ->where('role', \App\Enums\Role::StaffDept->value)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'username']);
+
+        return ApiResponse::success(['data' => $staff]);
+    }
 }
 

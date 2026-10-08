@@ -50,8 +50,8 @@ test('staff tidak boleh POST department (403)', function () {
 
 test('admin bisa CRUD department', function () {
     $this->seed([DepartmentSeeder::class, MenuSeeder::class, PermissionSeeder::class]);
-    makeUser(Role::AdminSpi);
-    $admin = User::where('role', Role::AdminSpi->value)->first();
+    makeUser(Role::SuperAdmin);
+    $admin = User::where('role', Role::SuperAdmin->value)->first();
 
     $create = $this->actingAs($admin, 'sanctum')->postJson('/api/v1/master/departments', [
         'code' => 'NEWTES', 'name' => 'Departemen Test',
@@ -77,8 +77,8 @@ test('department cache terinvalidasi setelah create', function () {
     $this->seed([DepartmentSeeder::class, MenuSeeder::class, PermissionSeeder::class]);
 
     DepartmentService::all(); // prime cache
-    makeUser(Role::AdminSpi);
-    $admin = User::where('role', Role::AdminSpi->value)->first();
+    makeUser(Role::SuperAdmin);
+    $admin = User::where('role', Role::SuperAdmin->value)->first();
 
     $before = DepartmentService::all()->where('code', 'CACHETEST')->isEmpty();
     expect($before)->toBeTrue();
@@ -93,8 +93,8 @@ test('department cache terinvalidasi setelah create', function () {
 
 test('employee create mem-validasi department_id exists', function () {
     $this->seed([DepartmentSeeder::class, MenuSeeder::class, PermissionSeeder::class]);
-    makeUser(Role::AdminSpi);
-    $admin = User::where('role', Role::AdminSpi->value)->first();
+    makeUser(Role::SuperAdmin);
+    $admin = User::where('role', Role::SuperAdmin->value)->first();
 
     $response = $this->actingAs($admin, 'sanctum')->postJson('/api/v1/master/employees', [
         'nik' => '123', 'name' => 'Budi', 'position' => 'Staff', 'department_id' => '9999',
@@ -104,8 +104,8 @@ test('employee create mem-validasi department_id exists', function () {
 
 test('user create mem-validasi role enum dan password confirmed', function () {
     $this->seed([DepartmentSeeder::class, MenuSeeder::class, PermissionSeeder::class]);
-    makeUser(Role::AdminSpi);
-    $admin = User::where('role', Role::AdminSpi->value)->first();
+    makeUser(Role::SuperAdmin);
+    $admin = User::where('role', Role::SuperAdmin->value)->first();
 
     $response = $this->actingAs($admin, 'sanctum')->postJson('/api/v1/master/users', [
         'name' => 'Budi',

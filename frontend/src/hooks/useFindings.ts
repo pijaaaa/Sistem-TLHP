@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { findingsApi } from '@/api/findings'
-import type { Finding, FindingDocument, FindingPayload, FindingDocumentPayload } from '@/types/finding'
+import type { Finding, FindingPayload } from '@/types/finding'
 
-export const useFindings = (params?: { page?: number; per_page?: number }) =>
+export const useFindings = (params?: { page?: number; per_page?: number; status?: string; fiscal_year?: number | string; source?: string; department_id?: number | string; q?: string }) =>
   useQuery({
     queryKey: ['findings', params],
     queryFn: () => findingsApi.list(params),
@@ -18,18 +18,15 @@ export const useFinding = (id: number) =>
 export const useCreateFinding = () => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (payload: FindingPayload) => findingsApi.create(payload),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['findings'] })
-    },
+    mutationFn: findingsApi.create,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['findings'] }),
   })
 }
 
 export const useUpdateFinding = () => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (payload: { id: number } & FindingPayload) =>
-      findingsApi.update(payload.id, payload),
+    mutationFn: (payload: { id: number } & FindingPayload) => findingsApi.update(payload.id, payload),
     onSuccess: (finding: Finding) => {
       qc.invalidateQueries({ queryKey: ['findings'] })
       qc.invalidateQueries({ queryKey: ['findings', finding.id] })
@@ -45,10 +42,10 @@ export const useDeleteFinding = () => {
   })
 }
 
-export const useSendToIA = () => {
+export const useRegisterFinding = () => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: findingsApi.sendToIA,
+    mutationFn: (payload: { id: number; department_ids: number[] }) => findingsApi.register(payload.id, payload.department_ids),
     onSuccess: (finding: Finding) => {
       qc.invalidateQueries({ queryKey: ['findings'] })
       qc.invalidateQueries({ queryKey: ['findings', finding.id] })
@@ -56,68 +53,16 @@ export const useSendToIA = () => {
   })
 }
 
-export const usePendingAssessments = (params?: { page?: number; per_page?: number }) =>
-  useQuery({
-    queryKey: ['pending-assessments', params],
-    queryFn: () => findingsApi.pendingAssessment(params),
-  })
-
-export const useAssessFinding = () => {
+export const useActivateFinding = () => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({
-      id,
-      ...payload
-    }: {
-      id: number
-      assessment_status: string
-      note?: string | null
-      department_ids?: number[]
-    }) => findingsApi.assess(id, payload),
+    mutationFn: findingsApi.activate,
     onSuccess: (finding: Finding) => {
-      qc.invalidateQueries({ queryKey: ['pending-assessments'] })
       qc.invalidateQueries({ queryKey: ['findings'] })
       qc.invalidateQueries({ queryKey: ['findings', finding.id] })
-      qc.invalidateQueries({ queryKey: ['finding-departments'] })
     },
   })
 }
-
-export const usePendingVerifications = (params?: { page?: number; per_page?: number }) =>
-  useQuery({
-    queryKey: ['pending-verifications', params],
-    queryFn: () => findingsApi.pendingVerifications(params),
-  })
-
-export const useRecordVerification = () => {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({
-      id,
-      ...payload
-    }: {
-      id: number
-      auditor_conclusion: string
-      auditor_result?: string | null
-      verified_date?: string | null
-      notes?: string | null
-    }) => findingsApi.recordVerification(id, payload),
-    onSuccess: (result) => {
-      qc.invalidateQueries({ queryKey: ['pending-verifications'] })
-      qc.invalidateQueries({ queryKey: ['findings'] })
-      qc.invalidateQueries({ queryKey: ['findings', result.finding.id] })
-      qc.invalidateQueries({ queryKey: ['verifications', result.finding.id] })
-      qc.invalidateQueries({ queryKey: ['finding-departments'] })
-    },
-  })
-}
-
-export const useFindingVerifications = (id: number) =>
-  useQuery({
-    queryKey: ['verifications', id],
-    queryFn: () => findingsApi.verifications(id),
-    enabled: !!id,
-  })
 
 export const useFindingDocuments = (findingId: number) =>
   useQuery({
@@ -129,11 +74,11 @@ export const useFindingDocuments = (findingId: number) =>
 export const useUploadFindingDocument = () => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (payload: { findingId: number } & FindingDocumentPayload) =>
-      findingsApi.uploadDocument(payload.findingId, payload),
-    onSuccess: (_data: FindingDocument, variables: { findingId: number }) => {
+    mutationFn: (payload: { findingId: number; file: File; label: string }) =>
+      findingsApi.uploadDocument(payload.findingId, payload.file, payload.label),
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['finding-documents', variables.findingId] })
-      qc.invalidateQueries({ queryKey: ['findings'] })
+      qc.invalidateQueries({ queryKey: ['findings', variables.findingId] })
     },
   })
 }
@@ -143,9 +88,9 @@ export const useDeleteFindingDocument = () => {
   return useMutation({
     mutationFn: (payload: { findingId: number; documentId: number }) =>
       findingsApi.deleteDocument(payload.findingId, payload.documentId),
-    onSuccess: (_data: unknown, variables: { findingId: number }) => {
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['finding-documents', variables.findingId] })
-      qc.invalidateQueries({ queryKey: ['findings'] })
+      qc.invalidateQueries({ queryKey: ['findings', variables.findingId] })
     },
   })
 }
