@@ -1,41 +1,46 @@
+import { Suspense, lazy } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ProtectedRoute, PermissionRoute } from '@/components/shared'
 import { AppLayout } from '@/layouts/AppLayout'
-import HomePage from '@/pages/HomePage'
-import DevComponentsPage from '@/pages/DevComponentsPage'
-import LoginPage from '@/pages/LoginPage'
-import Forbidden from '@/pages/Forbidden'
-import NotFound from '@/pages/NotFound'
-import DepartmentsPage from '@/pages/master/DepartmentsPage'
-import EmployeesPage from '@/pages/master/EmployeesPage'
-import UsersPage from '@/pages/master/UsersPage'
-import PermissionsPage from '@/pages/master/PermissionsPage'
-import AuditTrailPage from '@/pages/AuditTrailPage'
-import InboxPage from '@/pages/InboxPage'
-import ReportsPage from '@/pages/ReportsPage'
-import FindingsPage from '@/pages/findings/FindingsPage'
-import FindingFormPage from '@/pages/findings/FindingFormPage'
-import FindingDetailPage from '@/pages/findings/FindingDetailPage'
-import ActionPlansPage from '@/pages/action-plans/ActionPlansPage'
-import ActionPlanFormPage from '@/pages/action-plans/ActionPlanFormPage'
-import ActionPlanDetailPage from '@/pages/action-plans/ActionPlanDetailPage'
-import FollowUpsPage from '@/pages/follow-ups/FollowUpsPage'
-import FollowUpBatchFormPage from '@/pages/follow-ups/FollowUpBatchFormPage'
-import PersetujuanPage from '@/pages/follow-ups/PersetujuanPage'
-import IaMonitoringPage from '@/pages/follow-ups/IaMonitoringPage'
-import SpiReviewQueuePage from '@/pages/spi/SpiReviewQueuePage'
-import SpiReviewPage from '@/pages/spi/SpiReviewPage'
-import ExternalStatusPage from '@/pages/external/ExternalStatusPage'
-import ExternalStatusDetailPage from '@/pages/external/ExternalStatusDetailPage'
+
+const HomePage = lazy(() => import('@/pages/HomePage'))
+const DevComponentsPage = lazy(() => import('@/pages/DevComponentsPage'))
+const LoginPage = lazy(() => import('@/pages/LoginPage'))
+const Forbidden = lazy(() => import('@/pages/Forbidden'))
+const NotFound = lazy(() => import('@/pages/NotFound'))
+const DepartmentsPage = lazy(() => import('@/pages/master/DepartmentsPage'))
+const EmployeesPage = lazy(() => import('@/pages/master/EmployeesPage'))
+const UsersPage = lazy(() => import('@/pages/master/UsersPage'))
+const PermissionsPage = lazy(() => import('@/pages/master/PermissionsPage'))
+const AuditTrailPage = lazy(() => import('@/pages/AuditTrailPage'))
+const InboxPage = lazy(() => import('@/pages/InboxPage'))
+const ReportsPage = lazy(() => import('@/pages/ReportsPage'))
+const FindingsPage = lazy(() => import('@/pages/findings/FindingsPage'))
+const FindingFormPage = lazy(() => import('@/pages/findings/FindingFormPage'))
+const FindingDetailPage = lazy(() => import('@/pages/findings/FindingDetailPage'))
+const ActionPlansPage = lazy(() => import('@/pages/action-plans/ActionPlansPage'))
+const ActionPlanFormPage = lazy(() => import('@/pages/action-plans/ActionPlanFormPage'))
+const ActionPlanDetailPage = lazy(() => import('@/pages/action-plans/ActionPlanDetailPage'))
+const FollowUpsPage = lazy(() => import('@/pages/follow-ups/FollowUpsPage'))
+const FollowUpBatchFormPage = lazy(() => import('@/pages/follow-ups/FollowUpBatchFormPage'))
+const PersetujuanPage = lazy(() => import('@/pages/follow-ups/PersetujuanPage'))
+const IaMonitoringPage = lazy(() => import('@/pages/follow-ups/IaMonitoringPage'))
+const SpiReviewQueuePage = lazy(() => import('@/pages/spi/SpiReviewQueuePage'))
+const SpiReviewPage = lazy(() => import('@/pages/spi/SpiReviewPage'))
+const ExternalStatusPage = lazy(() => import('@/pages/external/ExternalStatusPage'))
+const ExternalStatusDetailPage = lazy(() => import('@/pages/external/ExternalStatusDetailPage'))
+
+const Loading = () => <div className="flex h-screen items-center justify-center text-sm text-gray-500">Memuat...</div>
 
 function App() {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/403" element={<Forbidden />} />
-        <Route path="/404" element={<NotFound />} />
+      <Suspense fallback={<Loading />}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/403" element={<Forbidden />} />
+          <Route path="/404" element={<NotFound />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<AppLayout />}>
@@ -236,7 +241,8 @@ function App() {
         </Route>
 
         <Route path="*" element={<NotFound />} />
-      </Routes>
+        </Routes>
+      </Suspense>
     </AuthProvider>
   )
 }

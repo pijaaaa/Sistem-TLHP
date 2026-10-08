@@ -1,144 +1,87 @@
-# Sistem TLHP — Tindak Lanjut Temuan Audit Eksternal
+# e-TLHT (Remodel)
 
-Aplikasi web untuk managing siklus penuh tindak lanjut temuan audit eksternal:
-input temuan → distribusi ke departemen → tindak lanjut PIC → review →
-evidence & progress → assessment IA → verifikasi auditor → closing.
+Sistem **Tindak Lanjut Hasil Temuan** audit eksternal. 
+Backend: **Laravel 11 API** (`/api/v1`) + MySQL (dev di Laragon). Frontend: **React + Vite + TypeScript** + TanStack Query + React Router + Tailwind.
 
-Alur dan state machine lengkap ada di [`docs/roadmap.md`](docs/roadmap.md).
+Alur domain: **Temuan** (`findings`) → **Action Plan** (`action_plans`, per departemen) → **Tindak Lanjut** (`follow_ups`, oleh PIC).
 
-## Stack
+> Dokumentasi lengkap: `docs/roadmap-remodel.md` (alur/status/visibilitas/milestone), `docs/api.md` (endpoint), `docs/deploy.md` (deploy & scheduler).
 
-| Bagian | Teknologi |
+## Prasyarat (Laragon)
+
+- PHP 8.3 (Laragon `php.ini`: aktifkan `pdo_mysql`, `pdo_sqlite`, `fileinfo`).
+- Composer, Node.js 20+, MySQL (atau SQLite untuk test).
+- Ekstensi `zip` (opsional), `gd` tidak wajib.
+
+## Setup dari nol
+
+```bash
+# 1. Backend
+cd backend
+composer install
+copy .env.example .env            # atur DB_DATABASE=etlht, DB_USERNAME=root, DB_PASSWORD=
+php artisan key:generate
+php artisan migrate:fresh --seed   # struktur + menu/izin + akun dev
+php artisan serve                 # http://localhost:8000
+
+# 2. Frontend
+cd ../frontend
+npm install                        # vite proxy /api → http://localhost:8000
+npm run dev                        # http://localhost:5173
+```
+
+Akun dev dibuat oleh `EmployeeUserSeeder` (password dari `DEV_USER_PASSWORD`, default `password`):
+
+| Username | Peran |
 |---|---|
-| Backend | Laravel 11 (API, prefix `/api/v1`), Sanctum token auth, MySQL |
-| Frontend | React + Vite + TypeScript, TanStack Query, React Router, Tailwind |
-| Testing | Pest (feature test), SQLite in-memory |
+| `admin_spi` | Admin SPI |
+| `internal_audit` | Internal Audit (IA) |
+| `manager_ia` | Manager IA (baca saja) |
+| `kepala_spi` | Kepala SPI |
+| `mgr_<kode_dept>` | Manager Departemen |
+| `pic_<n>_<kode_dept>` | PIC / Staff Departemen |
+| `manager_ia_auditee` / `pic_ia` | Departemen IA sebagai auditee |
+| `superadmin` | Super Admin teknis |
 
-## Menjalankan lokal (Laragon)
-
-### 1. Backend
+## Data demo
 
 ```bash
 cd backend
-composer install
-cp .env.example .env
-php artisan key:generate
-```
-
-Isi `.env` minimal:
-
-```dotenv
-APP_ENV=local
-APP_DEBUG=true
-APP_URL=http://localhost:8000
-
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=sistem_tlhp
-DB_USERNAME=root
-DB_PASSWORD=
-
-# Token Sanctum untuk API ( Sanctum:: expirationMinutes )
-SANCTUM_STATEFUL_DOMAINS=localhost:5173
-
-# Batas unggah
-UPLOAD_MAX_SIZE_KB=10240
-```
-
-Buat database lalu jalankan:
-
-```bash
-php artisan migrate --seed
-php artisan serve          # http://localhost:8000
-```
-
-Seeder membuat 13 departemen, seluruh menu + matriks izin per role, dan user
-developer. Password semua akun mengikuti `DEV_USER_PASSWORD` (default
-`password`):
-
-| Role | Email | Departemen |
-|---|---|---|
-| Admin SPI | `admin_spi@example.com` | FINANCE & ICT |
-| Manager IA | `manager_ia@example.com` | IA |
-| Manager Departemen | `manager_finance@example.com` | FINANCE & ICT |
-| Staff / PIC | `pic_finance@example.com` | FINANCE & ICT |
-| Manager SPI | `manager_spi@example.com` | FINANCE & ICT |
-| Super Admin | `superadmin@example.com` | FINANCE & ICT |
-
-> Set `DEV_USER_PASSWORD` yang kuat, atau ganti password seluruh akun developer
-> sebelum dipakai di lingkungan mana pun yang dapat diakses pengguna lain.
-
-### 2. Frontend
-
-```bash
-cd frontend
-npm install
-cp .env.example .env        # VITE_API_URL=http://localhost:8000/api/v1
-npm run dev                 # http://localhost:5173
+php artisan demo:reset   # migrate:fresh --seed + data lintas status (draft s/d SSR closed) + notifikasi contoh
 ```
 
 ## Menjalankan test
 
 ```bash
-cd backend && php artisan test          # seluruh feature test
-cd backend && php artisan test --filter=EndToEndTest   # alur penuh
-
-cd frontend && npm run build            # cek TypeScript + bundling
+cd backend
+php artisan test        # Pest/PHPUnit feature test (SQLite in-memory), termasuk alur penuh & matriks visibilitas
 ```
 
-## Deploy
+Frontend: `npm run build` (produksi) / `npx oxlint .` (lint).
 
-### Backend
+## Scheduler & pengingat
 
-```bash
-composer install --no-dev --optimize-autoloader
-php artisan config:cache
-php artisan route:cache
-php artisan migrate --force
-php artisan storage:link               # tidak wajib: dokumen memakai disk `private`
-php artisan optimize
+`php artisan reminders:daily` (jadwal 07:00 di `routes/console.php`): pengingat H-30/14/7/3/1, eskalasi keterlambatan, pengingat tugas belum dibuka — idempoten via `reminder_logs`. Di Windows gunakan Task Scheduler memanggil `php artisan schedule:run` tiap menit (lihat `docs/deploy.md`).
+
+## Struktur ringkas
+
+```
+backend/app/
+  Enums/        Status & role (FindingStatus, ActionPlanStatus, FollowUpStatus, ...)
+  Services/     Logika bisnis berlapis (Finding*, ActionPlan, FollowUp, Review, SPI, External Status, Progress, TaskDispatcher, Reports)
+  Scopes/       FindingVisibility, ActionPlanVisibility, FollowUpVisibility
+  Policies/     Otorisasi; CacheService & AuditLogger di app/Support
+frontend/src/
+  pages/        Halaman alur (temuan, action-plan, tindak-lanjut, persetujuan, pemantauan, review-spi, status-eksternal, inbox, laporan, log-aktivitas)
+  components/shared/  Komponen reusable (DataTable, Tabs, Folder*Select, FollowUpDetailModal, ReviewActionBar, ...)
+  hooks/        TanStack Query per entitas
+  lib/links.ts  Route helper terpusat notifikasi/inbox
 ```
 
-Wajib di produksi:
+## Catatan penting
 
-- `APP_DEBUG=false`
-- `APP_ENV=production`
-- `APP_URL` sesuai domain
-- `CACHE_STORE=redis` atau `file` (driver `file` sudah didukung; jangan pakai
-  cache tag)
-- `SESSION_DRIVER=file`
-- Kunci disk `private` tetap di dalam `storage/app/private` — **jangan** diarahkan
-  ke folder web publik. Dokumen hanya bisa diunduh lewat endpoint terotorisasi.
-
-### Frontend
-
-```bash
-npm ci
-npm run build          # keluaran di dist/
-```
-
-Sajikan `dist/` lewat web server (nginx/Apache) dan arahkan `/api/*` ke backend.
-
-### Checklist produksi
-
-- [ ] HTTPS aktif; `SANCTUM_STATEFUL_DOMAINS` disesuaikan
-- [ ] Password akun developer diganti
-- [ ] Backup terjadwal untuk MySQL **dan** `storage/app/private`
-- [ ] Login dibatasi 5 percobaan/menit per email+IP; unggahan dibatasi
-      120 permintaan/menit per pengguna
-- [ ] Login tidak lagi memakai session web: seluruh autentikasi via token, dan
-      logout mencabut token di database
-
-## Catatan arsitektur
-
-- **Izin menu** tersimpan di DB (`menus`, `role_menu_permissions`,
-  `user_menu_permissions`). Route memakai middleware `permission:{menu_code},{aksi}`.
-  Izin menu mengatur akses halaman/CRUD, **tidak** melewati aturan alur kerja
-  maupun scope visibilitas data (PIC hanya melihat temuan miliknya).
-- **Cache** memakai `App\Support\CacheService` dengan key berversi + invalidasi
-  eksplisit. Dilarang `Cache::remember` langsung.
-- **Audit trail** mencatat setiap perubahan state ke tabel `audits`. Kegagalan
-  pencatatan tidak pernah menggagalkan operasi bisnis.
-- **Ronde temuan**: kolom `round` Attach to `findings`, `finding_departments`,
-  `action_plans`, dan `evidence_submissions`. Ronde lama bersifat read-only.
+- Visibilitas data hanya lewat scope global (temuan/AP/TL); role pemantau melihat tindak lanjut setelah disetujui manager.
+- Temuan/AP **CLOSED** read-only kecuali Kepala SPI; setiap perubahan dicatat nilai lama & baru.
+- Bobot TL integer, total aktif ≤100 (wajib 100 saat ajukan ke SPI); `target_date` ≤ deadline AP; progres tidak bisa turun.
+- Dilarang endpoint unduh massal/zip; dokumen diunduh satu per satu lewat endpoint terotorisasi.
+- Cache hanya melalui `App\Support\CacheService` (group berversi; invalidasi otomatis saat data berubah).

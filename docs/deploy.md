@@ -36,3 +36,28 @@ Catatan: pastikan `php.ini` mengaktifkan ekstensi yang dibutuhkan (pdo_sqlite/pd
 
 - Backend API: `cd backend && php artisan serve` (default `http://localhost:8000`).
 - Frontend: `cd frontend && npm run dev` (Vite proxy `/api` → `:8000`, port 5173).
+
+## Optimasi produksi
+
+```bash
+cd backend
+composer install --no-dev --optimize-autoloader
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan migrate --force   # tanpa fresh di produksi
+```
+
+Cache config/route perlu di-refresh setelah perubahan `.env` atau `routes/*` (`php artisan optimize:clear`).
+
+## Storage & dokumen
+
+Dokumen disimpan di disk `private` (sesuai `config/filesystems.php`, key `upload.disk`). Di produksi titik ke
+`storage_path('app/private')` (atau penyimpanan objek S3 bila `upload.disk=s3`). Simbolik link:
+`php artisan storage:link`. Dokumen hanya diunduh **satu per satu** lewat endpoint ber-token; tidak ada unduhan massal/zip.
+
+## Backup
+
+- Database: `mysqldump -u root etlht > backup_$(date +%F).sql` (atau fitur backup Laragon).
+- Dokumen: salin folder `backend/storage/app/private`.
+- Scheduler (Task Scheduler Windows) men-trigger `php artisan schedule:run` tiap menit sebagai prasyarat pengingat otomatis.

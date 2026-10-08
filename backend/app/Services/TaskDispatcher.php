@@ -246,16 +246,22 @@ class TaskDispatcher
     /** Penerima tidak berhak (mis. PIC, temuan sudah CLOSED) → tidak dapat notifikasi. */
     private static function hasAccess(User $recipient, Model $subject): bool
     {
-        if ($subject instanceof FollowUp || $subject instanceof ActionPlan || $subject instanceof Finding) {
-            $finding = $subject instanceof Finding ? $subject : ($subject->actionPlan ?? null)?->finding ?? null;
-            $finding = $finding ?? ($subject instanceof ActionPlan ? $subject->finding : null);
-            if ($finding && $finding->status === \App\Enums\FindingStatus::Closed->value
-                && $recipient->role === Role::StaffDept) {
-                return false;
-            }
+        if ($recipient->role !== Role::StaffDept) {
+            return true;
         }
 
-        return true;
+        $finding = null;
+        if ($subject instanceof Finding) {
+            $finding = $subject;
+        } elseif ($subject instanceof ActionPlan) {
+            $subject->loadMissing('finding');
+            $finding = $subject->finding;
+        } else {
+            $subject->loadMissing('actionPlan.finding');
+            $finding = $subject->actionPlan?->finding;
+        }
+
+        return !($finding && $finding->status === \App\Enums\FindingStatus::Closed->value);
     }
 
     private static function managerOfDept(int $departmentId): \Illuminate\Support\Collection
