@@ -32,6 +32,11 @@ class FindingPolicy
 
     public function update(User $user, Finding $finding): bool
     {
+        if ($finding->status === FindingStatus::Closed) {
+            return in_array($user->role, [Role::Kepala_spi, Role::SuperAdmin], true)
+                && PermissionService::can($user, 'findings', 'update');
+        }
+
         return $this->isWriter($user) && PermissionService::can($user, 'findings', 'update');
     }
 

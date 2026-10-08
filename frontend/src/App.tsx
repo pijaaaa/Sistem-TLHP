@@ -24,6 +24,8 @@ import PersetujuanPage from '@/pages/follow-ups/PersetujuanPage'
 import IaMonitoringPage from '@/pages/follow-ups/IaMonitoringPage'
 import SpiReviewQueuePage from '@/pages/spi/SpiReviewQueuePage'
 import SpiReviewPage from '@/pages/spi/SpiReviewPage'
+import ExternalStatusPage from '@/pages/external/ExternalStatusPage'
+import ExternalStatusDetailPage from '@/pages/external/ExternalStatusDetailPage'
 
 function App() {
   return (
@@ -176,6 +178,22 @@ function App() {
               element={
                 <PermissionRoute menu="spi_review" action="update">
                   <SpiReviewPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="status-eksternal"
+              element={
+                <PermissionRoute menu="external_status" action="view">
+                  <ExternalStatusPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="status-eksternal/:findingId"
+              element={
+                <PermissionRoute menu="external_status" action="create">
+                  <ExternalStatusDetailPage />
                 </PermissionRoute>
               }
             />

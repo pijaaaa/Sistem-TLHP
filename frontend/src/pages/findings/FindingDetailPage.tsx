@@ -5,11 +5,12 @@ import { useActionPlans, useSendActionPlans } from '@/hooks/useActionPlans'
 import { useFollowUps } from '@/hooks/useFollowUps'
 import { useAuditeeDepartments } from '@/hooks/useLookups'
 import { findingsApi } from '@/api/findings'
-import { PageHeader, DataTable, Can, DocumentPanel, Tabs, DepartmentMultiSelect, FollowUpStatusBadge } from '@/components/shared'
+import { PageHeader, DataTable, Can, DocumentPanel, Tabs, DepartmentMultiSelect, FollowUpStatusBadge, ExternalStatusTimeline } from '@/components/shared'
 import type { Column } from '@/components/shared/data-table'
 import { Button, Spinner, StatusBadge, Modal, ConfirmDialog } from '@/components/ui'
 import { useToast } from '@/components/ui/toast'
 import { usePermission } from '@/hooks/usePermission'
+import { useAuth } from '@/contexts/AuthContext'
 import { getFindingStatusVariant, getActionPlanStatusVariant, type ActionPlan } from '@/types/finding'
 import { isAxiosError, type AxiosError } from 'axios'
 
@@ -18,8 +19,10 @@ export default function FindingDetailPage() {
   const findingId = Number(id)
   const navigate = useNavigate()
   const { showToast } = useToast()
+  const { user } = useAuth()
   const perm = usePermission('findings')
   const auditPerm = usePermission('audit_trail')
+  const extStatusPerm = usePermission('external_status')
   const [tab, setTab] = useState('ringkasan')
   const [registerOpen, setRegisterOpen] = useState(false)
   const [selectedDepts, setSelectedDepts] = useState<number[]>([])
@@ -48,6 +51,7 @@ export default function FindingDetailPage() {
     { key: 'action-plan', label: 'Action Plan', badge: apPage?.total ?? 0 },
     { key: 'tindak-lanjut', label: 'Tindak Lanjut', badge: fuPage?.total ?? 0 },
     { key: 'riwayat', label: 'Riwayat' },
+    ...(extStatusPerm.view ? [{ key: 'status-eksternal', label: 'Status Eksternal' }] : []),
   ]
 
   const errorMsg = (e: unknown, fallback: string) =>
@@ -144,6 +148,11 @@ export default function FindingDetailPage() {
                 {finding.status === 'TERDAFTAR' && (
                   <Button onClick={() => setActivateOpen(true)}>Aktifkan</Button>
                 )}
+                {finding.status === 'CLOSED' && user?.role === 'kepala_spi' && (
+                  <>
+                    <Button variant="outline" onClick={() => navigate(`/temuan/${finding.id}/edit`)}>Edit (Kepala SPI)</Button>
+                  </>
+                )}
               </Can>
             </div>
           )
@@ -231,6 +240,17 @@ export default function FindingDetailPage() {
                   </tbody>
                 </table>
               )}
+            </div>
+          )}
+
+          {tab === 'status-eksternal' && (
+            <div className="bg-white rounded-lg shadow p-6">
+              {finding.status === 'CLOSED' && user?.role === 'kepala_spi' && (
+                <p className="text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded p-2 mb-3">
+                  Temuan Closed. Setiap perubahan oleh Kepala SPI dicatat (nilai lama & baru).
+                </p>
+              )}
+              <ExternalStatusTimeline findingId={findingId} />
             </div>
           )}
 

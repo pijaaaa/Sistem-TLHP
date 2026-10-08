@@ -176,5 +176,5 @@ test('closed finding cannot be edited by admin_spi', function () {
     $finding = makeDraft($this->payload);
     $finding->update(['status' => FindingStatus::Closed]);
 
-    $this->putJson("/api/v1/findings/{$finding->id}", ['title' => 'Ubah closed'])->assertStatus(422);
+    $this->putJson("/api/v1/findings/{$finding->id}", ['title' => 'Ubah closed'])->assertStatus(403);
 });

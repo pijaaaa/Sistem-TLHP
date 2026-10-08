@@ -26,6 +26,7 @@ const getIcon = (iconName: string) => {
     'check-circle': LucideIcons.CheckCircle2,
     'thumbs-up': LucideIcons.ThumbsUp,
     'eye': LucideIcons.Eye,
+    'globe': LucideIcons.Globe,
     'logout': LucideIcons.LogOut,
   }
   return iconMap[iconName] || LucideIcons.FileQuestion

@@ -294,6 +294,27 @@ export interface SpiBundle {
   follow_ups: Record<number, SpiBundleFollowUp[]>
 }
 
+export type ExternalStatus = 'SSR' | 'BSR' | 'BD' | 'TDTL'
+
+export const EXTERNAL_STATUS_OPTIONS: { value: ExternalStatus; label: string; closes: boolean }[] = [
+  { value: 'SSR', label: 'SSR — Sudah Selesai & Direkomendasikan', closes: true },
+  { value: 'BSR', label: 'BSR — Belum Selesai, Perlu Revisi', closes: false },
+  { value: 'BD', label: 'BD — Belum Ditindaklanjuti', closes: false },
+  { value: 'TDTL', label: 'TDTL — Tidak Dapat Ditindaklanjuti', closes: false },
+]
+
+export interface ExternalStatusRecord {
+  id: number
+  status: ExternalStatus
+  status_label: string
+  note: string | null
+  recorded_by: number | null
+  recorder?: { id: number; name: string } | null
+  recorded_at: string
+  action_plans: { id: number; code: string; title: string }[]
+  documents: { id: number; label: string; name: string; size: number }[]
+}
+
 export const FOLLOW_UP_STATUS_OPTIONS: { value: FollowUpStatus; label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'info' }[] = [
   { value: 'DRAFT', label: 'Draft', variant: 'warning' },
   { value: 'DIAJUKAN', label: 'Diajukan', variant: 'info' },

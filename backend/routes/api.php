@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\ActionPlanController;
 use App\Http\Controllers\Api\FollowUpController;
 use App\Http\Controllers\Api\SpiReviewController;
+use App\Http\Controllers\Api\ExternalStatusController;
 use App\Http\Controllers\Api\LookupController;
 use App\Http\Controllers\Api\Master\DepartmentController;
 use App\Http\Controllers\Api\Master\EmployeeController;
@@ -173,6 +174,15 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:spi_review,update');
         Route::post('action-plans/{action_plan}/spi-complete', [SpiReviewController::class, 'complete'])
             ->middleware('permission:spi_review,update');
+    });
+
+    Route::middleware(['auth:sanctum', 'permission:external_status,view'])->group(function () {
+        Route::get('external-status', [ExternalStatusController::class, 'index']);
+        Route::get('findings/{finding}/external-status-records', [ExternalStatusController::class, 'records']);
+        Route::post('findings/{finding}/external-status', [ExternalStatusController::class, 'store'])
+            ->middleware('permission:external_status,create');
+        Route::get('findings/{finding}/external-status-records/{record}/documents/{document}/download', [ExternalStatusController::class, 'downloadDocument'])
+            ->name('external-status.documents.download');
     });
 
     Route::middleware(['auth:sanctum', 'permission:audit_trail,view'])->group(function () {

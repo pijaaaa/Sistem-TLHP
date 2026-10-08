@@ -17,7 +17,7 @@ class MenuSeeder extends Seeder
             ['code' => 'follow_up_reviews', 'name' => 'Persetujuan Manager', 'path' => '/persetujuan', 'icon' => 'thumbs-up', 'parent_id' => null, 'sort_order' => 4, 'is_active' => true],
             ['code' => 'ia_monitoring', 'name' => 'Pemantauan IA', 'path' => '/pemantauan', 'icon' => 'eye', 'parent_id' => null, 'sort_order' => 5, 'is_active' => true],
             ['code' => 'spi_review', 'name' => 'Review SPI', 'path' => '/review-spi', 'icon' => 'search', 'parent_id' => null, 'sort_order' => 6, 'is_active' => true],
-            ['code' => 'external_status', 'name' => 'Status Eksternal', 'path' => '/status-eksternal', 'icon' => 'globe', 'parent_id' => null, 'sort_order' => 7, 'is_active' => false],
+            ['code' => 'external_status', 'name' => 'Status Eksternal', 'path' => '/status-eksternal', 'icon' => 'globe', 'parent_id' => null, 'sort_order' => 7, 'is_active' => true],
             ['code' => 'inbox', 'name' => 'Inbox Persetujuan', 'path' => '/inbox', 'icon' => 'inbox', 'parent_id' => null, 'sort_order' => 8, 'is_active' => false],
             ['code' => 'reports', 'name' => 'Monitoring & Laporan', 'path' => '/laporan', 'icon' => 'bar-chart', 'parent_id' => null, 'sort_order' => 9, 'is_active' => false],
             ['code' => 'audit_trail', 'name' => 'Log Aktivitas', 'path' => '/log-aktivitas', 'icon' => 'history', 'parent_id' => null, 'sort_order' => 10, 'is_active' => true],

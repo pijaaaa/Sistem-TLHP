@@ -1,7 +1,7 @@
 import { apiClient } from '@/api/client'
 import type { ApiResponse } from '@/api/client'
 import type { AxiosResponse } from 'axios'
-import type { ActionPlan, ActionPlanPayload, ActionPlanUser, DocumentFile, Finding, FindingPayload, Department, FollowUp, FollowUpRowInput, FollowUpReview, FollowUpComment, FollowUpProgressReport, Page, SpiBundle } from '@/types/finding'
+import type { ActionPlan, ActionPlanPayload, ActionPlanUser, DocumentFile, Finding, FindingPayload, Department, FollowUp, FollowUpRowInput, FollowUpReview, FollowUpComment, FollowUpProgressReport, Page, SpiBundle, ExternalStatusRecord } from '@/types/finding'
 
 function unwrap<T>(res: AxiosResponse<ApiResponse<T>>): T {
   return res.data.data
@@ -203,6 +203,33 @@ export const spiApi = {
 
   complete: (id: number, newDeadline?: string | null) =>
     apiClient.post<ApiResponse<ActionPlan>>(`/action-plans/${id}/spi-complete`, { new_deadline: newDeadline || null }).then(unwrap),
+}
+
+export const externalStatusApi = {
+  records: (findingId: number) =>
+    apiClient.get<ApiResponse<ExternalStatusRecord[]>>(`/findings/${findingId}/external-status-records`).then(unwrap),
+
+  record: (findingId: number, payload: { status: string; note?: string | null; new_deadline?: string | null; files: { file: File; label: string }[]; action_plan_ids?: number[] }) => {
+    const form = new FormData()
+    form.append('status', payload.status)
+    if (payload.note) form.append('note', payload.note)
+    if (payload.new_deadline) form.append('new_deadline', payload.new_deadline)
+    payload.files.forEach((f, i) => {
+      form.append(`document[${i}][file]`, f.file)
+      form.append(`document[${i}][label]`, f.label)
+    })
+    if (payload.action_plan_ids) {
+      payload.action_plan_ids.forEach((id) => form.append('action_plan_ids[]', String(id)))
+    }
+    return apiClient
+      .post<ApiResponse<{ id: number }>>(`/findings/${findingId}/external-status`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then(unwrap)
+  },
+
+  recordDownload: (findingId: number, recordId: number, docId: number) =>
+    `${apiClient.defaults.baseURL}/findings/${findingId}/external-status-records/${recordId}/documents/${docId}/download`,
 }
 
 export { unwrap }
