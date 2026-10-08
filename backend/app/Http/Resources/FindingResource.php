@@ -26,7 +26,7 @@ class FindingResource extends JsonResource
             'status' => $this->status instanceof FindingStatus ? $this->status->value : $this->status,
             'status_label' => $this->status instanceof FindingStatus ? $this->status->label() : null,
             'age_days' => $this->age_days,
-            'progress' => (new \App\Services\ProgressService())->findingProgress($this),
+            'progress' => (new \App\Services\ProgressService())->findingProgress($this->resource),
             'activated_at' => $this->activated_at?->toDateTimeString(),
             'closed_at' => $this->closed_at?->toDateTimeString(),
             'closed_by' => $this->closed_by,

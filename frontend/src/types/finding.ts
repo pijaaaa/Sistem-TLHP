@@ -233,6 +233,67 @@ export interface FollowUpProgressReport {
   documents: DocumentFile[]
 }
 
+export interface SpiItem {
+  result: 'SESUAI' | 'REVISI'
+  result_label: string
+  note: string | null
+}
+
+export interface SpiRevision {
+  revision_no: number
+  label: string
+  source: string
+  source_label: string
+  reason: string
+  requested_by: string | null
+  requested_role: string | null
+  requested_at: string | null
+  forwarded_to_pic_at: string | null
+  new_deadline: string | null
+}
+
+export interface SpiBundleFollowUp {
+  id: number
+  revision_no: number
+  description: string
+  target_date: string
+  weight: number
+  progress: number
+  status: string
+  status_label: string
+  linked_follow_up_id: number | null
+  assignees: { id: number; name: string }[]
+  spi_item: SpiItem | null
+  progress_reports: {
+    id: number
+    progress_value: number
+    note: string | null
+    reported_at: string | null
+    reporter: string | null
+    documents: { id: number; label: string; name: string; size: number }[]
+  }[]
+  reviews: {
+    decision: string
+    decision_label: string
+    note: string | null
+    reviewer: string | null
+    created_at: string | null
+  }[]
+  comments: {
+    kind: string
+    kind_label: string
+    body: string
+    author: string | null
+    created_at: string | null
+  }[]
+}
+
+export interface SpiBundle {
+  action_plan: ActionPlan
+  revisions: SpiRevision[]
+  follow_ups: Record<number, SpiBundleFollowUp[]>
+}
+
 export const FOLLOW_UP_STATUS_OPTIONS: { value: FollowUpStatus; label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'info' }[] = [
   { value: 'DRAFT', label: 'Draft', variant: 'warning' },
   { value: 'DIAJUKAN', label: 'Diajukan', variant: 'info' },

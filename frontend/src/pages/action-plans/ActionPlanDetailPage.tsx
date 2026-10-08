@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useActionPlan, useSendActionPlans, useAssignPics, useChangeDeadline, useDeleteActionPlan, useActionPlanDocuments, useUploadActionPlanDocument, useDeleteActionPlanDocument, useSubmitActionPlanToSpi } from '@/hooks/useActionPlans'
+import { useSpiBundle, useForwardToPic } from '@/hooks/useSpiReview'
 import { useFollowUpsByActionPlan, useSubmitFollowUps } from '@/hooks/useFollowUps'
 import { useStaffByDepartment } from '@/hooks/useLookups'
 import { PageHeader, Can, DocumentPanel, Tabs, FollowUpStatusBadge, ProgressBar, FollowUpDetailModal } from '@/components/shared'
@@ -37,6 +38,8 @@ export default function ActionPlanDetailPage() {
   const { data: followUps } = useFollowUpsByActionPlan(apId)
   const submitFu = useSubmitFollowUps()
   const submitToSpi = useSubmitActionPlanToSpi()
+  const forward = useForwardToPic()
+  const { data: spiBundle } = useSpiBundle(ap?.status === 'REVISI_SPI' ? apId : 0)
   const [detailFu, setDetailFu] = useState<FollowUp | null>(null)
 
   const [tab, setTab] = useState<'ringkasan' | 'tindak-lanjut' | 'dokumen'>('ringkasan')
@@ -115,6 +118,15 @@ export default function ActionPlanDetailPage() {
     }
   }
 
+  const doForward = async () => {
+    try {
+      await forward.mutateAsync(apId)
+      showToast('Revisi diteruskan ke PIC.', 'success')
+    } catch (e) {
+      showToast(isAxiosError(e) ? e.response?.data?.message ?? 'Gagal meneruskan' : 'Gagal meneruskan', 'error')
+    }
+  }
+
   if (isLoading) {
     return <div className="flex items-center gap-2 text-sm text-gray-500"><Spinner /> Memuat...</div>
   }
@@ -150,6 +162,21 @@ export default function ActionPlanDetailPage() {
         <span className="text-sm text-gray-500">Deadline: {ap.deadline ?? '-'}</span>
         <span className="text-sm text-gray-500">Progress: {ap.progress ?? 0}%</span>
       </div>
+
+      {isManagerOfDept && ap.status === 'REVISI_SPI' && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded p-4 space-y-2">
+          <p className="text-sm font-medium">Revisi SPI menunggu diteruskan ke PIC</p>
+          {spiBundle?.revisions && spiBundle.revisions.length > 0 && (
+            <div className="text-sm text-gray-700">
+              <p>{spiBundle.revisions[spiBundle.revisions.length - 1].reason}</p>
+              {spiBundle.revisions[spiBundle.revisions.length - 1].new_deadline && (
+                <p className="text-xs text-gray-600">Deadline baru: {spiBundle.revisions[spiBundle.revisions.length - 1].new_deadline}</p>
+              )}
+            </div>
+          )}
+          <Button size="sm" onClick={doForward} disabled={forward.isPending}>Teruskan ke PIC</Button>
+        </div>
+      )}
 
       <Tabs
         tabs={[

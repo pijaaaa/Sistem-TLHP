@@ -225,6 +225,12 @@ class FollowUpReviewService
 
     private function assertManager(FollowUp $followUp): void
     {
+        if ($followUp->actionPlan->isFrozen()) {
+            throw ValidationException::withMessages([
+                'follow_up_id' => 'Action plan Sesuai/Closed beku; keputusan tidak dapat diambil.',
+            ]);
+        }
+
         $user = auth()->user();
         if ($user->role === Role::SuperAdmin) {
             return;

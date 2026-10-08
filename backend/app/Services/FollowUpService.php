@@ -24,6 +24,8 @@ class FollowUpService
             ]);
         }
 
+        $this->assertNotFrozen($actionPlan);
+
         $this->assertActorIsPic($actionPlan);
 
         if (empty($rows)) {
@@ -64,6 +66,8 @@ class FollowUpService
 
     public function update(FollowUp $followUp, array $data): FollowUp
     {
+        $this->assertNotFrozen($followUp->actionPlan);
+
         if (!$followUp->status->isEditable()) {
             throw ValidationException::withMessages([
                 'status' => 'Hanya tindak lanjut Draft atau Revisi yang dapat diubah.',
@@ -121,6 +125,8 @@ class FollowUpService
         }
 
         foreach ($followUps as $followUp) {
+            $this->assertNotFrozen($followUp->actionPlan);
+
             if (!$followUp->status->isEditable()) {
                 throw ValidationException::withMessages([
                     'status' => "Tindak lanjut #{$followUp->id} tidak berstatus Draft atau Revisi.",
@@ -223,8 +229,19 @@ class FollowUpService
         }
     }
 
+    private function assertNotFrozen(ActionPlan $actionPlan): void
+    {
+        if ($actionPlan->isFrozen()) {
+            throw ValidationException::withMessages([
+                'action_plan_id' => 'Action plan Sesuai/Closed beku; tindak lanjut di dalamnya tidak dapat diubah.',
+            ]);
+        }
+    }
+
     private function assertPicActor(FollowUp $followUp): void
     {
+        $this->assertNotFrozen($followUp->actionPlan);
+
         $user = auth()->user();
         if ($user->role === Role::SuperAdmin) {
             return;
@@ -242,6 +259,8 @@ class FollowUpService
 
     private function assertActorIsPic(ActionPlan $actionPlan): void
     {
+        $this->assertNotFrozen($actionPlan);
+
         $user = auth()->user();
         if ($user->role === Role::SuperAdmin) {
             return;

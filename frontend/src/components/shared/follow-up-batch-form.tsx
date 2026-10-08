@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { FormField, Input, Textarea, Button } from '@/components/ui'
+import { FormField, Input, Textarea, Button, Select } from '@/components/ui'
 import { RepeatableFields } from '@/components/shared/repeatable-fields'
 import { EmployeeMultiSelect } from '@/components/shared/employee-multi-select'
 import { WeightMeter } from '@/components/shared/WeightMeter'
@@ -14,6 +14,7 @@ export type SubmitMode = 'draft' | 'submit'
 
 interface FollowUpBatchFormProps {
   actionPlan: ActionPlan
+  linkCandidates?: { id: number; label: string }[]
   onSubmit: (rows: FollowUpRowInput[], mode: SubmitMode) => void
   submitting?: boolean
 }
@@ -21,7 +22,7 @@ interface FollowUpBatchFormProps {
 const picOptions = (ap: ActionPlan): { id: number; name: string; username: string }[] =>
   (ap.assignees ?? []).map((u: ActionPlanUser) => ({ id: u.id, name: u.name, username: u.username }))
 
-const FollowUpBatchForm = ({ actionPlan, onSubmit, submitting }: FollowUpBatchFormProps) => {
+const FollowUpBatchForm = ({ actionPlan, linkCandidates, onSubmit, submitting }: FollowUpBatchFormProps) => {
   const deadline = actionPlan.deadline ?? ''
   const [rows, setRows] = useState<Row[]>([])
 
@@ -69,7 +70,7 @@ const FollowUpBatchForm = ({ actionPlan, onSubmit, submitting }: FollowUpBatchFo
         values={rows}
         onChange={setRows}
         addLabel="+ Tambah Tindak Lanjut"
-        createEmpty={() => ({ id: crypto.randomUUID(), description: '', target_date: '', weight: '', pic_ids: [] })}
+        createEmpty={() => ({ id: crypto.randomUUID(), description: '', target_date: '', weight: '', pic_ids: [], linked_follow_up_id: null })}
         renderRow={(row, _i, update, _remove) => (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -105,6 +106,19 @@ const FollowUpBatchForm = ({ actionPlan, onSubmit, submitting }: FollowUpBatchFo
                 </FormField>
               </div>
             </div>
+            {linkCandidates && linkCandidates.length > 0 && (
+              <FormField label="Tautan ke Tindak Lanjut Revisi Sebelumnya (opsional)">
+                <Select
+                  value={row.linked_follow_up_id ?? ''}
+                  onChange={(e) => update({ linked_follow_up_id: e.target.value ? Number(e.target.value) : null })}
+                >
+                  <option value="">-- Tidak ada / buat baru --</option>
+                  {linkCandidates.map((c) => (
+                    <option key={c.id} value={c.id}>{c.label}</option>
+                  ))}
+                </Select>
+              </FormField>
+            )}
             <FormField label="PIC *">
               <EmployeeMultiSelect
                 value={row.pic_ids}

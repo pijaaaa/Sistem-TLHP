@@ -15,6 +15,7 @@ use App\Models\ActionPlan;
 use App\Models\Document;
 use App\Models\Finding;
 use App\Services\ActionPlanService;
+use App\Services\RevisionService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -141,6 +142,16 @@ class ActionPlanController extends Controller
         $ap->load(['finding', 'department', 'assignees']);
 
         return ApiResponse::success(new ActionPlanResource($ap), 'Action plan diajukan ke Admin SPI.');
+    }
+
+    public function forwardToPic(ActionPlan $action_plan): JsonResponse
+    {
+        $this->authorize('forwardToPic', $action_plan);
+
+        $ap = (new RevisionService())->forwardToPic($action_plan);
+        $ap->load(['finding', 'department', 'assignees']);
+
+        return ApiResponse::success(new ActionPlanResource($ap), 'Revisi diteruskan ke PIC.');
     }
 
     public function documents(ActionPlan $action_plan): JsonResponse

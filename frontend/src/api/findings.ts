@@ -1,8 +1,7 @@
 import { apiClient } from '@/api/client'
 import type { ApiResponse } from '@/api/client'
 import type { AxiosResponse } from 'axios'
-import type { Page } from '@/types/finding'
-import type { ActionPlan, ActionPlanPayload, ActionPlanUser, DocumentFile, Finding, FindingPayload, Department, FollowUp, FollowUpRowInput, FollowUpReview, FollowUpComment, FollowUpProgressReport } from '@/types/finding'
+import type { ActionPlan, ActionPlanPayload, ActionPlanUser, DocumentFile, Finding, FindingPayload, Department, FollowUp, FollowUpRowInput, FollowUpReview, FollowUpComment, FollowUpProgressReport, Page, SpiBundle } from '@/types/finding'
 
 function unwrap<T>(res: AxiosResponse<ApiResponse<T>>): T {
   return res.data.data
@@ -80,6 +79,9 @@ export const actionPlansApi = {
 
   submitToSpi: (id: number) =>
     apiClient.post<ApiResponse<ActionPlan>>(`/action-plans/${id}/submit-to-spi`).then(unwrap),
+
+  forwardToPic: (id: number) =>
+    apiClient.post<ApiResponse<ActionPlan>>(`/action-plans/${id}/forward-to-pic`).then(unwrap),
 
   documents: (id: number) =>
     apiClient.get<ApiResponse<DocumentFile[]>>(`/action-plans/${id}/documents`).then(unwrap),
@@ -182,6 +184,25 @@ export const lookupsApi = {
 
   staffByDepartment: (departmentId: number) =>
     apiClient.get<ApiResponse<{ data: LookupStaff[] }>>('/lookups/staff', { params: { department_id: departmentId } }).then(unwrap),
+}
+
+export interface SpiAssessItem {
+  follow_up_id: number
+  result: 'SESUAI' | 'REVISI'
+  note?: string | null
+}
+
+export const spiApi = {
+  queue: () => apiClient.get<ApiResponse<Page<ActionPlan>>>('/spi-reviews', { params: { per_page: 50 } }).then(unwrap),
+
+  bundle: (id: number) =>
+    apiClient.get<ApiResponse<SpiBundle>>(`/action-plans/${id}/review-bundle`).then(unwrap),
+
+  assess: (id: number, items: SpiAssessItem[]) =>
+    apiClient.post<ApiResponse<{ review_id: number; assessed_items: number }>>(`/action-plans/${id}/spi-review`, { items }).then(unwrap),
+
+  complete: (id: number, newDeadline?: string | null) =>
+    apiClient.post<ApiResponse<ActionPlan>>(`/action-plans/${id}/spi-complete`, { new_deadline: newDeadline || null }).then(unwrap),
 }
 
 export { unwrap }

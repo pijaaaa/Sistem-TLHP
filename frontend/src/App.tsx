@@ -22,6 +22,8 @@ import FollowUpsPage from '@/pages/follow-ups/FollowUpsPage'
 import FollowUpBatchFormPage from '@/pages/follow-ups/FollowUpBatchFormPage'
 import PersetujuanPage from '@/pages/follow-ups/PersetujuanPage'
 import IaMonitoringPage from '@/pages/follow-ups/IaMonitoringPage'
+import SpiReviewQueuePage from '@/pages/spi/SpiReviewQueuePage'
+import SpiReviewPage from '@/pages/spi/SpiReviewPage'
 
 function App() {
   return (
@@ -158,6 +160,22 @@ function App() {
               element={
                 <PermissionRoute menu="ia_monitoring" action="view">
                   <IaMonitoringPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="review-spi"
+              element={
+                <PermissionRoute menu="spi_review" action="view">
+                  <SpiReviewQueuePage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="review-spi/:actionPlanId"
+              element={
+                <PermissionRoute menu="spi_review" action="update">
+                  <SpiReviewPage />
                 </PermissionRoute>
               }
             />

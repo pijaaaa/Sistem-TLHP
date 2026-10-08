@@ -107,6 +107,12 @@ class ActionPlanService
 
     public function assignPics(ActionPlan $ap, array $user_ids): ActionPlan
     {
+        if ($ap->isFrozen()) {
+            throw ValidationException::withMessages([
+                'status' => 'Action plan Sesuai/Closed beku dan tidak dapat diubah.',
+            ]);
+        }
+
         if (empty($user_ids)) {
             throw ValidationException::withMessages([
                 'pics' => 'Minimal satu PIC harus ditunjuk.',
@@ -249,6 +255,12 @@ class ActionPlanService
 
     public function changeDeadline(ActionPlan $ap, string $deadline, ?string $reason = null): ActionPlan
     {
+        if ($ap->isFrozen()) {
+            throw ValidationException::withMessages([
+                'status' => 'Action plan Sesuai/Closed beku dan tidak dapat diubah.',
+            ]);
+        }
+
         if ($ap->status === ActionPlanStatus::Draft) {
             throw ValidationException::withMessages([
                 'status' => 'Deadline action plan Draft diubah lewat formulir, bukan endpoint ini.',

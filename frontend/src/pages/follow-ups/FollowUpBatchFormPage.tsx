@@ -4,7 +4,7 @@ import { PageHeader, Can } from '@/components/shared'
 import { Spinner } from '@/components/ui'
 import { useToast } from '@/components/ui/toast'
 import { useActionPlan } from '@/hooks/useActionPlans'
-import { useCreateFollowUps, useSubmitFollowUps } from '@/hooks/useFollowUps'
+import { useCreateFollowUps, useSubmitFollowUps, useFollowUpsByActionPlan } from '@/hooks/useFollowUps'
 import { isAxiosError } from 'axios'
 
 export default function FollowUpBatchFormPage() {
@@ -16,6 +16,13 @@ export default function FollowUpBatchFormPage() {
   const { data: ap, isLoading } = useActionPlan(apId)
   const create = useCreateFollowUps()
   const submit = useSubmitFollowUps()
+
+  const { data: allFups } = useFollowUpsByActionPlan(apId)
+  const linkCandidates = (ap?.current_revision ?? 0) > 0
+    ? (allFups?.data ?? [])
+        .filter((f) => f.revision_no < (ap?.current_revision ?? 0))
+        .map((f) => ({ id: f.id, label: `TL #${f.id} · ${f.description.slice(0, 60)}` }))
+    : undefined
 
   const handleSubmit = async (rows: Parameters<typeof create.mutateAsync>[0]['rows'], mode: SubmitMode) => {
     if (!ap) return
@@ -51,6 +58,7 @@ export default function FollowUpBatchFormPage() {
             <div className="bg-white rounded-lg shadow p-6">
               <FollowUpBatchForm
                 actionPlan={ap}
+                linkCandidates={linkCandidates}
                 submitting={create.isPending || submit.isPending}
                 onSubmit={handleSubmit}
               />

@@ -27,6 +27,7 @@ class ActionPlanResource extends JsonResource
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'current_revision' => $this->current_revision,
+            'revision_label' => $this->revision_label,
             'progress' => (float) $this->progress,
             'sent_at' => $this->sent_at?->toDateTimeString(),
             'can_edit' => $this->status->isEditable(),

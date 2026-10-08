@@ -79,4 +79,24 @@ class ActionPlan extends Model
     {
         return $this->hasMany(FollowUp::class);
     }
+
+    public function revisions()
+    {
+        return $this->hasMany(ActionPlanRevision::class)->latest('revision_no');
+    }
+
+    public function spi_reviews()
+    {
+        return $this->hasMany(SpiReview::class)->latest('id');
+    }
+
+    public function getRevisionLabelAttribute(): string
+    {
+        return $this->current_revision === 0 ? 'Awal' : "Revisi {$this->current_revision}";
+    }
+
+    public function isFrozen(): bool
+    {
+        return in_array($this->status, [ActionPlanStatus::Sesuai, ActionPlanStatus::Closed], true);
+    }
 }

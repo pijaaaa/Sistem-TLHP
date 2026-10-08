@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\FindingController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\ActionPlanController;
 use App\Http\Controllers\Api\FollowUpController;
+use App\Http\Controllers\Api\SpiReviewController;
 use App\Http\Controllers\Api\LookupController;
 use App\Http\Controllers\Api\Master\DepartmentController;
 use App\Http\Controllers\Api\Master\EmployeeController;
@@ -115,6 +116,8 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:action_plans,update');
         Route::post('action-plans/{action_plan}/submit-to-spi', [ActionPlanController::class, 'submitToSpi'])
             ->middleware('permission:action_plans,update');
+        Route::post('action-plans/{action_plan}/forward-to-pic', [ActionPlanController::class, 'forwardToPic'])
+            ->middleware('permission:action_plans,update');
         Route::get('action-plans/{action_plan}/documents', [ActionPlanController::class, 'documents']);
         Route::post('action-plans/{action_plan}/documents', [ActionPlanController::class, 'uploadDocument'])
             ->middleware('permission:action_plans,update');
@@ -162,6 +165,15 @@ Route::prefix('v1')->group(function () {
     // Komentar lintas peran (PIC, manager, pemantau) diverifikasi di service; label hak akses per FollowUpVisibility.
     Route::post('follow-ups/{follow_up}/comments', [FollowUpController::class, 'addComment'])
         ->middleware('auth:sanctum');
+
+    Route::middleware(['auth:sanctum', 'permission:spi_review,view'])->group(function () {
+        Route::get('spi-reviews', [SpiReviewController::class, 'index']);
+        Route::get('action-plans/{action_plan}/review-bundle', [SpiReviewController::class, 'bundle']);
+        Route::post('action-plans/{action_plan}/spi-review', [SpiReviewController::class, 'assess'])
+            ->middleware('permission:spi_review,update');
+        Route::post('action-plans/{action_plan}/spi-complete', [SpiReviewController::class, 'complete'])
+            ->middleware('permission:spi_review,update');
+    });
 
     Route::middleware(['auth:sanctum', 'permission:audit_trail,view'])->group(function () {
         Route::get('audit-trail', [AuditController::class, 'index']);
