@@ -15,6 +15,7 @@ use App\Models\FollowUpComment;
 use App\Models\FollowUpReview;
 use App\Models\User;
 use App\Support\AuditLogger;
+use App\Services\TaskDispatcher;
 use Illuminate\Validation\ValidationException;
 
 class FollowUpReviewService
@@ -221,6 +222,8 @@ class FollowUpReviewService
             'weight_before' => $before ?? $followUp->weight,
             'weight_after' => $after ?? $followUp->weight,
         ]);
+
+        TaskDispatcher::completeForActor($followUp);
     }
 
     private function assertManager(FollowUp $followUp): void

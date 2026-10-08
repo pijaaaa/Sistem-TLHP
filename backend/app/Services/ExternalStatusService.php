@@ -8,6 +8,7 @@ use App\Enums\FindingStatus;
 use App\Enums\RevisionSource;
 use App\Enums\Role;
 use App\Events\FindingClosed;
+use App\Events\ExternalStatusRecorded;
 use App\Models\ActionPlan;
 use App\Models\ActionPlanRevision;
 use App\Models\ExternalStatusRecord;
@@ -68,6 +69,9 @@ class ExternalStatusService
         } else {
             $this->applyRevision($finding, $record, $actionPlanIds, $note, $newDeadline);
         }
+
+        TaskDispatcher::completeForActor($finding);
+        ExternalStatusRecorded::dispatch($finding, $status);
 
         AuditLogger::log('external_status.recorded', auth()->id(), request()?->ip(), "Status eksternal {$status->value} dicatat untuk temuan {$finding->registration_number}.", [
             'finding_id' => $finding->id,

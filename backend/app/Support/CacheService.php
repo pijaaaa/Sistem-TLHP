@@ -10,7 +10,7 @@ class CacheService
 {
     private static array $groups = [
         'departments', 'employees', 'users', 'audit_trail', 'dashboard',
-        'permissions', 'menus', 'findings', 'lookups', 'action_plans',
+        'permissions', 'menus', 'findings', 'lookups', 'action_plans', 'notifications',
     ];
 
     public static function version(string $group): int

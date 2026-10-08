@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import type { MenuItem } from '@/types/auth'
 import { Button } from '@/components/ui/button'
+import { NotificationBell } from '@/components/shared/notification-bell'
 import * as LucideIcons from 'lucide-react'
 
 // Icon mapper from backend icon names to Lucide components
@@ -27,6 +28,7 @@ const getIcon = (iconName: string) => {
     'thumbs-up': LucideIcons.ThumbsUp,
     'eye': LucideIcons.Eye,
     'globe': LucideIcons.Globe,
+    'inbox': LucideIcons.Inbox,
     'logout': LucideIcons.LogOut,
   }
   return iconMap[iconName] || LucideIcons.FileQuestion
@@ -139,14 +141,17 @@ const AppLayout = () => {
 
       {/* Main */}
       <main className="flex-1 flex flex-col overflow-hidden md:ml-64">
-        <header className="bg-white border-b px-4 py-3 flex items-center justify-between">
+<header className="bg-white border-b px-4 py-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-800">Sistem TLHP</h2>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="md:hidden text-gray-600"
-          >
-            ☰
-          </button>
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="md:hidden text-gray-600"
+            >
+              ≈
+            </button>
+          </div>
         </header>
         <div className="flex-1 overflow-y-auto p-6">
           <Outlet />

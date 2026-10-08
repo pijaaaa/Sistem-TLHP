@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Http\Middleware\PermissionMiddleware;
+use App\Listeners\DispatchNotificationTasks;
 use App\Models\ActionPlan;
 use App\Models\Department;
 use App\Models\Employee;
@@ -52,6 +53,24 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ActionPlan::class, ActionPlanPolicy::class);
         Gate::policy(FollowUp::class, FollowUpPolicy::class);
         Gate::policy(Audit::class, AuditPolicy::class);
+
+        \Illuminate\Support\Facades\Event::listen([
+            \App\Events\ActionPlanSent::class,
+            \App\Events\PicAssigned::class,
+            \App\Events\FollowUpSubmitted::class,
+            \App\Events\FollowUpDecided::class,
+            \App\Events\FollowUpReturnedToRevision::class,
+            \App\Events\IaCommentAdded::class,
+            \App\Events\ProgressReported::class,
+            \App\Events\CompletionRequested::class,
+            \App\Events\CompletionDecided::class,
+            \App\Events\ActionPlanSubmittedToSpi::class,
+            \App\Events\SpiReviewCompleted::class,
+            \App\Events\RevisionForwarded::class,
+            \App\Events\FindingWaitingExternal::class,
+            \App\Events\ExternalStatusRecorded::class,
+            \App\Events\FindingClosed::class,
+        ], DispatchNotificationTasks::class);
 
         Route::get('/sanctum/csrf-cookie', function () {
             return response()->json(['message' => 'CSRF cookie set']);

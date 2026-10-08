@@ -15,6 +15,7 @@ use App\Models\SpiReview;
 use App\Models\SpiReviewItem;
 use App\Support\AuditLogger;
 use App\Support\CacheService;
+use App\Services\TaskDispatcher;
 use Illuminate\Validation\ValidationException;
 
 class SpiReviewService
@@ -131,6 +132,7 @@ class SpiReviewService
 
         (new FindingStatusService())->recompute($actionPlan->finding);
         CacheService::flushGroup('action_plans');
+        TaskDispatcher::completeForActor($actionPlan);
 
         return $actionPlan->refresh();
     }

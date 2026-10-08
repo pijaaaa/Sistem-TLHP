@@ -232,5 +232,44 @@ export const externalStatusApi = {
     `${apiClient.defaults.baseURL}/findings/${findingId}/external-status-records/${recordId}/documents/${docId}/download`,
 }
 
+export const notificationsApi = {
+  list: () => apiClient.get<ApiResponse<{ data: NotificationItem[] }>>('/notifications').then((r) => r.data.data.data),
+
+  unreadCount: () => apiClient.get<ApiResponse<{ count: number }>>('/notifications/unread-count').then(unwrap),
+
+  markRead: (id: string) => apiClient.post<ApiResponse<null>>(`/notifications/${id}/read`).then(unwrap),
+
+  markAllRead: () => apiClient.post<ApiResponse<null>>('/notifications/read-all').then(unwrap),
+}
+
+export interface NotificationItem {
+  id: string
+  title: string
+  data: { url?: string | null }
+  read_at: string | null
+  created_at: string
+}
+
+export interface InboxTaskItem {
+  id: number
+  task_type: string
+  task_type_label: string
+  subject_type: string
+  subject_id: number
+  title: string
+  received_at: string
+  first_opened_at: string | null
+  acted_at: string | null
+  status: 'OPEN' | 'DONE'
+}
+
+export const inboxApi = {
+  list: (params?: { page?: number; per_page?: number; status?: string; task_type?: string }) =>
+    apiClient.get<ApiResponse<Page<InboxTaskItem>>>('/inbox', { params }).then(unwrap),
+
+  open: (subject_type: string, subject_id: number) =>
+    apiClient.post<ApiResponse<{ opened: number }>>('/inbox/open', { subject_type, subject_id }).then(unwrap),
+}
+
 export { unwrap }
 export type { ActionPlanUser }

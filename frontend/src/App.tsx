@@ -12,6 +12,7 @@ import EmployeesPage from '@/pages/master/EmployeesPage'
 import UsersPage from '@/pages/master/UsersPage'
 import PermissionsPage from '@/pages/master/PermissionsPage'
 import AuditTrailPage from '@/pages/AuditTrailPage'
+import InboxPage from '@/pages/InboxPage'
 import FindingsPage from '@/pages/findings/FindingsPage'
 import FindingFormPage from '@/pages/findings/FindingFormPage'
 import FindingDetailPage from '@/pages/findings/FindingDetailPage'
@@ -202,6 +203,14 @@ function App() {
               element={
                 <PermissionRoute menu="audit_trail" action="view">
                   <AuditTrailPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="inbox"
+              element={
+                <PermissionRoute menu="inbox" action="view">
+                  <InboxPage />
                 </PermissionRoute>
               }
             />

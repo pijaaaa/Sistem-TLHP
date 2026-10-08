@@ -10,6 +10,7 @@ use App\Models\ActionPlan;
 use App\Models\FollowUp;
 use App\Models\User;
 use App\Support\AuditLogger;
+use App\Services\TaskDispatcher;
 use Illuminate\Validation\ValidationException;
 
 class FollowUpService
@@ -61,6 +62,8 @@ class FollowUpService
             $created[] = $followUp->load('assignees');
         }
 
+        TaskDispatcher::completeForActor($actionPlan);
+
         return $created;
     }
 
@@ -110,6 +113,7 @@ class FollowUpService
         ]);
 
         (new ProgressService())->persistApProgress($followUp->actionPlan);
+        TaskDispatcher::completeForActor($followUp);
 
         return $followUp->refresh();
     }
@@ -145,6 +149,7 @@ class FollowUpService
             ]);
 
             FollowUpSubmitted::dispatch($followUp);
+            TaskDispatcher::completeForActor($followUp);
         }
 
         return $followUps->all();

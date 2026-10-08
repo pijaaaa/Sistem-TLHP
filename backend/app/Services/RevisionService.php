@@ -54,6 +54,7 @@ class RevisionService
 
         CacheService::flushGroup('action_plans');
         CacheService::flushGroup('findings');
+        TaskDispatcher::completeForActor($actionPlan);
 
         return $actionPlan->refresh();
     }

@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\ActionPlanController;
 use App\Http\Controllers\Api\FollowUpController;
 use App\Http\Controllers\Api\SpiReviewController;
 use App\Http\Controllers\Api\ExternalStatusController;
+use App\Http\Controllers\Api\NotificationsController;
+use App\Http\Controllers\Api\InboxController;
 use App\Http\Controllers\Api\LookupController;
 use App\Http\Controllers\Api\Master\DepartmentController;
 use App\Http\Controllers\Api\Master\EmployeeController;
@@ -28,8 +30,18 @@ Route::prefix('v1')->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
 
+        Route::get('/notifications', [NotificationsController::class, 'index']);
+        Route::get('/notifications/unread-count', [NotificationsController::class, 'unreadCount']);
+        Route::post('/notifications/{notification}/read', [NotificationsController::class, 'read']);
+        Route::post('/notifications/read-all', [NotificationsController::class, 'readAll']);
+
         Route::get('/lookups/departments', [LookupController::class, 'departments']);
         Route::get('/lookups/staff', [LookupController::class, 'staff']);
+
+        Route::middleware(['permission:inbox,view'])->group(function () {
+            Route::get('/inbox', [InboxController::class, 'index']);
+            Route::post('/inbox/open', [InboxController::class, 'open']);
+        });
     });
 
     Route::get('/dashboard', [DashboardController::class, '__invoke'])

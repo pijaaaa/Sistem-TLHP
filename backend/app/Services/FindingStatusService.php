@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\ActionPlanStatus;
 use App\Enums\FindingStatus;
+use App\Events\FindingWaitingExternal;
 use App\Models\ActionPlan;
 use App\Models\Finding;
 use App\Support\CacheService;
@@ -48,6 +49,10 @@ class FindingStatusService
         }
 
         $finding->update(['status' => $newStatus]);
+
+        if ($newStatus === FindingStatus::MenungguStatusEksternal) {
+            FindingWaitingExternal::dispatch($finding);
+        }
 
         CacheService::flushGroup('findings');
         CacheService::flushGroup('dashboard');

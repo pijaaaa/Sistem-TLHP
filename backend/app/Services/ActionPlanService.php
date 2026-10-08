@@ -11,6 +11,7 @@ use App\Models\ActionPlan;
 use App\Models\Finding;
 use App\Models\FollowUp;
 use App\Services\FindingStatusService;
+use App\Services\TaskDispatcher;
 use App\Support\AuditLogger;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
@@ -160,6 +161,7 @@ class ActionPlanService
             'finding_id' => $ap->finding_id,
         ]);
 
+        TaskDispatcher::completeForActor($ap);
         PicAssigned::dispatch($ap, $added);
 
         return $ap->refresh();
