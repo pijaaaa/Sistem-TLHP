@@ -1,10 +1,12 @@
 export type Role =
+  | 'super_admin'
   | 'admin_spi'
-  | 'manager_ia'
+  | 'internal_audit'
   | 'manager_dept'
   | 'staff_dept'
-  | 'manager_spi'
-  | 'super_admin'
+  | 'kepala_spi'
+  | 'manager_ia'
+  | 'direksi'
 
 export interface Department {
   id: number

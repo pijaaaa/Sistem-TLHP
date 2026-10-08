@@ -66,4 +66,14 @@ class FollowUp extends Model
         return $this->belongsToMany(User::class, 'follow_up_assignees', 'follow_up_id', 'user_id')
             ->withTimestamps();
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(FollowUpReview::class)->latest('id');
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(FollowUpComment::class)->latest('id');
+    }
 }

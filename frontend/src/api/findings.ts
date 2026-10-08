@@ -2,7 +2,7 @@ import { apiClient } from '@/api/client'
 import type { ApiResponse } from '@/api/client'
 import type { AxiosResponse } from 'axios'
 import type { Page } from '@/types/finding'
-import type { ActionPlan, ActionPlanPayload, ActionPlanUser, DocumentFile, Finding, FindingPayload, Department, FollowUp, FollowUpRowInput } from '@/types/finding'
+import type { ActionPlan, ActionPlanPayload, ActionPlanUser, DocumentFile, Finding, FindingPayload, Department, FollowUp, FollowUpRowInput, FollowUpReview, FollowUpComment } from '@/types/finding'
 
 function unwrap<T>(res: AxiosResponse<ApiResponse<T>>): T {
   return res.data.data
@@ -120,6 +120,30 @@ export const followUpsApi = {
 
   submit: (ids: number[]) =>
     apiClient.post<ApiResponse<FollowUp[]>>('/follow-ups/submit', { ids }).then(unwrap),
+
+  approve: (id: number) =>
+    apiClient.post<ApiResponse<FollowUp>>(`/follow-ups/${id}/approve`).then(unwrap),
+
+  requestRevision: (id: number, note: string) =>
+    apiClient.post<ApiResponse<FollowUp>>(`/follow-ups/${id}/revision`, { note }).then(unwrap),
+
+  reject: (id: number, note: string) =>
+    apiClient.post<ApiResponse<FollowUp>>(`/follow-ups/${id}/reject`, { note }).then(unwrap),
+
+  returnToRevision: (id: number, note: string) =>
+    apiClient.post<ApiResponse<FollowUp>>(`/follow-ups/${id}/return-to-revision`, { note }).then(unwrap),
+
+  overrideWeight: (id: number, weight: number) =>
+    apiClient.patch<ApiResponse<FollowUp>>(`/follow-ups/${id}/weight`, { weight }).then(unwrap),
+
+  reviews: (id: number) =>
+    apiClient.get<ApiResponse<FollowUpReview[]>>(`/follow-ups/${id}/reviews`).then(unwrap),
+
+  comments: (id: number) =>
+    apiClient.get<ApiResponse<FollowUpComment[]>>(`/follow-ups/${id}/comments`).then(unwrap),
+
+  addComment: (id: number, kind: string, body: string) =>
+    apiClient.post<ApiResponse<FollowUpComment>>(`/follow-ups/${id}/comments`, { kind, body }).then(unwrap),
 }
 
 export const lookupsApi = {

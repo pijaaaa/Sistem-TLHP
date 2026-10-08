@@ -47,3 +47,72 @@ export const useUpdateFollowUp = () => {
     },
   })
 }
+
+const invalidateFu = (qc: ReturnType<typeof useQueryClient>, fu: FollowUp) => {
+  qc.invalidateQueries({ queryKey: ['follow-ups'] })
+  qc.invalidateQueries({ queryKey: ['follow-ups', fu.id] })
+}
+
+export const useApproveFollowUp = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: followUpsApi.approve,
+    onSuccess: (fu) => invalidateFu(qc, fu),
+  })
+}
+
+export const useRequestFollowUpRevision = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: { id: number; note: string }) => followUpsApi.requestRevision(payload.id, payload.note),
+    onSuccess: (fu) => invalidateFu(qc, fu),
+  })
+}
+
+export const useRejectFollowUp = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: { id: number; note: string }) => followUpsApi.reject(payload.id, payload.note),
+    onSuccess: (fu) => invalidateFu(qc, fu),
+  })
+}
+
+export const useReturnFollowUpToRevision = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: { id: number; note: string }) => followUpsApi.returnToRevision(payload.id, payload.note),
+    onSuccess: (fu) => invalidateFu(qc, fu),
+  })
+}
+
+export const useOverrideFollowUpWeight = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: { id: number; weight: number }) => followUpsApi.overrideWeight(payload.id, payload.weight),
+    onSuccess: (fu) => invalidateFu(qc, fu),
+  })
+}
+
+export const useFollowUpReviews = (followUpId: number) =>
+  useQuery({
+    queryKey: ['follow-up-reviews', followUpId],
+    queryFn: () => followUpsApi.reviews(followUpId),
+    enabled: !!followUpId,
+  })
+
+export const useFollowUpComments = (followUpId: number) =>
+  useQuery({
+    queryKey: ['follow-up-comments', followUpId],
+    queryFn: () => followUpsApi.comments(followUpId),
+    enabled: !!followUpId,
+  })
+
+export const useAddFollowUpComment = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: { id: number; kind: string; body: string }) => followUpsApi.addComment(payload.id, payload.kind, payload.body),
+    onSuccess: (_c, vars) => {
+      qc.invalidateQueries({ queryKey: ['follow-up-comments', vars.id] })
+    },
+  })
+}

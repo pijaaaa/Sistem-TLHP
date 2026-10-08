@@ -131,7 +131,25 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:follow_ups,update');
         Route::post('action-plans/{action_plan}/follow-ups', [FollowUpController::class, 'store'])
             ->middleware('permission:follow_ups,create');
+        Route::get('follow-ups/{follow_up}/reviews', [FollowUpController::class, 'reviews']);
+        Route::get('follow-ups/{follow_up}/comments', [FollowUpController::class, 'comments']);
     });
+
+    Route::middleware(['auth:sanctum', 'permission:follow_up_reviews,view'])->group(function () {
+        Route::post('follow-ups/{follow_up}/approve', [FollowUpController::class, 'approve'])
+            ->middleware('permission:follow_up_reviews,update');
+        Route::post('follow-ups/{follow_up}/revision', [FollowUpController::class, 'revision'])
+            ->middleware('permission:follow_up_reviews,update');
+        Route::post('follow-ups/{follow_up}/reject', [FollowUpController::class, 'reject'])
+            ->middleware('permission:follow_up_reviews,update');
+        Route::post('follow-ups/{follow_up}/return-to-revision', [FollowUpController::class, 'returnToRevision'])
+            ->middleware('permission:follow_up_reviews,update');
+        Route::patch('follow-ups/{follow_up}/weight', [FollowUpController::class, 'overrideWeight'])
+            ->middleware('permission:follow_up_reviews,update');
+    });
+
+    Route::post('follow-ups/{follow_up}/comments', [FollowUpController::class, 'addComment'])
+        ->middleware(['auth:sanctum', 'permission:ia_monitoring,create']);
 
     Route::middleware(['auth:sanctum', 'permission:audit_trail,view'])->group(function () {
         Route::get('audit-trail', [AuditController::class, 'index']);

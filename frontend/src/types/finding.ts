@@ -194,6 +194,34 @@ export interface FollowUpRowInput {
   linked_follow_up_id?: number | null
 }
 
+export type ReviewDecision = 'SETUJUI' | 'REVISI' | 'TOLAK' | 'KEMBALI_REVISI' | 'OVERRIDE_BOBOT'
+
+export interface FollowUpReview {
+  id: number
+  follow_up_id: number
+  reviewer_id: number
+  reviewer?: { id: number; name: string; role: string }
+  decision: ReviewDecision
+  decision_label: string
+  note: string | null
+  weight_before: number
+  weight_after: number
+  created_at: string
+}
+
+export type CommentKind = 'DISKUSI' | 'IA_COMMENT'
+
+export interface FollowUpComment {
+  id: number
+  follow_up_id: number
+  author_id: number
+  author?: { id: number; name: string; role: string }
+  kind: CommentKind
+  kind_label: string
+  body: string
+  created_at: string
+}
+
 export const FOLLOW_UP_STATUS_OPTIONS: { value: FollowUpStatus; label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'info' }[] = [
   { value: 'DRAFT', label: 'Draft', variant: 'warning' },
   { value: 'DIAJUKAN', label: 'Diajukan', variant: 'info' },

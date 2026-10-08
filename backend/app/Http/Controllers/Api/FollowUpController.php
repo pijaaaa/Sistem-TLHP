@@ -4,12 +4,19 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreFollowUpsRequest;
+use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\SubmitFollowUpsRequest;
 use App\Http\Requests\UpdateFollowUpRequest;
+use App\Http\Requests\OverrideWeightRequest;
+use App\Http\Requests\ReviewNoteRequest;
 use App\Http\Resources\FollowUpResource;
+use App\Http\Resources\FollowUpReviewResource;
+use App\Http\Resources\FollowUpCommentResource;
+use App\Enums\CommentKind;
 use App\Models\ActionPlan;
 use App\Models\FollowUp;
 use App\Services\FollowUpService;
+use App\Services\FollowUpReviewService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -86,5 +93,81 @@ class FollowUpController extends Controller
             FollowUpResource::collection($followUps),
             'Tindak lanjut berhasil diajukan ke manager.',
         );
+    }
+
+    public function approve(FollowUp $follow_up): JsonResponse
+    {
+        $this->authorize('view', $follow_up);
+
+        $followUp = (new FollowUpReviewService())->approve($follow_up);
+
+        return ApiResponse::success(new FollowUpResource($followUp), 'Tindak lanjut disetujui.');
+    }
+
+    public function revision(ReviewNoteRequest $request, FollowUp $follow_up): JsonResponse
+    {
+        $this->authorize('view', $follow_up);
+
+        $followUp = (new FollowUpReviewService())->requestRevision($follow_up, $request->input('note'));
+
+        return ApiResponse::success(new FollowUpResource($followUp), 'Permintaan revisi dikirim ke PIC.');
+    }
+
+    public function reject(ReviewNoteRequest $request, FollowUp $follow_up): JsonResponse
+    {
+        $this->authorize('view', $follow_up);
+
+        $followUp = (new FollowUpReviewService())->reject($follow_up, $request->input('note'));
+
+        return ApiResponse::success(new FollowUpResource($followUp), 'Tindak lanjut ditolak.');
+    }
+
+    public function returnToRevision(ReviewNoteRequest $request, FollowUp $follow_up): JsonResponse
+    {
+        $this->authorize('view', $follow_up);
+
+        $followUp = (new FollowUpReviewService())->returnToRevision($follow_up, $request->input('note'));
+
+        return ApiResponse::success(new FollowUpResource($followUp), 'Tindak lanjut dikembalikan ke revisi.');
+    }
+
+    public function overrideWeight(OverrideWeightRequest $request, FollowUp $follow_up): JsonResponse
+    {
+        $this->authorize('view', $follow_up);
+
+        $followUp = (new FollowUpReviewService())->overrideWeight($follow_up, (int) $request->input('weight'));
+
+        return ApiResponse::success(new FollowUpResource($followUp), 'Bobot tindak lanjut diperbarui.');
+    }
+
+    public function reviews(FollowUp $follow_up): JsonResponse
+    {
+        $this->authorize('view', $follow_up);
+
+        $reviews = $follow_up->reviews()->with('reviewer')->get();
+
+        return ApiResponse::success(FollowUpReviewResource::collection($reviews));
+    }
+
+    public function comments(FollowUp $follow_up): JsonResponse
+    {
+        $this->authorize('view', $follow_up);
+
+        $comments = $follow_up->comments()->with('author')->get();
+
+        return ApiResponse::success(FollowUpCommentResource::collection($comments));
+    }
+
+    public function addComment(StoreCommentRequest $request, FollowUp $follow_up): JsonResponse
+    {
+        $this->authorize('view', $follow_up);
+
+        $comment = (new FollowUpReviewService())->addComment(
+            $follow_up,
+            CommentKind::from($request->input('kind')),
+            $request->input('body'),
+        );
+
+        return ApiResponse::success(new FollowUpCommentResource($comment), 'Komentar ditambahkan.', 201);
     }
 }

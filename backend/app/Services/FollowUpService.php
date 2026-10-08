@@ -77,7 +77,7 @@ class FollowUpService
             ->all();
 
         if (isset($data['weight']) && (int) $data['weight'] !== $followUp->weight) {
-            $available = $this->availableWeight($followUp->actionPlan, $followUp->id) + $followUp->weight;
+            $available = $this->availableWeight($followUp->actionPlan, $followUp->id);
             if ($data['weight'] > $available) {
                 throw ValidationException::withMessages([
                     'weight' => "Total bobot tindak lanjut aktif melebihi " . self::MAX_TOTAL_WEIGHT . ". Sisa bobot yang tersedia: {$available}.",
@@ -171,7 +171,7 @@ class FollowUpService
             ->sum('weight');
     }
 
-    private function availableWeight(ActionPlan $actionPlan, ?int $excludingId = null): int
+    public function availableWeight(ActionPlan $actionPlan, ?int $excludingId = null): int
     {
         $used = $this->activeWeight($actionPlan);
         if ($excludingId) {

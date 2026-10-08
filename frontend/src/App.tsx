@@ -20,6 +20,8 @@ import ActionPlanFormPage from '@/pages/action-plans/ActionPlanFormPage'
 import ActionPlanDetailPage from '@/pages/action-plans/ActionPlanDetailPage'
 import FollowUpsPage from '@/pages/follow-ups/FollowUpsPage'
 import FollowUpBatchFormPage from '@/pages/follow-ups/FollowUpBatchFormPage'
+import PersetujuanPage from '@/pages/follow-ups/PersetujuanPage'
+import IaMonitoringPage from '@/pages/follow-ups/IaMonitoringPage'
 
 function App() {
   return (
@@ -140,6 +142,22 @@ function App() {
               element={
                 <PermissionRoute menu="follow_ups" action="view">
                   <FollowUpsPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="persetujuan"
+              element={
+                <PermissionRoute menu="follow_up_reviews" action="view">
+                  <PersetujuanPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="pemantauan"
+              element={
+                <PermissionRoute menu="ia_monitoring" action="view">
+                  <IaMonitoringPage />
                 </PermissionRoute>
               }
             />
