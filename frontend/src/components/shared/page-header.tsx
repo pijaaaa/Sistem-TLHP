@@ -20,10 +20,10 @@ const PageHeader = ({
   permissionMenu,
   permissionAction = 'create',
 }: PageHeaderProps) => (
-  <div className={cn('flex items-center justify-between mb-6', className)}>
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-      {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+  <div className={cn('flex items-center justify-between mb-8', className)}>
+    <div className="space-y-1">
+      <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">{title}</h1>
+      {subtitle && <p className="text-sm text-gray-500 font-medium">{subtitle}</p>}
     </div>
     {action && (
       <div>

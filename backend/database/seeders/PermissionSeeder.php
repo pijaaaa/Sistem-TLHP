@@ -16,6 +16,10 @@ class PermissionSeeder extends Seeder
         $permissions = [
             Role::SuperAdmin->value => [
                 'dashboard' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'temuan_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'tindak_lanjut_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'review_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'master' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'master.departments' => ['view' => true, 'create' => true, 'update' => true, 'delete' => true],
                 'master.employees' => ['view' => true, 'create' => true, 'update' => true, 'delete' => true],
                 'access.permissions' => ['view' => true, 'create' => true, 'update' => true, 'delete' => true],
@@ -33,6 +37,10 @@ class PermissionSeeder extends Seeder
             ],
             Role::AdminSpi->value => [
                 'dashboard' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'temuan_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'tindak_lanjut_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'review_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'master' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'master.departments' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'master.employees' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'access.permissions' => ['view' => false, 'create' => false, 'update' => false, 'delete' => false],
@@ -50,6 +58,10 @@ class PermissionSeeder extends Seeder
             ],
             Role::InternalAudit->value => [
                 'dashboard' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'temuan_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'tindak_lanjut_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'review_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'master' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'master.departments' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'master.employees' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'access.permissions' => ['view' => false, 'create' => false, 'update' => false, 'delete' => false],
@@ -67,6 +79,10 @@ class PermissionSeeder extends Seeder
             ],
             Role::ManagerDept->value => [
                 'dashboard' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'temuan_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'tindak_lanjut_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'review_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'master' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'master.departments' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'master.employees' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'access.permissions' => ['view' => false, 'create' => false, 'update' => false, 'delete' => false],
@@ -84,6 +100,10 @@ class PermissionSeeder extends Seeder
             ],
             Role::StaffDept->value => [
                 'dashboard' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'temuan_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'tindak_lanjut_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'review_group' => ['view' => false, 'create' => false, 'update' => false, 'delete' => false],
+                'master' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'master.departments' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'master.employees' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'access.permissions' => ['view' => false, 'create' => false, 'update' => false, 'delete' => false],
@@ -101,6 +121,10 @@ class PermissionSeeder extends Seeder
             ],
             Role::Kepala_spi->value => [
                 'dashboard' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'temuan_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'tindak_lanjut_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'review_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'master' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'master.departments' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'master.employees' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'access.permissions' => ['view' => false, 'create' => false, 'update' => false, 'delete' => false],
@@ -118,6 +142,10 @@ class PermissionSeeder extends Seeder
             ],
             Role::ManagerIa->value => [
                 'dashboard' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'temuan_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'tindak_lanjut_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'review_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'master' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'master.departments' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'master.employees' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'access.permissions' => ['view' => false, 'create' => false, 'update' => false, 'delete' => false],
@@ -135,6 +163,10 @@ class PermissionSeeder extends Seeder
             ],
             Role::Direksi->value => [
                 'dashboard' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'temuan_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'tindak_lanjut_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'review_group' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
+                'master' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'master.departments' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'master.employees' => ['view' => true, 'create' => false, 'update' => false, 'delete' => false],
                 'access.permissions' => ['view' => false, 'create' => false, 'update' => false, 'delete' => false],

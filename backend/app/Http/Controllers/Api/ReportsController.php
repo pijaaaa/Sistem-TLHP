@@ -154,6 +154,22 @@ class ReportsController extends Controller
         return [$aps, $fups];
     }
 
+    private function applyFindingFilters(Request $request, $query): void
+    {
+        if ($fiscalYear = $request->query('fiscal_year')) {
+            $query->whereYear('response_period_start', (int) $fiscalYear);
+        }
+        if ($source = $request->query('source')) {
+            $query->where('source', $source);
+        }
+        if ($status = $request->query('status')) {
+            $query->where('status', $status);
+        }
+        if ($departmentId = $request->query('department_id')) {
+            $query->whereHas('auditee_departments', fn ($q) => $q->where('departments.id', (int) $departmentId));
+        }
+    }
+
     private function applyApFilters(Request $request, $query): void
     {
         if ($departmentId = $request->query('department_id')) {

@@ -203,28 +203,16 @@ class PermissionService
         $perms = self::effective($user);
         $menuTree = [];
 
-        $menus = Menu::orderBy('sort_order')->get();
-        $menuMap = $menus->keyBy('id');
+        // Hanya ambil menu root (parent_id null)
+        $rootMenus = Menu::whereNull('parent_id')->orderBy('sort_order')->get();
 
-        foreach ($menus as $menu) {
-            if (!isset($perms[$menu->code]['view']) || !$perms[$menu->code]['view']) {
-                continue;
-            }
-
-            if ($menu->parent_id) {
-                $parent = $menuMap->get($menu->parent_id);
-                if ($parent && isset($menuTree[$parent->code])) {
-                    if (!isset($menuTree[$parent->code]['children'])) {
-                        $menuTree[$parent->code]['children'] = [];
-                    }
-                    $menuTree[$parent->code]['children'][] = self::formatMenu($menu, $perms);
-                }
-            } else {
-                $menuTree[$menu->code] = self::formatMenu($menu, $perms);
+        foreach ($rootMenus as $menu) {
+            if (isset($perms[$menu->code]['view']) && $perms[$menu->code]['view']) {
+                $menuTree[] = self::formatMenu($menu, $perms);
             }
         }
 
-        return array_values($menuTree);
+        return $menuTree;
     }
 
     protected static function formatMenu(Menu $menu, array $perms): array

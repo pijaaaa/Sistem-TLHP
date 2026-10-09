@@ -23,14 +23,14 @@ const NotificationBell = () => {
 
   return (
     <div className="relative">
-      <button
+          <button
         onClick={() => setOpen((o) => !o)}
-        className="relative p-2 rounded-md hover:bg-gray-100 text-gray-600"
+        className="relative p-2.5 rounded-xl hover:bg-gray-100 text-gray-600 transition-colors"
         aria-label="Notifikasi"
       >
-        <Bell size={18} />
+        <Bell size={20} />
         {(unread ?? 0) > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] rounded-full min-w-4 h-4 px-1 flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 bg-accent-500 text-white text-[10px] font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center shadow-sm">
             {Math.min(unread ?? 0, 99)}
           </span>
         )}
@@ -39,31 +39,31 @@ const NotificationBell = () => {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-50 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2 border-b">
-              <span className="text-sm font-semibold">Notifikasi</span>
+          <div className="absolute right-0 z-50 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100">
+              <span className="text-sm font-bold text-gray-900">Notifikasi</span>
               {(unread ?? 0) > 0 && (
-                <button onClick={() => markAll.mutateAsync()} className="text-xs text-blue-600 hover:underline">
+                <button onClick={() => markAll.mutateAsync()} className="text-xs font-semibold text-primary-700 hover:text-primary-800">
                   Tandai semua dibaca
                 </button>
               )}
             </div>
-            <div className="max-h-80 overflow-y-auto">
+            <div className="max-h-80 overflow-y-auto divide-y divide-gray-50">
               {!notifications || notifications.length === 0 ? (
-                <p className="px-4 py-6 text-sm text-gray-500">Tidak ada notifikasi.</p>
+                <p className="px-4 py-8 text-sm text-center text-gray-400">Tidak ada notifikasi.</p>
               ) : (
                 notifications.map((n) => (
                   <button
                     key={n.id}
                     onClick={() => openNotification(n)}
                     className={cn(
-                      'w-full text-left px-4 py-3 border-b hover:bg-gray-50',
-                      !n.read_at && 'bg-blue-50/60',
+                      'w-full text-left px-4 py-3 hover:bg-primary-50/50 transition-colors',
+                      !n.read_at && 'bg-accent-50/40',
                     )}
                   >
-                    <p className="text-sm text-gray-800">{n.title}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {n.data?.url ? 'Buka subjek' : ''} · {new Date(n.created_at).toLocaleString('id-ID')}
+                    <p className="text-sm font-medium text-gray-800">{n.title}</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {new Date(n.created_at).toLocaleString('id-ID')}
                     </p>
                   </button>
                 ))

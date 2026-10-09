@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ProtectedRoute, PermissionRoute } from '@/components/shared'
 import { AppLayout } from '@/layouts/AppLayout'
@@ -46,6 +46,10 @@ function App() {
           <Route path="/" element={<AppLayout />}>
             <Route
               index
+              element={<Navigate to="/dashboard" replace />}
+            />
+            <Route
+              path="dashboard"
               element={
                 <PermissionRoute menu="dashboard" action="view">
                   <HomePage />
