@@ -5,6 +5,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import type { MenuItem } from '@/types/auth'
 import { Button } from '@/components/ui/button'
 import { NotificationBell } from '@/components/shared/notification-bell'
+import { AvatarCircle } from '@/components/shared/avatar-circle'
+import { ProfileModal } from '@/components/shared/profile-modal'
 import * as LucideIcons from 'lucide-react'
 
 // Workflow group configuration
@@ -298,6 +300,7 @@ const renderMenuTree = (
 const AppLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set(['workflow']))
+  const [profileOpen, setProfileOpen] = useState(false)
   const location = useLocation()
   const { menus, logout, user } = useAuth()
 
@@ -340,10 +343,16 @@ const AppLayout = () => {
           </div>
           
           {user && (
-            <div className="mb-6 px-2 py-3 bg-[#164436] rounded-xl">
-              <p className="text-sm font-semibold text-white truncate">{user.name}</p>
-              <p className="text-xs text-accent-yellow">{user.role}</p>
-            </div>
+            <button 
+              onClick={() => setProfileOpen(true)}
+              className="mb-6 px-2 py-3 bg-[#164436] rounded-xl flex items-center gap-3 hover:bg-[#1a4d3c] transition-colors w-full text-left group"
+            >
+              <AvatarCircle name={user.name} size="md" className="group-hover:ring-2 group-hover:ring-accent-orange transition-all" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-white truncate">{user.name}</p>
+                <p className="text-xs text-accent-yellow">{user.role}</p>
+              </div>
+            </button>
           )}
           
           <nav className="space-y-1 flex-1">
@@ -351,6 +360,9 @@ const AppLayout = () => {
           </nav>
         </div>
       </aside>
+
+      {/* Profile Modal */}
+      {user && <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} user={user} />}
 
       {/* Main */}
       <main className="flex-1 flex flex-col overflow-hidden md:ml-64">

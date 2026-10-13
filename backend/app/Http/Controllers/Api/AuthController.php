@@ -86,6 +86,21 @@ class AuthController extends Controller
         ]);
     }
 
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $user->update([
+            'name' => $request->name,
+        ]);
+
+        return ApiResponse::success(['message' => 'Profil berhasil diperbarui.']);
+    }
+
     public function changePassword(ChangePasswordRequest $request)
     {
         $user = $request->user();
