@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Enums\FindingSource;
 use App\Enums\FindingStatus;
 use App\Events\FindingActivated;
 use App\Events\FindingRegistered;
@@ -25,7 +24,7 @@ class FindingService
     ];
 
     /** Setelah terdaftar hanya field deskriptif yang boleh diubah. */
-    private const POST_REGISTER_FIELDS = ['title', 'scope', 'source_name'];
+    private const POST_REGISTER_FIELDS = ['title', 'scope', 'source'];
 
     public function createDraft(array $data): Finding
     {
@@ -55,7 +54,7 @@ class FindingService
             $allowed = array_intersect_key($data, array_flip(self::POST_REGISTER_FIELDS));
             if (empty($allowed)) {
                 throw ValidationException::withMessages([
-                    'status' => 'Setelah didaftarkan hanya judul, ruang lingkup, dan nama sumber yang dapat diubah.',
+                    'status' => 'Setelah didaftarkan hanya judul, ruang lingkup, dan sumber yang dapat diubah.',
                 ]);
             }
         }
@@ -84,12 +83,6 @@ class FindingService
         if (!empty($missing)) {
             throw ValidationException::withMessages([
                 'fields' => 'Data registrasi belum lengkap: ' . implode(', ', $missing) . '.',
-            ]);
-        }
-
-        if ($finding->source === FindingSource::Lainnya->value && empty($finding->source_name)) {
-            throw ValidationException::withMessages([
-                'source_name' => 'Nama sumber wajib diisi untuk sumber Lainnya.',
             ]);
         }
 

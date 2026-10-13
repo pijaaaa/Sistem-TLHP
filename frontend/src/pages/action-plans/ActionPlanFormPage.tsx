@@ -6,6 +6,7 @@ import { Select, Spinner } from '@/components/ui'
 import { useToast } from '@/components/ui/toast'
 import { useFinding, useFindings } from '@/hooks/useFindings'
 import { useCreateActionPlan, useUploadActionPlanDocument } from '@/hooks/useActionPlans'
+import { usePermission } from '@/hooks/usePermission'
 import type { Finding } from '@/types/finding'
 import { isAxiosError } from 'axios'
 
@@ -19,7 +20,8 @@ export default function ActionPlanFormPage() {
   const [findingOptions, setFindingOptions] = useState<Finding[]>([])
 
   const { data: loadedFinding } = useFinding(findingId ?? 0)
-  const { data: findingsPage } = useFindings({ per_page: 100 })
+  const permFindings = usePermission('findings')
+  const { data: findingsPage } = useFindings({ per_page: 100 }, { enabled: permFindings.view })
 
   const create = useCreateActionPlan()
   const uploadDoc = useUploadActionPlanDocument()

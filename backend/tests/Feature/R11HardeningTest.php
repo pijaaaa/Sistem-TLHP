@@ -31,6 +31,7 @@ test('semua route api v1 dilindungi permission atau daftar putih eksplisit', fun
         'api/v1/auth/change-password',
         'api/v1/lookups/departments',
         'api/v1/lookups/staff',
+        'api/v1/lookups/finding-sources',
     ];
     $publicUris = [
         'api/v1/health',
@@ -135,9 +136,8 @@ test('pemantau tidak melihat tindak lanjut sebelum disetujui', function () {
     $this->actingAs($this->ia, 'sanctum')->getJson('/api/v1/follow-ups')->assertOk()->assertJsonCount(1, 'data.data');
 });
 
-test('departemen ia sebagai auditee: manager_dept ia mengelola, manager_ia baca saja', function () {
+test('departemen ia sebagai auditee: manager_ia mengelola AP departemennya', function () {
     $iaDept = Department::where('code', 'IA')->first();
-    $managerIaAuditee = User::where('username', 'manager_ia_auditee')->first();
     $picIa = User::where('username', 'pic_ia')->first();
 
     $svc = new FindingService();
@@ -152,11 +152,7 @@ test('departemen ia sebagai auditee: manager_dept ia mengelola, manager_ia baca 
     ])->assertCreated()->json('data')[0];
     $this->actingAs($this->admin, 'sanctum')->postJson('/api/v1/action-plans/send', ['ids' => [$ap['id']]])->assertOk();
 
-    // Manager_dept IA menunjuk PIC IA.
-    $this->actingAs($managerIaAuditee, 'sanctum')->postJson("/api/v1/action-plans/{$ap['id']}/assign-pics", ['user_ids' => [$picIa->id]])
-        ->assertOk();
-
-    // manager_ia (baca saja) tidak boleh memutuskan.
+    // manager_ia menunjuk PIC untuk departemennya sendiri.
     $this->actingAs($this->managerIa, 'sanctum')->postJson("/api/v1/action-plans/{$ap['id']}/assign-pics", ['user_ids' => [$picIa->id]])
-        ->assertStatus(403);
+        ->assertOk();
 });

@@ -2,10 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { findingsApi } from '@/api/findings'
 import type { Finding, FindingPayload } from '@/types/finding'
 
-export const useFindings = (params?: { page?: number; per_page?: number; status?: string; fiscal_year?: number | string; source?: string; department_id?: number | string; q?: string }) =>
+export const useFindings = (params?: { page?: number; per_page?: number; status?: string; fiscal_year?: number | string; source?: string; department_id?: number | string; q?: string }, options?: { enabled?: boolean }) =>
   useQuery({
     queryKey: ['findings', params],
     queryFn: () => findingsApi.list(params),
+    enabled: options?.enabled ?? true,
   })
 
 export const useFinding = (id: number) =>

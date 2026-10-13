@@ -53,7 +53,9 @@ export default function ActionPlanDetailPage() {
   const { data: staff } = useStaffByDepartment(ap?.department_id ?? 0)
 
   const isManagerOfDept =
-    ap && user?.role === 'manager_dept' && user.department?.id === ap.department_id
+    ap &&
+    (user?.role === 'manager_dept' || user?.role === 'manager_ia') &&
+    user.department?.id === ap.department_id
   const canAssign =
     isManagerOfDept && ap && ap.status !== 'CLOSED' && ap.status !== 'DRAFT'
 

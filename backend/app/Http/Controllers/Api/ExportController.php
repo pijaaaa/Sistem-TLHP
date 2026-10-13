@@ -24,8 +24,7 @@ class ExportController extends Controller
 
         $rows = $findings->map(fn (Finding $f) => [
             $f->registration_number ?? '-',
-            $f->source ?? '-',
-            $f->source_name ?? '-',
+            $f->source ? (\App\Services\FindingSourceService::labels()[$f->source] ?? $f->source) : '-',
             $f->lhp_number ?? '-',
             $f->lhp_date?->toDateString() ?? '-',
             $f->finding_date?->toDateString() ?? '-',
@@ -39,7 +38,7 @@ class ExportController extends Controller
 
         return $this->csv(
             'temuan-' . now()->format('Ymd-His') . '.csv',
-            ['No Registrasi', 'Sumber', 'Nama Sumber', 'No LHP', 'Tgl LHP', 'Tgl Temuan', 'Tahun Buku', 'Judul', 'Status', 'Umur (hari)', 'Dokumen', 'Dibuat'],
+            ['No Registrasi', 'Sumber', 'No LHP', 'Tgl LHP', 'Tgl Temuan', 'Tahun Buku', 'Judul', 'Status', 'Umur (hari)', 'Dokumen', 'Dibuat'],
             $rows,
         );
     }

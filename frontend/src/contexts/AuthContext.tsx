@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { apiClient, setAuthLogout, fetchAuthMe } from '@/api/client'
 import type { AuthMe, User } from '@/types/auth'
 
@@ -22,6 +23,7 @@ const TOKEN_KEY = 'auth_token'
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const queryClient = useQueryClient()
   const [user, setUser] = useState<User | null>(null)
   const [role, setRole] = useState<AuthMe['role'] | null>(null)
   const [department, setDepartment] = useState<AuthMe['department'] | null>(null)
@@ -56,8 +58,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const token = data.data.token
     localStorage.setItem(TOKEN_KEY, token)
     apiClient.defaults.headers.common.Authorization = `Bearer ${token}`
+    queryClient.clear()
     await loadMe()
-  }, [loadMe])
+  }, [loadMe, queryClient])
 
   const logout = useCallback(async () => {
     const token = localStorage.getItem(TOKEN_KEY)
@@ -70,13 +73,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     localStorage.removeItem(TOKEN_KEY)
     apiClient.defaults.headers.common.Authorization = ''
+    queryClient.clear()
     setUser(null)
     setRole(null)
     setDepartment(null)
     setPermissions({})
     setMenus([])
     setIsReady(true)
-  }, [])
+  }, [queryClient])
 
   const refreshMe = useCallback(async () => {
     await loadMe()

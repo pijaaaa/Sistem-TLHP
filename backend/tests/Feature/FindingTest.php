@@ -11,7 +11,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
-    $this->seed([DepartmentSeeder::class, MenuSeeder::class, PermissionSeeder::class, \Database\Seeders\EmployeeUserSeeder::class]);
+    $this->seed([DepartmentSeeder::class, MenuSeeder::class, PermissionSeeder::class, \Database\Seeders\FindingSourceSeeder::class, \Database\Seeders\EmployeeUserSeeder::class]);
     Storage::fake(config('upload.disk'));
 });
 

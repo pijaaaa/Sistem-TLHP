@@ -15,3 +15,10 @@ export const useStaffByDepartment = (departmentId: number) =>
     enabled: !!departmentId,
     select: (res) => res.data,
   })
+
+export const useFindingSources = () =>
+  useQuery({
+    queryKey: ['lookups', 'finding-sources'],
+    queryFn: lookupsApi.findingSources,
+    select: (res) => res.data,
+  })

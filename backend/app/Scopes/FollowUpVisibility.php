@@ -22,7 +22,6 @@ class FollowUpVisibility implements Scope
         }
 
         if (in_array($user->role->value, [Role::AdminSpi->value, Role::InternalAudit->value, Role::Kepala_spi->value], true)
-            || $user->role->value === Role::ManagerIa->value
             || $user->role->value === Role::Direksi->value
         ) {
             // Pemantau hanya melihat tindak lanjut yang sudah disetujui manager.
@@ -31,6 +30,20 @@ class FollowUpVisibility implements Scope
                 'MENUNGGU_PERSETUJUAN_SELESAI',
                 'SELESAI',
             ]);
+            return;
+        }
+
+        if ($user->role->value === Role::ManagerIa->value) {
+            // manager_ia memantau semua, tetapi mengelola penuh departemennya sendiri.
+            $query->where(function ($q) use ($user) {
+                $q->whereHas('actionPlan', function ($a) use ($user) {
+                    $a->where('department_id', $user->department_id)->whereNull('deleted_at');
+                })->orWhereIn('status', [
+                    'DISETUJUI',
+                    'MENUNGGU_PERSETUJUAN_SELESAI',
+                    'SELESAI',
+                ]);
+            });
             return;
         }
 

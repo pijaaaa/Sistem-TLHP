@@ -17,12 +17,15 @@ use App\Http\Controllers\Api\ReportsController;
 use App\Http\Controllers\Api\LookupController;
 use App\Http\Controllers\Api\Master\DepartmentController;
 use App\Http\Controllers\Api\Master\EmployeeController;
+use App\Http\Controllers\Api\Master\FindingSourceController;
 use App\Http\Controllers\Api\Master\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', [HealthController::class, '__invoke']);
 
 Route::prefix('v1')->group(function () {
+    Route::get('/health', [HealthController::class, '__invoke']);
+
     Route::post('/auth/login', [AuthController::class, 'login'])
     ->middleware('throttle:login');
 
@@ -38,6 +41,7 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/lookups/departments', [LookupController::class, 'departments']);
         Route::get('/lookups/staff', [LookupController::class, 'staff']);
+        Route::get('/lookups/finding-sources', [LookupController::class, 'findingSources']);
 
         Route::middleware(['permission:inbox,view'])->group(function () {
             Route::get('/inbox', [InboxController::class, 'index']);
@@ -70,7 +74,7 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:master.employees,delete');
     });
 
-    Route::middleware(['auth:sanctum', 'permission:master.employees,view'])->group(function () {
+     Route::middleware(['auth:sanctum', 'permission:master.employees,view'])->group(function () {
         Route::get('master/users', [UserController::class, 'index']);
         Route::post('master/users', [UserController::class, 'store'])
             ->middleware('permission:master.employees,create');
@@ -79,6 +83,17 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:master.employees,update');
         Route::delete('master/users/{user}', [UserController::class, 'destroy'])
             ->middleware('permission:master.employees,delete');
+    });
+
+    Route::middleware(['auth:sanctum', 'permission:master.finding_sources,view'])->group(function () {
+        Route::get('master/finding-sources', [FindingSourceController::class, 'index']);
+        Route::post('master/finding-sources', [FindingSourceController::class, 'store'])
+            ->middleware('permission:master.finding_sources,create');
+        Route::get('master/finding-sources/{finding_source}', [FindingSourceController::class, 'show']);
+        Route::put('master/finding-sources/{finding_source}', [FindingSourceController::class, 'update'])
+            ->middleware('permission:master.finding_sources,update');
+        Route::delete('master/finding-sources/{finding_source}', [FindingSourceController::class, 'destroy'])
+            ->middleware('permission:master.finding_sources,delete');
     });
 
     Route::middleware(['auth:sanctum', 'permission:access.permissions,view'])->group(function () {

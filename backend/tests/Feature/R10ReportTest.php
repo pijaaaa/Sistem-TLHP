@@ -108,6 +108,17 @@ test('laporan keterlambatan hanya menampilkan data dalam scope', function () {
         ->and(collect($res->json('data.data'))->pluck('days_overdue')->first())->toBeGreaterThanOrEqual(1);
 });
 
+test('umur temuan mengelompokkan sesuai bucket', function () {
+    r10SeedReportingData();
+
+    $res = $this->actingAs($this->admin, 'sanctum')->getJson('/api/v1/reports/finding-age');
+    $res->assertOk();
+
+    $rows = collect($res->json('data.data'))->keyBy('group');
+    expect($rows->keys()->all())->toHaveCount(5)
+        ->and($rows->sum('count'))->toBe(\App\Models\Finding::count());
+});
+
 test('export laporan tidak membocorkan data di luar scope', function () {
     r10SeedReportingData();
 

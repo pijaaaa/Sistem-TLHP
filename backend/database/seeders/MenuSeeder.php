@@ -25,7 +25,8 @@ class MenuSeeder extends Seeder
             ['code' => 'master', 'name' => 'Master & Akses', 'path' => null, 'icon' => 'settings', 'parent_id' => null, 'sort_order' => 11, 'is_active' => true],
             ['code' => 'master.departments', 'name' => 'Departemen', 'path' => '/master/departemen', 'icon' => 'building', 'parent_id' => 'master', 'sort_order' => 0, 'is_active' => true],
             ['code' => 'master.employees', 'name' => 'Karyawan', 'path' => '/master/karyawan', 'icon' => 'users', 'parent_id' => 'master', 'sort_order' => 1, 'is_active' => true],
-            ['code' => 'access.permissions', 'name' => 'Manajemen Akses', 'path' => '/akses', 'icon' => 'shield', 'parent_id' => 'master', 'sort_order' => 2, 'is_active' => true],
+            ['code' => 'master.finding_sources', 'name' => 'Sumber Temuan', 'path' => '/master/sumber-temuan', 'icon' => 'file-text', 'parent_id' => 'master', 'sort_order' => 2, 'is_active' => true],
+            ['code' => 'access.permissions', 'name' => 'Manajemen Akses', 'path' => '/akses', 'icon' => 'shield', 'parent_id' => 'master', 'sort_order' => 3, 'is_active' => true],
         ];
 
         $parentMap = [];
@@ -37,7 +38,7 @@ class MenuSeeder extends Seeder
                 }
             }
 
-            $menu = Menu::firstOrCreate(
+            $menu = Menu::updateOrCreate(
                 ['code' => $menuData['code']],
                 [
                     'name' => $menuData['name'],

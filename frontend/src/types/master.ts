@@ -17,6 +17,11 @@ export interface DepartmentSummary {
   is_active: boolean
 }
 
+export interface FindingSource extends MasterItem {
+  code: string
+  name: string
+}
+
 export interface Employee extends MasterItem {
   nik: string
   name: string

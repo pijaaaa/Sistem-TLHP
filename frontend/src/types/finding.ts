@@ -16,7 +16,7 @@ export type ActionPlanStatus =
   | 'CLOSED'
 
 export type RiskLevel = 'RENDAH' | 'SEDANG' | 'TINGGI' | 'KRITIS'
-export type FindingSource = 'BPK' | 'BPKP' | 'KAP' | 'LAINNYA'
+export type FindingSource = string
 
 export type FollowUpStatus =
   | 'DRAFT'
@@ -48,7 +48,7 @@ export interface Finding {
   id: number
   registration_number: string | null
   source: FindingSource | null
-  source_name: string | null
+  source_label?: string | null
   lhp_number: string | null
   lhp_date: string | null
   finding_date: string | null
@@ -75,7 +75,6 @@ export interface Finding {
 export type FindingPayload = Partial<{
   title: string
   source: FindingSource | string
-  source_name: string | null
   lhp_number: string | null
   lhp_date: string | null
   finding_date: string | null
@@ -340,13 +339,6 @@ export const RISK_OPTIONS: { value: RiskLevel; label: string; variant: 'default'
   { value: 'SEDANG', label: 'Sedang', variant: 'info' },
   { value: 'TINGGI', label: 'Tinggi', variant: 'warning' },
   { value: 'KRITIS', label: 'Kritis', variant: 'danger' },
-]
-
-export const SOURCE_OPTIONS: { value: FindingSource; label: string }[] = [
-  { value: 'BPK', label: 'BPK' },
-  { value: 'BPKP', label: 'BPKP' },
-  { value: 'KAP', label: 'KAP' },
-  { value: 'LAINNYA', label: 'Lainnya' },
 ]
 
 export const getFindingStatusLabel = (status?: string | null): string =>

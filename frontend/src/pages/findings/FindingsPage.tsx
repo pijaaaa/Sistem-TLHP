@@ -4,14 +4,13 @@ import { ChevronRight, ChevronDown } from 'lucide-react'
 import { useFindings, useDeleteFinding } from '@/hooks/useFindings'
 import { useFindingTree } from '@/hooks/useReports'
 import { useFollowUpsByActionPlan } from '@/hooks/useFollowUps'
-import { useAuditeeDepartments } from '@/hooks/useLookups'
+import { useAuditeeDepartments, useFindingSources } from '@/hooks/useLookups'
 import { PageHeader, Can, FollowUpStatusBadge, ProgressBar, FollowUpDetailModal } from '@/components/shared'
 import { Button, StatusBadge, Select, ConfirmDialog, InputField } from '@/components/ui'
 import { useToast } from '@/components/ui/toast'
 import { usePermission } from '@/hooks/usePermission'
 import {
   FINDING_STATUS_OPTIONS,
-  SOURCE_OPTIONS,
   getFindingStatusVariant,
   getActionPlanStatusVariant,
   type Finding,
@@ -34,6 +33,7 @@ const FindingsPage = () => {
   const [detailFu, setDetailFu] = useState<FollowUp | null>(null)
 
   const { data: depts } = useAuditeeDepartments()
+  const { data: sources } = useFindingSources()
   const params = useMemo(
     () => ({ page, per_page: 15, status: status || undefined, fiscal_year: fiscalYear || undefined, source: source || undefined, department_id: departmentId || undefined, q: q || undefined }),
     [page, q, status, fiscalYear, source, departmentId],
@@ -74,7 +74,7 @@ const FindingsPage = () => {
         </Select>
         <Select value={source} onChange={(e) => { setSource(e.target.value); setPage(1) }}>
           <option value="">Semua Sumber</option>
-          {SOURCE_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          {(sources ?? []).map((s) => <option key={s.code} value={s.code}>{s.name}</option>)}
         </Select>
         <Select value={departmentId} onChange={(e) => { setDepartmentId(e.target.value); setPage(1) }}>
           <option value="">Semua Departemen</option>

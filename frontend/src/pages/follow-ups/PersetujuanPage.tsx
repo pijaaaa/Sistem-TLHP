@@ -78,7 +78,7 @@ export default function PersetujuanPage() {
     return [...map.entries()]
   }, [pendingData])
 
-  const isManager = user?.role === 'manager_dept'
+  const isManager = user?.role === 'manager_dept' || user?.role === 'manager_ia'
 
   return (
     <div className="space-y-4">

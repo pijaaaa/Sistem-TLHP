@@ -53,7 +53,6 @@ export default function FindingFormPage() {
             initial={finding ? {
               title: finding.title,
               source: finding.source ?? '',
-              source_name: finding.source_name,
               lhp_number: finding.lhp_number,
               lhp_date: finding.lhp_date,
               finding_date: finding.finding_date,

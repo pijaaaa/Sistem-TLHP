@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\FindingSource;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -17,8 +16,7 @@ class UpdateFindingRequest extends FormRequest
     {
         return [
             'title' => ['sometimes', 'required', 'string', 'max:255'],
-            'source' => ['sometimes', 'nullable', Rule::enum(FindingSource::class)],
-            'source_name' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'source' => ['sometimes', 'nullable', 'string', Rule::exists('finding_sources', 'code')->whereNull('deleted_at')],
             'lhp_number' => ['sometimes', 'nullable', 'string', 'max:100'],
             'lhp_date' => ['sometimes', 'nullable', 'date'],
             'finding_date' => ['sometimes', 'nullable', 'date'],

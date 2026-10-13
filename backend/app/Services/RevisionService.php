@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\ActionPlanStatus;
-use App\Enums\Role;
 use App\Events\RevisionForwarded;
 use App\Models\ActionPlan;
 use App\Models\ActionPlanRevision;
@@ -16,7 +15,7 @@ class RevisionService
     public function forwardToPic(ActionPlan $actionPlan): ActionPlan
     {
         $user = auth()->user();
-        if ($user->role !== Role::ManagerDept || $actionPlan->department_id !== $user->department_id) {
+        if (! $user->managesDepartment($actionPlan->department_id)) {
             throw ValidationException::withMessages([
                 'action_plan_id' => 'Hanya manager departemen pemilik action plan yang dapat meneruskan revisi.',
             ]);

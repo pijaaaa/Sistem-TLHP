@@ -20,9 +20,9 @@ class ProgressReportService
     {
         $this->assertPicActor($followUp);
 
-        if (!in_array($followUp->status, [FollowUpStatus::Disetujui, FollowUpStatus::MenungguPersetujuanSelesai], true)) {
+        if ($followUp->status !== FollowUpStatus::Disetujui) {
             throw ValidationException::withMessages([
-                'status' => 'Progres hanya dapat dilaporkan pada tindak lanjut yang sudah disetujui.',
+                'status' => 'Progres hanya dapat dilaporkan pada tindak lanjut yang berstatus Disetujui.',
             ]);
         }
 

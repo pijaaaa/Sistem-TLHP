@@ -4,6 +4,7 @@ import type {
   AccountUser,
   Department,
   Employee,
+  FindingSource,
   MenuOption,
   PermissionMatrix,
   RoleOption,
@@ -44,6 +45,17 @@ export const employeesApi = {
   update: (id: number, payload: { nik: string; name: string; position?: string; department_id: number; is_active?: boolean }) =>
     apiClient.put<ApiResponse<Employee>>(`/master/employees/${id}`, payload).then(unwrap),
   remove: (id: number) => apiClient.delete<ApiResponse<null>>(`/master/employees/${id}`).then(unwrap),
+}
+
+export const findingSourcesApi = {
+  list: (params?: { per_page?: number; page?: number }) =>
+    apiClient.get<ApiResponse<Paginated<FindingSource>>>('/master/finding-sources', { params }).then(unwrap),
+  get: (id: number) => apiClient.get<ApiResponse<FindingSource>>(`/master/finding-sources/${id}`).then(unwrap),
+  create: (payload: { code: string; name: string; is_active?: boolean }) =>
+    apiClient.post<ApiResponse<FindingSource>>('/master/finding-sources', payload).then(unwrap),
+  update: (id: number, payload: { code: string; name: string; is_active?: boolean }) =>
+    apiClient.put<ApiResponse<FindingSource>>(`/master/finding-sources/${id}`, payload).then(unwrap),
+  remove: (id: number) => apiClient.delete<ApiResponse<null>>(`/master/finding-sources/${id}`).then(unwrap),
 }
 
 export const usersApi = {

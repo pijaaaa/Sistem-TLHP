@@ -45,6 +45,13 @@ class User extends Authenticatable
         return $this->belongsTo(Department::class);
     }
 
+    public function managesDepartment(?int $departmentId): bool
+    {
+        return $departmentId !== null
+            && $this->department_id === $departmentId
+            && in_array($this->role, [Role::ManagerDept, Role::ManagerIa], true);
+    }
+
     public function employee()
     {
         return $this->belongsTo(Employee::class);

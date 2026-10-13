@@ -181,7 +181,7 @@ export default function FindingDetailPage() {
               <DetailRow label="Tanggal LHP" value={finding.lhp_date ?? '-'} />
               <DetailRow label="Tanggal Temuan" value={finding.finding_date ?? '-'} />
               <DetailRow label="Periode Tanggapan" value={finding.response_period_start && finding.response_period_end ? `${finding.response_period_start} s.d. ${finding.response_period_end}` : '-'} />
-              <DetailRow label="Sumber" value={finding.source ? `${finding.source}${finding.source_name ? ' - ' + finding.source_name : ''}` : '-'} />
+              <DetailRow label="Sumber" value={finding.source_label ?? finding.source ?? '-'} />
               <DetailRow label="Ruang Lingkup" value={finding.scope ?? '-'} />
               <DetailRow label="Departemen Auditee" value={(finding.auditee_departments ?? []).map((d) => d.name).join(', ') || '-'} />
               <DetailRow label="Aktif" value={finding.activated_at ? new Date(finding.activated_at).toLocaleString('id-ID') : '-'} />

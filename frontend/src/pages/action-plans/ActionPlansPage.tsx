@@ -15,6 +15,7 @@ export default function ActionPlansPage() {
   const navigate = useNavigate()
   const { showToast } = useToast()
   const perm = usePermission('action_plans')
+  const permFindings = usePermission('findings')
   const [page, setPage] = useState(1)
   const [status, setStatus] = useState('')
   const [findingId, setFindingId] = useState('')
@@ -25,7 +26,7 @@ export default function ActionPlansPage() {
   const [deadlineReason, setDeadlineReason] = useState('')
   const [deleteItem, setDeleteItem] = useState<ActionPlan | null>(null)
 
-  const { data: findingsPage } = useFindings({ per_page: 100 })
+  const { data: findingsPage } = useFindings({ per_page: 100 }, { enabled: permFindings.view })
   const { data: depts } = useAuditeeDepartments()
 
   const params = useMemo(
@@ -130,12 +131,14 @@ export default function ActionPlansPage() {
             <option key={s.value} value={s.value}>{s.label}</option>
           ))}
         </Select>
-        <Select value={findingId} onChange={(e) => { setFindingId(e.target.value); setPage(1) }} className="w-64">
-          <option value="">Semua Temuan</option>
-          {(findingsPage?.data ?? []).map((f) => (
-            <option key={f.id} value={f.id}>{f.registration_number ?? `#${f.id}`} — {f.title}</option>
-          ))}
-        </Select>
+        {permFindings.view && (
+          <Select value={findingId} onChange={(e) => { setFindingId(e.target.value); setPage(1) }} className="w-64">
+            <option value="">Semua Temuan</option>
+            {(findingsPage?.data ?? []).map((f) => (
+              <option key={f.id} value={f.id}>{f.registration_number ?? `#${f.id}`} — {f.title}</option>
+            ))}
+          </Select>
+        )}
         <Select value={departmentId} onChange={(e) => { setDepartmentId(e.target.value); setPage(1) }} className="w-56">
           <option value="">Semua Departemen</option>
           {(depts ?? []).map((d) => (

@@ -41,12 +41,20 @@ class ActionPlanPolicy
 
     public function update(User $user, ActionPlan $ap): bool
     {
+        if ($user->role === Role::ManagerIa && ! $user->managesDepartment($ap->department_id)) {
+            return false;
+        }
+
         return $ap->status === ActionPlanStatus::Draft
             && PermissionService::can($user, 'action_plans', 'update');
     }
 
     public function delete(User $user, ActionPlan $ap): bool
     {
+        if ($user->role === Role::ManagerIa && ! $user->managesDepartment($ap->department_id)) {
+            return false;
+        }
+
         return $ap->status === ActionPlanStatus::Draft
             && PermissionService::can($user, 'action_plans', 'delete');
     }
@@ -63,8 +71,7 @@ class ActionPlanPolicy
             return true;
         }
 
-        return $user->role === Role::ManagerDept
-            && $ap->department_id === $user->department_id
+        return $user->managesDepartment($ap->department_id)
             && $ap->sent_at !== null
             && $ap->status !== ActionPlanStatus::Closed;
     }
@@ -81,8 +88,7 @@ class ActionPlanPolicy
             return true;
         }
 
-        return $user->role === Role::ManagerDept
-            && $ap->department_id === $user->department_id
+        return $user->managesDepartment($ap->department_id)
             && $ap->status === ActionPlanStatus::ProsesTindakLanjut;
     }
 
@@ -101,8 +107,7 @@ class ActionPlanPolicy
             return true;
         }
 
-        return $user->role === Role::ManagerDept
-            && $ap->department_id === $user->department_id
+        return $user->managesDepartment($ap->department_id)
             && $ap->status === ActionPlanStatus::RevisiSpi;
     }
 

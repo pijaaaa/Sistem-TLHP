@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ProtectedRoute, PermissionRoute } from '@/components/shared'
 import { AppLayout } from '@/layouts/AppLayout'
@@ -13,6 +13,7 @@ const DepartmentsPage = lazy(() => import('@/pages/master/DepartmentsPage'))
 const EmployeesPage = lazy(() => import('@/pages/master/EmployeesPage'))
 const UsersPage = lazy(() => import('@/pages/master/UsersPage'))
 const PermissionsPage = lazy(() => import('@/pages/master/PermissionsPage'))
+const FindingSourcesPage = lazy(() => import('@/pages/master/FindingSourcesPage'))
 const AuditTrailPage = lazy(() => import('@/pages/AuditTrailPage'))
 const InboxPage = lazy(() => import('@/pages/InboxPage'))
 const ReportsPage = lazy(() => import('@/pages/ReportsPage'))
@@ -44,8 +45,9 @@ function App() {
 
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<AppLayout />}>
+            <Route index element={<Navigate to="/dashboard" replace />} />
             <Route
-              index
+              path="dashboard"
               element={
                 <PermissionRoute menu="dashboard" action="view">
                   <HomePage />
@@ -53,7 +55,7 @@ function App() {
               }
             />
             <Route
-              path="master/departments"
+              path="master/departemen"
               element={
                 <PermissionRoute menu="master.departments" action="view">
                   <DepartmentsPage />
@@ -61,7 +63,7 @@ function App() {
               }
             />
             <Route
-              path="master/employees"
+              path="master/karyawan"
               element={
                 <PermissionRoute menu="master.employees" action="view">
                   <EmployeesPage />
@@ -77,10 +79,18 @@ function App() {
               }
             />
             <Route
-              path="access/permissions"
+              path="akses"
               element={
                 <PermissionRoute menu="access.permissions" action="view">
                   <PermissionsPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="master/sumber-temuan"
+              element={
+                <PermissionRoute menu="master.finding_sources" action="view">
+                  <FindingSourcesPage />
                 </PermissionRoute>
               }
             />
@@ -205,7 +215,7 @@ function App() {
               }
             />
             <Route
-              path="audit-trail"
+              path="log-aktivitas"
               element={
                 <PermissionRoute menu="audit_trail" action="view">
                   <AuditTrailPage />

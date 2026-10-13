@@ -14,7 +14,7 @@ class FindingResource extends JsonResource
             'id' => $this->id,
             'registration_number' => $this->registration_number,
             'source' => $this->source,
-            'source_name' => $this->source_name,
+            'source_label' => $this->source ? (\App\Services\FindingSourceService::labels()[$this->source] ?? $this->source) : null,
             'lhp_number' => $this->lhp_number,
             'lhp_date' => $this->lhp_date?->toDateString(),
             'finding_date' => $this->finding_date?->toDateString(),

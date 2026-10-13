@@ -41,9 +41,3 @@ enum InboxTaskType: string
         };
     }
 }
-
-enum InboxTaskStatus: string
-{
-    case Open = 'OPEN';
-    case Done = 'DONE';
-}

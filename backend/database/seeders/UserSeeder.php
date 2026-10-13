@@ -42,13 +42,6 @@ class UserSeeder extends Seeder
                 'department_code' => 'IA',
             ],
             [
-                'name' => 'Manager IA (IA Auditee)',
-                'email' => 'manager_ia_auditee@example.com',
-                'username' => 'manager_ia_auditee',
-                'role' => Role::ManagerDept,
-                'department_code' => 'IA',
-            ],
-            [
                 'name' => 'PIC IA',
                 'email' => 'pic_ia@example.com',
                 'username' => 'pic_ia',

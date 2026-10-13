@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { PageHeader, Tabs, ProgressBar } from '@/components/shared'
 import { Select, InputField, Button, Spinner } from '@/components/ui'
 import { useReportDepartments, useReportLate, useReportAge, useReportRisk } from '@/hooks/useReports'
-import { useAuditeeDepartments } from '@/hooks/useLookups'
-import { SOURCE_OPTIONS } from '@/types/finding'
+import { useAuditeeDepartments, useFindingSources } from '@/hooks/useLookups'
 import { apiClient } from '@/api/client'
 import { confirmDownload } from '@/lib/utils'
 
@@ -30,6 +29,7 @@ export default function ReportsPage() {
   const { data: riskData, isLoading: riskLoading } = useReportRisk(tab === 'risk' ? filters : undefined)
 
   const { data: depts } = useAuditeeDepartments()
+  const { data: sources } = useFindingSources()
   const loading = tab === 'departments' ? deptsLoading : tab === 'late' ? lateLoading : tab === 'age' ? ageLoading : riskLoading
 
   const exportHref = EXPORT_LINKS[tab]
@@ -46,7 +46,7 @@ export default function ReportsPage() {
         </Select>
         <Select value={source} onChange={(e) => setSource(e.target.value)}>
           <option value="">Semua Sumber</option>
-          {SOURCE_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          {(sources ?? []).map((s) => <option key={s.code} value={s.code}>{s.name}</option>)}
         </Select>
         <Select value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
           <option value="">Semua Departemen</option>
@@ -69,13 +69,13 @@ export default function ReportsPage() {
       {loading ? (
         <div className="flex items-center gap-2 text-sm text-gray-500"><Spinner /> Memuat...</div>
       ) : tab === 'departments' ? (
-        <DepartmentTable data={(deptsData?.data ?? []) as Record<string, unknown>[]} />
+        <DepartmentTable data={(deptsData ?? []) as Record<string, unknown>[]} />
       ) : tab === 'late' ? (
-        <LateTable data={(lateData?.data ?? []) as Record<string, unknown>[]} />
+        <LateTable data={(lateData ?? []) as Record<string, unknown>[]} />
       ) : tab === 'age' ? (
-        <AgeList data={(ageData?.data ?? []) as { group: string; count: number }[]} />
+        <AgeList data={(ageData ?? []) as { group: string; count: number }[]} />
       ) : (
-        <RiskTable data={(riskData?.data ?? []) as { risk: string; risk_label: string; count: number; loss_idr: number; loss_usd: number }[]} />
+        <RiskTable data={(riskData ?? []) as { risk: string; risk_label: string; count: number; loss_idr: number; loss_usd: number }[]} />
       )}
     </div>
   )

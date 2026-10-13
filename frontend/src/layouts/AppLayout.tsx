@@ -49,18 +49,25 @@ const renderMenuTree = (
 
     list.push(
       <div key={menu.code}>
-        <Link
-          to={menu.path}
-          className={cn(
-            'flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors',
-            isActive
-              ? 'bg-blue-600 text-white'
-              : 'text-gray-300 hover:bg-gray-800 hover:text-white',
-          )}
-        >
-          <IconComponent size={18} className="mr-3" />
-          {menu.name}
-        </Link>
+        {menu.path ? (
+          <Link
+            to={menu.path}
+            className={cn(
+              'flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors',
+              isActive
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-300 hover:bg-gray-800 hover:text-white',
+            )}
+          >
+            <IconComponent size={18} className="mr-3" />
+            {menu.name}
+          </Link>
+        ) : (
+          <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 uppercase tracking-wide">
+            <IconComponent size={18} className="mr-3" />
+            {menu.name}
+          </div>
+        )}
 
         {hasChildren && (
           <div className="ml-6 mt-1 space-y-1">

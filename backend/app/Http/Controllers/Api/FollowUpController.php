@@ -183,9 +183,15 @@ class FollowUpController extends Controller
     {
         $this->authorize('view', $follow_up);
 
-        $documents = collect($request->input('document', []))
-            ->map(fn ($doc) => ['file' => $doc['file'], 'label' => $doc['label']])
-            ->all();
+        $documents = array_values(array_filter(
+            array_keys($request->input('document', [])),
+            fn ($i) => $request->file("document.{$i}.file") !== null,
+        ));
+
+        $documents = array_map(fn ($i) => [
+            'file' => $request->file("document.{$i}.file"),
+            'label' => $request->input("document.{$i}.label"),
+        ], $documents);
 
         $report = (new ProgressReportService())->report(
             $follow_up,

@@ -4,11 +4,13 @@ use App\Enums\Role;
 use App\Http\Resources\DepartmentResource;
 use App\Models\Department;
 use App\Models\Employee;
+use App\Models\FindingSource;
 use App\Models\Menu;
 use App\Models\User;
 use App\Services\DepartmentService;
 use App\Services\PermissionService;
 use Database\Seeders\DepartmentSeeder;
+use Database\Seeders\FindingSourceSeeder;
 use Database\Seeders\MenuSeeder;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\UserSeeder;
@@ -165,4 +167,53 @@ test('user menu override dapat dibaca & diupdate', function () {
      $matrix->assertOk();
      expect($matrix->json('data.overrides.findings.view'))->toBeTrue();
      expect($matrix->json('data.effective.findings.view'))->toBeTrue();
+});
+
+test('superadmin bisa CRUD sumber temuan', function () {
+    $this->seed([DepartmentSeeder::class, MenuSeeder::class, PermissionSeeder::class, FindingSourceSeeder::class]);
+    makeUser(Role::SuperAdmin);
+    $admin = User::where('role', Role::SuperAdmin->value)->first();
+
+    $create = $this->actingAs($admin, 'sanctum')->postJson('/api/v1/master/finding-sources', [
+        'code' => 'KAP-XYZ', 'name' => 'KAP XYZ',
+    ])->assertStatus(201);
+    $id = $create->json('data.id');
+
+    $this->actingAs($admin, 'sanctum')->putJson("/api/v1/master/finding-sources/{$id}", [
+        'code' => 'KAP-XYZ', 'name' => 'KAP XYZ Baru', 'is_active' => true,
+    ])->assertOk()->assertJsonPath('data.name', 'KAP XYZ Baru');
+
+    $this->actingAs($admin, 'sanctum')->deleteJson("/api/v1/master/finding-sources/{$id}")->assertOk();
+    expect(FindingSource::withTrashed()->find($id)->deleted_at)->not->toBeNull();
+});
+
+test('staff tidak boleh kelola sumber temuan (403)', function () {
+    $this->seed([DepartmentSeeder::class, MenuSeeder::class, PermissionSeeder::class, FindingSourceSeeder::class]);
+    makeUser(Role::StaffDept);
+    $staff = User::where('role', Role::StaffDept->value)->first();
+
+    $this->actingAs($staff, 'sanctum')->getJson('/api/v1/master/finding-sources')->assertStatus(403);
+    $this->actingAs($staff, 'sanctum')->postJson('/api/v1/master/finding-sources', ['code' => 'X', 'name' => 'X'])->assertStatus(403);
+});
+
+test('lookup sumber temuan mengembalikan sumber aktif', function () {
+    $this->seed([DepartmentSeeder::class, MenuSeeder::class, PermissionSeeder::class, FindingSourceSeeder::class]);
+    makeUser(Role::StaffDept);
+    $staff = User::where('role', Role::StaffDept->value)->first();
+
+    $res = $this->actingAs($staff, 'sanctum')->getJson('/api/v1/lookups/finding-sources')->assertOk();
+    expect(collect($res->json('data.data'))->pluck('code'))->toContain('BPK');
+});
+
+test('temuan menerima sumber dari master dan menolak kode tak dikenal', function () {
+    $this->seed([DepartmentSeeder::class, MenuSeeder::class, PermissionSeeder::class, FindingSourceSeeder::class, \Database\Seeders\EmployeeUserSeeder::class]);
+    $admin = User::where('username', 'admin_spi')->first();
+
+    $this->actingAs($admin, 'sanctum')->postJson('/api/v1/findings', [
+        'title' => 'Temuan sumber master', 'source' => 'BPKP',
+    ])->assertStatus(201)->assertJsonPath('data.source_label', 'BPKP');
+
+    $this->actingAs($admin, 'sanctum')->postJson('/api/v1/findings', [
+        'title' => 'Temuan sumber asing', 'source' => 'TIDAK_ADA',
+    ])->assertStatus(422);
 });

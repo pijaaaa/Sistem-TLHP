@@ -188,8 +188,7 @@ class FollowUpReviewService
             }
         } else {
             $isPic = $followUp->assignees()->whereKey($user->id)->exists();
-            $isManager = $user->role === Role::ManagerDept
-                && $followUp->actionPlan->department_id === $user->department_id;
+            $isManager = $user->managesDepartment($followUp->actionPlan->department_id);
             $isMonitorAfterApproval = $user->role->isMonitor() && $followUp->status->isVisibleToMonitor();
             if ($user->role !== Role::SuperAdmin && !$isPic && !$isManager && !$isMonitorAfterApproval) {
                 throw ValidationException::withMessages([
@@ -239,7 +238,7 @@ class FollowUpReviewService
             return;
         }
 
-        if ($user->role !== Role::ManagerDept || $followUp->actionPlan->department_id !== $user->department_id) {
+        if (! $user->managesDepartment($followUp->actionPlan->department_id)) {
             throw ValidationException::withMessages([
                 'follow_up_id' => 'Hanya manager departemen pemilik action plan yang dapat mengambil keputusan ini.',
             ]);

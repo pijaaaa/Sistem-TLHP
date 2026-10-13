@@ -28,7 +28,6 @@ class DemoSeeder extends Seeder
         $makeFinding = function (array $data): Finding {
             $data += [
                 'source' => 'BPK',
-                'source_name' => null,
                 'lhp_number' => 'LHP/' . now()->year . '/' . strtoupper(substr((string) mt_rand(), 0, 4)),
                 'lhp_date' => now()->subMonths(3)->toDateString(),
                 'finding_date' => now()->subMonths(3)->toDateString(),

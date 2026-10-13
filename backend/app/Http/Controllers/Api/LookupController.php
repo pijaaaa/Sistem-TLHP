@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DepartmentResource;
+use App\Http\Resources\FindingSourceResource;
 use App\Models\Department;
 use App\Support\ApiResponse;
 use App\Support\CacheService;
@@ -43,6 +44,15 @@ class LookupController extends Controller
             ->get(['id', 'name', 'username']);
 
         return ApiResponse::success(['data' => $staff]);
+    }
+
+    public function findingSources()
+    {
+        $sources = \App\Services\FindingSourceService::active();
+
+        return ApiResponse::success([
+            'data' => FindingSourceResource::collection($sources),
+        ]);
     }
 }
 

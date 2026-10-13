@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { FormField, Input, Select, Textarea, Button } from '@/components/ui'
-import { SOURCE_OPTIONS, type FindingPayload } from '@/types/finding'
+import { useFindingSources } from '@/hooks/useLookups'
+import type { FindingPayload } from '@/types/finding'
 
 interface FindingFormProps {
   initial?: Partial<FindingPayload>
@@ -12,7 +13,6 @@ interface FindingFormProps {
 const blank = (): FindingPayload => ({
   title: '',
   source: '',
-  source_name: null,
   lhp_number: null,
   lhp_date: null,
   finding_date: null,
@@ -23,6 +23,7 @@ const blank = (): FindingPayload => ({
 
 const FindingForm = ({ initial, submitLabel = 'Simpan', submitting, onSubmit }: FindingFormProps) => {
   const [form, setForm] = useState<FindingPayload>(blank())
+  const { data: sources } = useFindingSources()
 
   useEffect(() => {
     if (initial) setForm({ ...blank(), ...initial })
@@ -45,22 +46,18 @@ const FindingForm = ({ initial, submitLabel = 'Simpan', submitting, onSubmit }: 
         </FormField>
       </div>
 
-      <FormField label="Sumber *">
-        <Select value={form.source ?? ''} onChange={(e) => set('source', e.target.value)}
-          data-testid="source-select"
-          required>
-          <option value="">-- Pilih Sumber --</option>
-          {SOURCE_OPTIONS.map((s) => (
-            <option key={s.value} value={s.value}>{s.label}</option>
-          ))}
-        </Select>
-      </FormField>
-
-      {form.source === 'LAINNYA' && (
-        <FormField label="Nama Sumber *">
-          <Input required value={form.source_name ?? ''} onChange={(e) => set('source_name', e.target.value)} placeholder="contoh: KAP Indonesia" />
+      <div className="md:col-span-2">
+        <FormField label="Sumber *">
+          <Select value={form.source ?? ''} onChange={(e) => set('source', e.target.value)}
+            data-testid="source-select"
+            required>
+            <option value="">-- Pilih Sumber --</option>
+            {(sources ?? []).map((s) => (
+              <option key={s.code} value={s.code}>{s.name}</option>
+            ))}
+          </Select>
         </FormField>
-      )}
+      </div>
 
       <FormField label="Nomor LHP">
         <Input value={form.lhp_number ?? ''} onChange={(e) => set('lhp_number', e.target.value)} />

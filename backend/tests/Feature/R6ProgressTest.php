@@ -16,7 +16,9 @@ use App\Services\FindingService;
 use App\Services\FindingStatusService;
 use App\Services\ProgressService;
 use App\Support\CacheService;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     $this->seed();
@@ -88,6 +90,35 @@ function completeFollowUp(FollowUp $fu): void
     test()->actingAs(test()->manager, 'sanctum')->postJson("/api/v1/follow-ups/{$fu->id}/approve-completion")->assertOk()
         ->assertJsonPath('data.status', FollowUpStatus::Selesai->value);
 }
+
+test('lapor progres dengan dokumen berlabel tersimpan', function () {
+    Storage::fake(config('upload.disk'));
+    $ap = r6ReadyAp([100]);
+    $fu = $ap->follow_ups()->withoutGlobalScopes()->first();
+
+    $this->actingAs($this->pic, 'sanctum')->post("/api/v1/follow-ups/{$fu->id}/progress", [
+        'progress_value' => 50,
+        'note' => 'Dengan bukti',
+        'document' => [
+            ['file' => UploadedFile::fake()->create('bukti.pdf', 120, 'application/pdf'), 'label' => 'Bukti'],
+        ],
+    ])->assertCreated()->assertJsonPath('data.documents.0.label', 'Bukti');
+
+    $report = FollowUpProgressReport::where('follow_up_id', $fu->id)->latest('id')->first();
+    expect($report->documents()->count())->toBe(1);
+});
+
+test('tidak dapat lapor progres setelah 100 menunggu persetujuan selesai', function () {
+    $ap = r6ReadyAp([100]);
+    $fu = $ap->follow_ups()->withoutGlobalScopes()->first();
+
+    reportProgress($fu, 100, 'Rampung');
+    expect($fu->refresh()->status)->toEqual(FollowUpStatus::MenungguPersetujuanSelesai);
+
+    $this->actingAs($this->pic, 'sanctum')->postJson("/api/v1/follow-ups/{$fu->id}/progress", [
+        'progress_value' => 100,
+    ])->assertStatus(422);
+});
 
 test('progres tidak boleh turun', function () {
     $ap = r6ReadyAp([100]);

@@ -75,7 +75,9 @@ class FindingController extends Controller
     {
         $this->authorize('view', $finding);
 
-        $aps = CacheService::remember('action_plans', "tree.{$finding->id}", function () use ($finding) {
+        $userId = auth()->id() ?? 0;
+
+        $aps = CacheService::remember('action_plans', "tree.{$finding->id}.u{$userId}", function () use ($finding) {
             return ActionPlan::query()
                 ->where('finding_id', $finding->id)
                 ->with(['department'])

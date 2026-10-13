@@ -7,7 +7,7 @@ Alur bisnis, status, aturan bobot/progres/revisi, peta halaman: `docs/roadmap-re
 ## Glosarium (jangan campur istilah)
 - **Temuan** (`findings`) → **Action Plan** (`action_plans`, dijalankan satu departemen) → **Tindak Lanjut** (`follow_ups`, disusun PIC).
 - Di kode lama `action_plans` = tindak lanjut. Itu sudah DIHAPUS di R0; jangan mengacu ke model lama.
-- Role: admin_spi, internal_audit, manager_dept, staff_dept (PIC), kepala_spi, manager_ia (baca saja), direksi, + superadmin teknis. 1 user = 1 akun = 1 departemen = 1 role.
+- Role: admin_spi, internal_audit, manager_dept, staff_dept (PIC), kepala_spi, manager_ia (pemantau; sekaligus mengelola penuh AP/TL departemennya sendiri), direksi, + superadmin teknis. 1 user = 1 akun = 1 departemen = 1 role.
 
 ## Aturan kerja
 1. Kerjakan HANYA milestone yang diminta. Jangan membuat fitur milestone lain, jangan memulihkan kode modul lama.

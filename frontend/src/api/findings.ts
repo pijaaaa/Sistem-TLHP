@@ -187,6 +187,16 @@ export const lookupsApi = {
 
   staffByDepartment: (departmentId: number) =>
     apiClient.get<ApiResponse<{ data: LookupStaff[] }>>('/lookups/staff', { params: { department_id: departmentId } }).then(unwrap),
+
+  findingSources: () =>
+    apiClient.get<ApiResponse<{ data: LookupFindingSource[] }>>('/lookups/finding-sources').then(unwrap),
+}
+
+export interface LookupFindingSource {
+  id: number
+  code: string
+  name: string
+  is_active: boolean
 }
 
 export interface SpiAssessItem {
@@ -212,7 +222,14 @@ export const externalStatusApi = {
   records: (findingId: number) =>
     apiClient.get<ApiResponse<ExternalStatusRecord[]>>(`/findings/${findingId}/external-status-records`).then(unwrap),
 
-  record: (findingId: number, payload: { status: string; note?: string | null; new_deadline?: string | null; files: { file: File; label: string }[]; action_plan_ids?: number[] }) => {
+  record: (payload: {
+    findingId: number
+    status: string
+    note?: string | null
+    new_deadline?: string | null
+    files: { file: File; label: string }[]
+    action_plan_ids?: number[]
+  }) => {
     const form = new FormData()
     form.append('status', payload.status)
     if (payload.note) form.append('note', payload.note)
@@ -225,7 +242,7 @@ export const externalStatusApi = {
       payload.action_plan_ids.forEach((id) => form.append('action_plan_ids[]', String(id)))
     }
     return apiClient
-      .post<ApiResponse<{ id: number }>>(`/findings/${findingId}/external-status`, form, {
+      .post<ApiResponse<{ id: number }>>(`/findings/${payload.findingId}/external-status`, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       .then(unwrap)

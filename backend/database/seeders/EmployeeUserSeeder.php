@@ -57,7 +57,6 @@ class EmployeeUserSeeder extends Seeder
         if ($deptIa) {
             $this->createEmployeeAndUser('INT_AUD', 'Internal Audit', 'Internal Audit', $deptIa, Role::InternalAudit, 'internal_audit', $password);
             $this->createEmployeeAndUser('MGR_IA', 'Manager IA', 'VP Internal Audit', $deptIa, Role::ManagerIa, 'manager_ia', $password);
-            $this->createEmployeeAndUser('MGR_IA_AUD', 'Manager IA (Auditee)', 'Manager', $deptIa, Role::ManagerDept, 'manager_ia_auditee', $password);
             $this->createEmployeeAndUser('PIC_IA', 'PIC IA', 'Staff', $deptIa, Role::StaffDept, 'pic_ia', $password);
         }
 

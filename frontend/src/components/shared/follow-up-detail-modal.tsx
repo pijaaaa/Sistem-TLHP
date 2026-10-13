@@ -33,7 +33,7 @@ const FollowUpDetailModal = ({ followUp, onClose }: FollowUpDetailModalProps) =>
   if (!followUp) return null
 
   const current = Number(followUp.progress) || 0
-  const canReport = followUp.status === 'DISETUJUI' || followUp.status === 'MENUNGGU_PERSETUJUAN_SELESAI'
+  const canReport = followUp.status === 'DISETUJUI'
 
   const submit = async () => {
     const v = Number(value)

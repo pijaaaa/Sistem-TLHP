@@ -15,7 +15,6 @@ class Finding extends Model
     protected $fillable = [
         'registration_number',
         'source',
-        'source_name',
         'lhp_number',
         'lhp_date',
         'finding_date',

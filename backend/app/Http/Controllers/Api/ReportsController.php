@@ -170,6 +170,22 @@ class ReportsController extends Controller
         }
     }
 
+    private function applyFindingFilters(Request $request, $query): void
+    {
+        if ($status = $request->query('status')) {
+            $query->where('status', $status);
+        }
+        if ($departmentId = $request->query('department_id')) {
+            $query->whereHas('auditee_departments', fn ($q) => $q->where('departments.id', (int) $departmentId));
+        }
+        if ($fiscalYear = $request->query('fiscal_year')) {
+            $query->where('fiscal_year', (int) $fiscalYear);
+        }
+        if ($source = $request->query('source')) {
+            $query->where('source', $source);
+        }
+    }
+
     private function remember(Request $request, string $type, \Closure $callback): JsonResponse
     {
         $user = auth()->user();
