@@ -6,6 +6,7 @@ import { useToast } from '@/components/ui/toast'
 import { useActionPlan } from '@/hooks/useActionPlans'
 import { useCreateFollowUps, useSubmitFollowUps, useFollowUpsByActionPlan } from '@/hooks/useFollowUps'
 import { isAxiosError } from 'axios'
+import { motion } from 'framer-motion'
 
 export default function FollowUpBatchFormPage() {
   const { id } = useParams<{ id: string }>()
@@ -43,26 +44,44 @@ export default function FollowUpBatchFormPage() {
   }
 
   return (
-    <div className="max-w-4xl space-y-4">
-      <PageHeader title="Susun Tindak Lanjut" subtitle={ap ? `${ap.code} — ${ap.title}` : 'Menyusun rencana kegiatan PIC'} />
+    <div className="max-w-5xl mx-auto space-y-6">
+      <PageHeader 
+        title="Susun Tindak Lanjut" 
+        subtitle={ap ? `${ap.code} — ${ap.title}` : 'Menyusun rencana kegiatan PIC'} 
+      />
 
       {isLoading ? (
-        <div className="flex items-center gap-2 text-sm text-gray-500"><Spinner /> Memuat...</div>
+        <div className="flex items-center justify-center py-12">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Spinner /> Memuat action plan...
+          </div>
+        </div>
       ) : !ap ? null : (
         <Can menu="follow_ups" action="create">
           {ap.status !== 'PROSES_TINDAK_LANJUT' ? (
-            <p className="text-sm text-yellow-700 bg-yellow-50 border border-yellow-200 rounded p-3">
-              Tindak lanjut hanya dapat disusun saat action plan berstatus Proses Tindak Lanjut.
-            </p>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-yellow-50 border border-yellow-200 rounded-lg p-4"
+            >
+              <p className="text-sm text-yellow-800">
+                <strong>Perhatian:</strong> Tindak lanjut hanya dapat disusun saat action plan berstatus <strong>Proses Tindak Lanjut</strong>.
+              </p>
+            </motion.div>
           ) : (
-            <div className="bg-white rounded-lg shadow p-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8"
+            >
               <FollowUpBatchForm
                 actionPlan={ap}
                 linkCandidates={linkCandidates}
                 submitting={create.isPending || submit.isPending}
                 onSubmit={handleSubmit}
               />
-            </div>
+            </motion.div>
           )}
         </Can>
       )}

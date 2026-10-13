@@ -53,9 +53,6 @@ export default function DepartmentsPage() {
   }
 
   const columns: Column<Department>[] = [
-    { key: 'code', header: 'Kode', body: (r) => r.code },
-    { key: 'name', header: 'Nama', body: (r) => r.name },
-    { key: 'is_active', header: 'Status', body: (r) => <StatusBadge status={r.is_active ? 'Aktif' : 'Tidak Aktif'} /> },
     {
       key: 'actions', header: 'Aksi', body: (r) => (
         <div className="flex gap-2">
@@ -68,6 +65,9 @@ export default function DepartmentsPage() {
         </div>
       ),
     },
+    { key: 'code', header: 'Kode', body: (r) => r.code },
+    { key: 'name', header: 'Nama', body: (r) => r.name },
+    { key: 'is_active', header: 'Status', body: (r) => <StatusBadge status={r.is_active ? 'Aktif' : 'Tidak Aktif'} /> },
   ]
 
   return (

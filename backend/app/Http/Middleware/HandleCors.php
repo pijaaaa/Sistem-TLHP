@@ -10,6 +10,7 @@ class HandleCors
     public function handle(Request $request, Closure $next)
     {
         $origin = $request->headers->get('Origin');
+        \Log::info('HandleCors: Origin=' . $origin . ', Method=' . $request->method());
 
         if ($this->isAllowedOrigin($origin)) {
             if ($request->isMethod('OPTIONS')) {

@@ -21,8 +21,6 @@ use App\Http\Controllers\Api\Master\FindingSourceController;
 use App\Http\Controllers\Api\Master\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/health', [HealthController::class, '__invoke']);
-
 Route::prefix('v1')->group(function () {
     Route::get('/health', [HealthController::class, '__invoke']);
 

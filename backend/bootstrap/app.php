@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->api(prepend: [
+            \App\Http\Middleware\HandleCors::class,
+        ]);
         $middleware->api(append: [
             \App\Http\Middleware\CheckActiveUntil::class,
         ]);

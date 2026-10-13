@@ -9,6 +9,7 @@ import { useCreateActionPlan, useUploadActionPlanDocument } from '@/hooks/useAct
 import { usePermission } from '@/hooks/usePermission'
 import type { Finding } from '@/types/finding'
 import { isAxiosError } from 'axios'
+import { motion } from 'framer-motion'
 
 export default function ActionPlanFormPage() {
   const [searchParams] = useSearchParams()
@@ -75,20 +76,31 @@ export default function ActionPlanFormPage() {
   }
 
   return (
-    <div className="max-w-4xl space-y-4">
-      <PageHeader title="Buat Action Plan" subtitle="Satu formulir untuk satu action plan per departemen" />
+    <div className="max-w-5xl mx-auto space-y-6">
+      <PageHeader 
+        title="Buat Action Plan" 
+        subtitle="Satu formulir untuk satu action plan per departemen" 
+      />
 
       <Can menu="action_plans" action="create">
-        <div className="bg-white rounded-lg shadow p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8"
+        >
           {findingId === null && (
-            <div className="mb-4 max-w-md">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Pilih Temuan</label>
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
+                Pilih Temuan
+              </label>
               <Select
                 value={finding?.id ?? ''}
                 onChange={(e) => {
                   const f = findingOptions.find((x) => x.id === Number(e.target.value))
                   setFinding(f ?? null)
                 }}
+                className="max-w-2xl"
               >
                 <option value="">-- Pilih Temuan --</option>
                 {findingOptions.map((f) => (
@@ -101,7 +113,11 @@ export default function ActionPlanFormPage() {
           )}
 
           {!finding && findingId !== null ? (
-            <div className="flex items-center gap-2 text-sm text-gray-500"><Spinner /> Memuat temuan...</div>
+            <div className="flex items-center justify-center py-12">
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Spinner /> Memuat temuan...
+              </div>
+            </div>
           ) : finding ? (
             <ActionPlanForm
               finding={finding}
@@ -110,15 +126,19 @@ export default function ActionPlanFormPage() {
               onSubmit={submit}
             />
           ) : (
-            <p className="text-sm text-gray-500">Pilih temuan untuk memulai.</p>
+            <div className="text-center py-12">
+              <p className="text-sm text-gray-500">Pilih temuan untuk memulai membuat action plan.</p>
+            </div>
           )}
-        </div>
+        </motion.div>
       </Can>
 
       {finding && finding.status === 'TERDAFTAR' && (
-        <p className="text-sm text-gray-500">
-          Catatan: temuan belum diaktifkan; action plan dapat dibuat dan dikirim.
-        </p>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <p className="text-sm text-yellow-800">
+            <strong>Catatan:</strong> Temuan belum diaktifkan; action plan dapat dibuat dan dikirim.
+          </p>
+        </div>
       )}
     </div>
   )

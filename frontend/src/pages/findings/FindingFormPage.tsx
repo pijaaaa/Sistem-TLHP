@@ -7,6 +7,7 @@ import { useCreateFinding, useUpdateFinding, useFinding } from '@/hooks/useFindi
 import { usePermission } from '@/hooks/usePermission'
 import type { FindingPayload } from '@/types/finding'
 import { isAxiosError } from 'axios'
+import { motion } from 'framer-motion'
 
 export default function FindingFormPage() {
   const { id } = useParams<{ id: string }>()
@@ -39,16 +40,25 @@ export default function FindingFormPage() {
   }
 
   return (
-    <div className="max-w-3xl space-y-4">
+    <div className="max-w-4xl mx-auto space-y-6">
       <PageHeader
         title={editingId ? 'Edit Temuan' : 'Tambah Temuan'}
         subtitle="Data LHP dari auditor eksternal"
       />
 
       {editingId && isLoading ? (
-        <div className="flex items-center gap-2 text-sm text-gray-500"><Spinner /> Memuat...</div>
+        <div className="flex items-center justify-center py-12">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Spinner /> Memuat data temuan...
+          </div>
+        </div>
       ) : (
-        <div className="bg-white rounded-lg shadow p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8"
+        >
           <FindingForm
             initial={finding ? {
               title: finding.title,
@@ -64,7 +74,7 @@ export default function FindingFormPage() {
             submitting={create.isPending || update.isPending}
             onSubmit={submit}
           />
-        </div>
+        </motion.div>
       )}
     </div>
   )
