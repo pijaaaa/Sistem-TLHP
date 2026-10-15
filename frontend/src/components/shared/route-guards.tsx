@@ -39,7 +39,8 @@ const PermissionRoute = ({ menu, action, children, fallback }: PermissionRoutePr
   }
 
   if (!perm[action]) {
-    return <Navigate to="/403" replace />
+    // Redirect to dashboard instead of 403 if user doesn't have permission
+    return <Navigate to="/dashboard" replace />
   }
 
   return <>{children}</>

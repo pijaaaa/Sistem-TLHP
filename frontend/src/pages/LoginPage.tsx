@@ -30,8 +30,6 @@ export default function LoginPage() {
   const location = useLocation()
   const { login } = useAuth()
 
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard'
-
   const refreshCaptcha = () => {
     setCaptchaCode(generateCaptcha())
     setCaptchaInput('')
@@ -54,7 +52,8 @@ export default function LoginPage() {
 
     try {
       await login(email, password)
-      navigate(from, { replace: true })
+      // Always redirect to dashboard after login
+      navigate('/dashboard', { replace: true })
     } catch (err: any) {
       setError(err.response?.data?.message || 'Email atau password salah')
       refreshCaptcha()
