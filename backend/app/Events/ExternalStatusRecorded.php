@@ -11,7 +11,10 @@ class ExternalStatusRecorded
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public Finding $finding, public ExternalStatus $status)
-    {
+    public function __construct(
+        public Finding $finding,
+        public ExternalStatus $status,
+        public ?string $note = null,
+    ) {
     }
 }

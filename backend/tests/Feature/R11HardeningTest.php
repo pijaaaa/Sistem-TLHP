@@ -29,6 +29,7 @@ test('semua route api v1 dilindungi permission atau daftar putih eksplisit', fun
         'api/v1/auth/me',
         'api/v1/auth/logout',
         'api/v1/auth/change-password',
+        'api/v1/auth/profile',
         'api/v1/lookups/departments',
         'api/v1/lookups/staff',
         'api/v1/lookups/finding-sources',

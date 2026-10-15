@@ -19,6 +19,23 @@ export interface ActionPlanFormValue {
   deadline_per_department: Record<number, string>
 }
 
+const digitsOnly = (s: string) => s.replace(/\D/g, '')
+
+const formatIdr = (s: string) =>
+  digitsOnly(s).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+
+const normalizeUsd = (s: string) => {
+  const clean = s.replace(/[^\d,]/g, '')
+  const [int, ...dec] = clean.split(',')
+  return dec.length ? `${int},${dec.join('').slice(0, 2)}` : int
+}
+
+const formatUsd = (s: string) => {
+  const [int, ...dec] = s.split(',')
+  const intFmt = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  return dec.length ? `${intFmt},${dec.join('')}` : intFmt
+}
+
 const empty = (): ActionPlanFormValue => ({
   title: '',
   condition: '',
@@ -178,26 +195,25 @@ const ActionPlanForm = ({ finding, departments, submitting, submitLabel = 'Simpa
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField label="Nilai (IDR)">
-            <Input 
-              type="number" 
-              min="0" 
-              value={form.loss_idr} 
-              onChange={(e) => set('loss_idr', e.target.value)} 
-              placeholder="0"
-            />
-          </FormField>
+            <FormField label="Nilai (IDR)">
+              <Input 
+                type="text"
+                inputMode="numeric"
+                value={formatIdr(form.loss_idr)} 
+                onChange={(e) => set('loss_idr', e.target.value.replace(/\D/g, ''))} 
+                placeholder="0"
+              />
+            </FormField>
 
-          <FormField label="Nilai (USD)">
-            <Input 
-              type="number" 
-              min="0" 
-              step="0.01" 
-              value={form.loss_usd} 
-              onChange={(e) => set('loss_usd', e.target.value)} 
-              placeholder="0.00"
-            />
-          </FormField>
+            <FormField label="Nilai (USD)">
+              <Input 
+                type="text"
+                inputMode="decimal"
+                value={formatUsd(form.loss_usd)} 
+                onChange={(e) => set('loss_usd', normalizeUsd(e.target.value))} 
+                placeholder="0,00"
+              />
+            </FormField>
         </div>
       </div>
 

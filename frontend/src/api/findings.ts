@@ -32,12 +32,14 @@ export const findingsApi = {
   documents: (id: number) =>
     apiClient.get<ApiResponse<DocumentFile[]>>(`/findings/${id}/documents`).then(unwrap),
 
-  uploadDocument: (id: number, file: File, label: string) => {
+  uploadDocument: (id: number, files: { file: File; label: string }[]) => {
     const form = new FormData()
-    form.append('document', file)
-    form.append('label', label)
+    files.forEach((f, i) => {
+      form.append(`document[${i}][file]`, f.file)
+      form.append(`document[${i}][label]`, f.label)
+    })
     return apiClient
-      .post<ApiResponse<DocumentFile>>(`/findings/${id}/documents`, form, {
+      .post<ApiResponse<DocumentFile[]>>(`/findings/${id}/documents`, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       .then(unwrap)
@@ -89,12 +91,14 @@ export const actionPlansApi = {
   documents: (id: number) =>
     apiClient.get<ApiResponse<DocumentFile[]>>(`/action-plans/${id}/documents`).then(unwrap),
 
-  uploadDocument: (id: number, file: File, label: string) => {
+  uploadDocument: (id: number, files: { file: File; label: string }[]) => {
     const form = new FormData()
-    form.append('document', file)
-    form.append('label', label)
+    files.forEach((f, i) => {
+      form.append(`document[${i}][file]`, f.file)
+      form.append(`document[${i}][label]`, f.label)
+    })
     return apiClient
-      .post<ApiResponse<DocumentFile>>(`/action-plans/${id}/documents`, form, {
+      .post<ApiResponse<DocumentFile[]>>(`/action-plans/${id}/documents`, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       .then(unwrap)

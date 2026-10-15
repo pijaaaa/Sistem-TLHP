@@ -75,8 +75,8 @@ export const useFindingDocuments = (findingId: number) =>
 export const useUploadFindingDocument = () => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (payload: { findingId: number; file: File; label: string }) =>
-      findingsApi.uploadDocument(payload.findingId, payload.file, payload.label),
+    mutationFn: (payload: { findingId: number; files: { file: File; label: string }[] }) =>
+      findingsApi.uploadDocument(payload.findingId, payload.files),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['finding-documents', variables.findingId] })
       qc.invalidateQueries({ queryKey: ['findings', variables.findingId] })

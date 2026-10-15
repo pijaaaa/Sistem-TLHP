@@ -39,6 +39,15 @@ class FollowUp extends Model
     protected static function booted(): void
     {
         static::addGlobalScope(new FollowUpVisibility());
+
+        static::creating(function (FollowUp $followUp) {
+            if ($followUp->action_plan_id && is_null($followUp->revision_no)) {
+                $actionPlan = ActionPlan::withoutGlobalScopes()->find($followUp->action_plan_id);
+                if ($actionPlan) {
+                    $followUp->revision_no = $actionPlan->current_revision;
+                }
+            }
+        });
     }
 
     public function actionPlan()

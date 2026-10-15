@@ -71,7 +71,7 @@ class ExternalStatusService
         }
 
         TaskDispatcher::completeForActor($finding);
-        ExternalStatusRecorded::dispatch($finding, $status);
+        ExternalStatusRecorded::dispatch($finding, $status, $note);
 
         CacheService::flushGroup('reports');
 

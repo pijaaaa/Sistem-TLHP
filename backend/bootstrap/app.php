@@ -34,6 +34,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpException) {
                     return \App\Support\ApiResponse::error($e->getMessage(), $e->getStatusCode());
                 }
+                \Log::error('API Error: ' . $e->getMessage(), [
+                    'url' => $request->url(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
                 return \App\Support\ApiResponse::error($e->getMessage(), 500);
             }
         });

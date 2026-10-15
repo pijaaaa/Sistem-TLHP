@@ -18,16 +18,18 @@ interface FollowUpBatchFormProps {
   linkCandidates?: { id: number; label: string }[]
   onSubmit: (rows: FollowUpRowInput[], mode: SubmitMode) => void
   submitting?: boolean
+  existingWeight?: number
 }
 
 const picOptions = (ap: ActionPlan): { id: number; name: string; username: string }[] =>
   (ap.assignees ?? []).map((u: ActionPlanUser) => ({ id: u.id, name: u.name, username: u.username }))
 
-const FollowUpBatchForm = ({ actionPlan, linkCandidates, onSubmit, submitting }: FollowUpBatchFormProps) => {
+const FollowUpBatchForm = ({ actionPlan, linkCandidates, onSubmit, submitting, existingWeight = 0 }: FollowUpBatchFormProps) => {
   const deadline = actionPlan.deadline ?? ''
   const [rows, setRows] = useState<Row[]>([])
 
-  const total = useMemo(() => rows.reduce((sum, r) => sum + (Number(r.weight) || 0), 0), [rows])
+  const newWeightTotal = useMemo(() => rows.reduce((sum, r) => sum + (Number(r.weight) || 0), 0), [rows])
+  const total = existingWeight + newWeightTotal
   const hasExceeded = total > 100
   const hasInvalidDate = rows.some((r) => deadline && r.target_date && r.target_date > deadline)
   const hasEmpty = rows.some((r) => !r.description.trim() || r.weight === '' || r.pic_ids.length === 0 || !r.target_date)
@@ -83,7 +85,7 @@ const FollowUpBatchForm = ({ actionPlan, linkCandidates, onSubmit, submitting }:
       {hasExceeded && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
           <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-700">Total bobot melebihi 100. Kurangi bobot beberapa baris.</p>
+          <p className="text-sm text-red-700">Total bobot melebihi 100. Kurangi bobot beberapa baris. (Bobot yang sudah ada: {existingWeight}%)</p>
         </div>
       )}
       {!hasEmpty && !hasExceeded && !hasInvalidDate && rows.length > 0 && (

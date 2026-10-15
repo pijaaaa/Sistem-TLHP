@@ -165,19 +165,21 @@ class ActionPlanController extends Controller
     {
         $this->authorize('uploadDocument', $action_plan);
 
-        $file = $request->file('document');
-        $path = $file->store('action-plans', config('upload.disk'));
+        $documents = collect($request->validated()['document'])->map(function (array $item) use ($action_plan) {
+            $file = $item['file'];
+            $path = $file->store('action-plans', config('upload.disk'));
 
-        $document = $action_plan->documents()->create([
-            'label' => $request->input('label'),
-            'name' => $file->getClientOriginalName(),
-            'path' => $path,
-            'mime' => $file->getMimeType(),
-            'size' => $file->getSize(),
-            'uploaded_by' => auth()->id(),
-        ]);
+            return $action_plan->documents()->create([
+                'label' => $item['label'],
+                'name' => $file->getClientOriginalName(),
+                'path' => $path,
+                'mime' => $file->getMimeType(),
+                'size' => $file->getSize(),
+                'uploaded_by' => auth()->id(),
+            ]);
+        });
 
-        return ApiResponse::success(new DocumentResource($document), 'Dokumen berhasil diunggah.', 201);
+        return ApiResponse::success(DocumentResource::collection($documents), 'Dokumen berhasil diunggah.', 201);
     }
 
     public function deleteDocument(ActionPlan $action_plan, Document $document): JsonResponse

@@ -40,7 +40,7 @@ export const employeesApi = {
   list: (params?: { per_page?: number; page?: number }) =>
     apiClient.get<ApiResponse<Paginated<Employee>>>('/master/employees', { params }).then(unwrap),
   get: (id: number) => apiClient.get<ApiResponse<Employee>>(`/master/employees/${id}`).then(unwrap),
-  create: (payload: { nik: string; name: string; position?: string; department_id: number; is_active?: boolean }) =>
+  create: (payload: { nik: string; name: string; position?: string; department_id: number; is_active?: boolean; role: string; username: string; email: string; password: string; password_confirmation: string }) =>
     apiClient.post<ApiResponse<Employee>>('/master/employees', payload).then(unwrap),
   update: (id: number, payload: { nik: string; name: string; position?: string; department_id: number; is_active?: boolean }) =>
     apiClient.put<ApiResponse<Employee>>(`/master/employees/${id}`, payload).then(unwrap),

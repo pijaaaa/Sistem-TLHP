@@ -43,8 +43,8 @@ export default function ActionPlanFormPage() {
       return
     }
     try {
-      const lossIdr = data.loss_idr !== '' ? Number(data.loss_idr) : null
-      const lossUsd = data.loss_usd !== '' ? Number(data.loss_usd) : null
+      const lossIdr = data.loss_idr !== '' ? Number(data.loss_idr.replace(/\D/g, '')) : null
+      const lossUsd = data.loss_usd !== '' ? Number(data.loss_usd.replace(',', '.')) : null
       const aps = await create.mutateAsync({
         finding_id: finding.id,
         department_ids: data.department_ids,
@@ -62,9 +62,12 @@ export default function ActionPlanFormPage() {
         loss_usd: lossUsd,
       })
 
-      for (const file of data.files) {
-        for (const ap of aps) {
-          await uploadDoc.mutateAsync({ id: ap.id, file: file.file, label: file.label || 'Dokumen' })
+      for (const ap of aps) {
+        if (data.files.length > 0) {
+          await uploadDoc.mutateAsync({
+            id: ap.id,
+            files: data.files.map((f) => ({ file: f.file, label: f.label || 'Dokumen' })),
+          })
         }
       }
 

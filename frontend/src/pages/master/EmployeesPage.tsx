@@ -10,6 +10,7 @@ import { DataTable, PageHeader, Can } from '@/components/shared'
 import type { Column } from '@/components/shared/data-table'
 import { Button, Select, Modal, ConfirmDialog, Checkbox, StatusBadge, InputField } from '@/components/ui'
 import { useToast } from '@/components/ui/toast'
+import { ROLE_OPTIONS } from '@/types/master'
 import type { Employee } from '@/types/master'
 import { isAxiosError } from 'axios'
 
@@ -18,7 +19,17 @@ interface FormState {
   name: string
   position: string
   department_id: number | ''
+  role: string
+  username: string
+  email: string
+  password: string
+  password_confirmation: string
   is_active: boolean
+}
+
+const emptyForm: FormState = {
+  nik: '', name: '', position: '', department_id: '', role: '',
+  username: '', email: '', password: '', password_confirmation: '', is_active: true,
 }
 
 export default function EmployeesPage() {
@@ -26,7 +37,7 @@ export default function EmployeesPage() {
   const [page, setPage] = useState(1)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Employee | null>(null)
-  const [form, setForm] = useState<FormState>({ nik: '', name: '', position: '', department_id: '', is_active: true })
+  const [form, setForm] = useState<FormState>(emptyForm)
   const [deleteItem, setDeleteItem] = useState<Employee | null>(null)
 
   const params = useMemo(() => ({ page, per_page: 15 }), [page])
@@ -38,22 +49,41 @@ export default function EmployeesPage() {
 
   const openAdd = () => {
     setEditing(null)
-    setForm({ nik: '', name: '', position: '', department_id: departments[0]?.id ?? '', is_active: true })
+    setForm({ ...emptyForm, department_id: departments[0]?.id ?? '' })
     setModalOpen(true)
   }
   const openEdit = (row: Employee) => {
     setEditing(row)
-    setForm({ nik: row.nik, name: row.name, position: row.position ?? '', department_id: row.department?.id ?? '', is_active: row.is_active })
+    setForm({
+      nik: row.nik, name: row.name, position: row.position ?? '', department_id: row.department?.id ?? '',
+      role: row.role ?? '', username: row.username ?? '', email: row.email ?? '',
+      password: '', password_confirmation: '', is_active: row.is_active,
+    })
     setModalOpen(true)
   }
 
   const submit = async () => {
     if (!form.nik || !form.name || !form.department_id) return
+    if (!editing && (!form.role || !form.username || !form.email || !form.password)) {
+      showToast('Role, username, email, dan password wajib diisi', 'error')
+      return
+    }
     try {
       if (editing) {
-        await update.mutateAsync({ id: editing.id, ...form, department_id: Number(form.department_id) })
+        await update.mutateAsync({
+          id: editing.id, nik: form.nik, name: form.name, position: form.position,
+          department_id: Number(form.department_id), is_active: form.is_active,
+        })
       } else {
-        await create.mutateAsync({ ...form, department_id: Number(form.department_id) })
+        await create.mutateAsync({
+          ...form,
+          department_id: Number(form.department_id),
+          role: form.role,
+          username: form.username,
+          email: form.email,
+          password: form.password,
+          password_confirmation: form.password_confirmation,
+        })
       }
       showToast('Berhasil menyimpan karyawan', 'success')
       setModalOpen(false)
@@ -84,6 +114,7 @@ export default function EmployeesPage() {
     { key: 'nik', header: 'NIK', body: (r) => r.nik },
     { key: 'name', header: 'Nama', body: (r) => r.name },
     { key: 'position', header: 'Jabatan', body: (r) => r.position ?? '-' },
+    { key: 'role', header: 'Role', body: (r) => r.role_label ?? r.role ?? '-' },
     { key: 'department', header: 'Departemen', body: (r) => r.department?.name ?? '-' },
     { key: 'is_active', header: 'Status', body: (r) => <StatusBadge status={r.is_active ? 'Aktif' : 'Tidak Aktif'} /> },
   ]
@@ -118,6 +149,23 @@ export default function EmployeesPage() {
               ))}
             </Select>
           </div>
+          <div>
+            <label className="block text-sm mb-1">Role <span className="text-red-600">*</span></label>
+            <Select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+              <option value="">Pilih role</option>
+              {ROLE_OPTIONS.map((r) => (
+                <option key={r.value} value={r.value}>{r.label}</option>
+              ))}
+            </Select>
+          </div>
+          {!editing && (
+            <>
+              <InputField label="Username" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
+              <InputField label="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <InputField label="Password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+              <InputField label="Konfirmasi Password" type="password" value={form.password_confirmation} onChange={(e) => setForm({ ...form, password_confirmation: e.target.value })} />
+            </>
+          )}
           <label className="flex items-center gap-2 text-sm">
             <Checkbox
               checked={form.is_active}

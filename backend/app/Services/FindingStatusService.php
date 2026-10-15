@@ -19,6 +19,7 @@ class FindingStatusService
     public function recompute(Finding $finding): Finding
     {
         if (!in_array($finding->status, [
+            FindingStatus::Terdaftar,
             FindingStatus::ProsessTindakLanjut,
             FindingStatus::ReviewSpi,
             FindingStatus::MenungguStatusEksternal,

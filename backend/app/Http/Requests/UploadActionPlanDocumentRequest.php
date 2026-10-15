@@ -17,8 +17,9 @@ class UploadActionPlanDocumentRequest extends FormRequest
         $max = config('upload.max_size_kb', 10240);
 
         return [
-            'document' => ['required', 'file', 'mimes:' . $mimes, 'max:' . $max],
-            'label' => ['required', 'string', 'max:100'],
+            'document' => ['required', 'array', 'min:1', 'max:10'],
+            'document.*.file' => ['required', 'file', 'mimes:' . $mimes, 'max:' . $max],
+            'document.*.label' => ['required', 'string', 'max:100'],
         ];
     }
 }

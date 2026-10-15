@@ -195,7 +195,7 @@ export default function FindingDetailPage() {
                 loading={docsLoading}
                 canManage={!!perm.update && finding.status !== 'CLOSED'}
                 download={(docId) => findingsApi.downloadDocument(findingId, docId)}
-                onUpload={async (file, label) => uploadDoc.mutateAsync({ findingId, file, label })}
+                onUpload={async (files) => { await uploadDoc.mutateAsync({ findingId, files }) }}
                 onDelete={async (docId) => deleteDoc.mutateAsync({ findingId, documentId: docId })}
               />
             </div>

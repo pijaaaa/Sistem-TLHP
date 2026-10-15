@@ -11,6 +11,7 @@ use App\Models\FollowUp;
 use App\Models\User;
 use App\Support\AuditLogger;
 use App\Services\TaskDispatcher;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class FollowUpService
@@ -19,52 +20,74 @@ class FollowUpService
 
     public function createBatch(ActionPlan $actionPlan, array $rows): array
     {
-        if ($actionPlan->status !== ActionPlanStatus::ProsesTindakLanjut) {
-            throw ValidationException::withMessages([
-                'action_plan_id' => 'Action plan harus berstatus Proses Tindak Lanjut untuk menyusun tindak lanjut.',
-            ]);
-        }
+        return DB::transaction(function () use ($actionPlan, $rows) {
+            $ap = ActionPlan::withoutGlobalScopes()
+                ->whereKey($actionPlan->id)
+                ->lockForUpdate()
+                ->first();
 
-        $this->assertNotFrozen($actionPlan);
+            if (!$ap) {
+                throw ValidationException::withMessages([
+                    'action_plan_id' => 'Action plan tidak ditemukan.',
+                ]);
+            }
 
-        $this->assertActorIsPic($actionPlan);
+            if ($ap->status !== ActionPlanStatus::ProsesTindakLanjut) {
+                throw ValidationException::withMessages([
+                    'action_plan_id' => 'Action plan harus berstatus Proses Tindak Lanjut untuk menyusun tindak lanjut.',
+                ]);
+            }
 
-        if (empty($rows)) {
-            throw ValidationException::withMessages([
-                'rows' => 'Minimal satu tindak lanjut harus diisi.',
-            ]);
-        }
+            $this->assertNotFrozen($ap);
 
-        $available = $this->availableWeight($actionPlan);
+            $this->assertActorIsPic($ap);
 
-        $created = [];
-        foreach ($rows as $row) {
-            $available = $this->validateRow($actionPlan, $row, $available);
+            if (empty($rows)) {
+                throw ValidationException::withMessages([
+                    'rows' => 'Minimal satu tindak lanjut harus diisi.',
+                ]);
+            }
 
-            $followUp = FollowUp::create([
-                'action_plan_id' => $actionPlan->id,
-                'revision_no' => $actionPlan->current_revision,
-                'description' => $row['description'],
-                'target_date' => $row['target_date'],
-                'weight' => $row['weight'],
-                'status' => FollowUpStatus::Draft,
-                'linked_follow_up_id' => $row['linked_follow_up_id'] ?? null,
-                'created_by' => auth()->id(),
-            ]);
+            $newRowsTotal = collect($rows)->sum(fn ($r) => (int) ($r['weight'] ?? 0));
+            $currentActive = $this->activeWeight($ap);
+            if ($currentActive + $newRowsTotal > self::MAX_TOTAL_WEIGHT) {
+                $available = self::MAX_TOTAL_WEIGHT - $currentActive;
+                throw ValidationException::withMessages([
+                    'rows' => "Total bobot tindak lanjut aktif melebihi 100. Sisa bobot yang tersedia: {$available}.",
+                ]);
+            }
 
-            $followUp->assignees()->sync($row['pic_ids']);
+            $available = $this->availableWeight($ap);
 
-            AuditLogger::log('follow_up.created', auth()->id(), request()?->ip(), 'Tindak lanjut draft dibuat.', [
-                'follow_up_id' => $followUp->id,
-                'action_plan_id' => $actionPlan->id,
-            ]);
+            $created = [];
+            foreach ($rows as $row) {
+                $available = $this->validateRow($ap, $row, $available);
 
-            $created[] = $followUp->load('assignees');
-        }
+                $followUp = FollowUp::create([
+                    'action_plan_id' => $ap->id,
+                    'revision_no' => $ap->current_revision,
+                    'description' => $row['description'],
+                    'target_date' => $row['target_date'],
+                    'weight' => $row['weight'],
+                    'status' => FollowUpStatus::Draft,
+                    'linked_follow_up_id' => $row['linked_follow_up_id'] ?? null,
+                    'created_by' => auth()->id(),
+                ]);
 
-        TaskDispatcher::completeForActor($actionPlan);
+                $followUp->assignees()->sync($row['pic_ids']);
 
-        return $created;
+                AuditLogger::log('follow_up.created', auth()->id(), request()?->ip(), 'Tindak lanjut draft dibuat.', [
+                    'follow_up_id' => $followUp->id,
+                    'action_plan_id' => $ap->id,
+                ]);
+
+                $created[] = $followUp->load('assignees');
+            }
+
+            TaskDispatcher::completeForActor($ap);
+
+            return $created;
+        });
     }
 
     public function update(FollowUp $followUp, array $data): FollowUp

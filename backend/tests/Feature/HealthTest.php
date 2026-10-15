@@ -1,7 +1,7 @@
 <?php
 
 test('health endpoint returns ok status and app info', function () {
-    $response = $this->get('/api/health');
+    $response = $this->get('/api/v1/health');
 
     $response->assertOk()
         ->assertJsonStructure([

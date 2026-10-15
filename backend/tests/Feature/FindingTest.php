@@ -68,6 +68,6 @@ test('dokumen temuan wajib berlabel', function () {
     ])->assertStatus(201)->json('data.id');
 
     $this->actingAs($admin, 'sanctum')->postJson("/api/v1/findings/{$findingId}/documents", [
-        'document' => UploadedFile::fake()->create('lhp.pdf', 100, 'application/pdf'),
+        'document' => [['file' => UploadedFile::fake()->create('lhp.pdf', 100, 'application/pdf')]],
     ])->assertStatus(422);
 });

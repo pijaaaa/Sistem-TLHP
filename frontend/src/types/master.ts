@@ -27,6 +27,10 @@ export interface Employee extends MasterItem {
   name: string
   position?: string | null
   department?: DepartmentSummary
+  role?: string | null
+  role_label?: string | null
+  username?: string | null
+  email?: string | null
 }
 
 export interface AccountUser extends MasterItem {
@@ -51,10 +55,12 @@ export interface PermissionMatrix {
 
 export const ROLE_OPTIONS: { value: string; label: string }[] = [
   { value: 'admin_spi', label: 'Admin SPI' },
-  { value: 'manager_ia', label: 'Manager IA' },
+  { value: 'internal_audit', label: 'Internal Audit' },
   { value: 'manager_dept', label: 'Manager Departemen' },
   { value: 'staff_dept', label: 'Staff Departemen / PIC' },
-  { value: 'manager_spi', label: 'Manager SPI' },
+  { value: 'kepala_spi', label: 'Kepala SPI' },
+  { value: 'manager_ia', label: 'Manager Internal Audit' },
+  { value: 'direksi', label: 'Direksi' },
   { value: 'super_admin', label: 'Super Admin' },
 ]
 

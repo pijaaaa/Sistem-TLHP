@@ -6,10 +6,10 @@ import {
   useApproveFollowUp,
   useRequestFollowUpRevision,
   useRejectFollowUp,
-  useReturnFollowUpToRevision,
   useOverrideFollowUpWeight,
   useApproveCompletion,
   useCompletionRevision,
+  useFollowUpsByActionPlan,
 } from '@/hooks/useFollowUps'
 import type { FollowUp } from '@/types/finding'
 import { isAxiosError } from 'axios'
@@ -17,21 +17,24 @@ import { isAxiosError } from 'axios'
 interface ReviewActionBarProps {
   followUp: FollowUp
   canDecide?: boolean
-  canReturn?: boolean
 }
 
-type NoteAction = 'revision' | 'reject' | 'return' | 'completion' | null
+type NoteAction = 'revision' | 'reject' | 'completion' | null
 type WeightAction = { open: boolean; weight: number }
 
-const ReviewActionBar = ({ followUp, canDecide = false, canReturn = false }: ReviewActionBarProps) => {
+const ReviewActionBar = ({ followUp, canDecide = false }: ReviewActionBarProps) => {
   const { showToast } = useToast()
   const approve = useApproveFollowUp()
   const revision = useRequestFollowUpRevision()
   const reject = useRejectFollowUp()
-  const ret = useReturnFollowUpToRevision()
   const override = useOverrideFollowUpWeight()
   const complete = useApproveCompletion()
   const completionRevision = useCompletionRevision()
+
+  const { data: siblingsPage } = useFollowUpsByActionPlan(followUp.action_plan_id)
+  const otherWeight = (siblingsPage?.data ?? [])
+    .filter((f) => f.id !== followUp.id && f.revision_no === followUp.revision_no && f.status !== 'DITOLAK')
+    .reduce((sum, f) => sum + (Number(f.weight) || 0), 0)
 
   const [noteAction, setNoteAction] = useState<NoteAction>(null)
   const [note, setNote] = useState('')
@@ -49,7 +52,6 @@ const ReviewActionBar = ({ followUp, canDecide = false, canReturn = false }: Rev
     try {
       if (noteAction === 'revision') await revision.mutateAsync({ id: followUp.id, note: note.trim() })
       if (noteAction === 'reject') await reject.mutateAsync({ id: followUp.id, note: note.trim() })
-      if (noteAction === 'return') await ret.mutateAsync({ id: followUp.id, note: note.trim() })
       if (noteAction === 'completion') await completionRevision.mutateAsync({ id: followUp.id, note: note.trim() })
       showToast('Keputusan berhasil disimpan.', 'success')
       setNoteAction(null)
@@ -74,7 +76,7 @@ const ReviewActionBar = ({ followUp, canDecide = false, canReturn = false }: Rev
     }
   }
 
-  const busyAny = approve.isPending || revision.isPending || reject.isPending || ret.isPending || override.isPending || complete.isPending || completionRevision.isPending
+  const busyAny = approve.isPending || revision.isPending || reject.isPending || override.isPending || complete.isPending || completionRevision.isPending
 
   return (
     <div className="flex gap-2 flex-wrap">
@@ -93,10 +95,6 @@ const ReviewActionBar = ({ followUp, canDecide = false, canReturn = false }: Rev
           <Button size="sm" onClick={() => complete.mutateAsync(followUp.id).catch(err)}>Setujui Selesai</Button>
           <Button size="sm" variant="outline" onClick={() => { setNoteAction('completion'); setNote('') }}>Minta Revisi Penyelesaian</Button>
         </>
-      )}
-
-      {canReturn && followUp.status === 'DISETUJUI' && (
-        <Button size="sm" variant="secondary" onClick={() => { setNoteAction('return'); setNote('') }}>Kembalikan ke Revisi</Button>
       )}
 
       <Modal open={noteAction !== null} onClose={() => setNoteAction(null)} title="Catatan Keputusan">
@@ -121,7 +119,7 @@ const ReviewActionBar = ({ followUp, canDecide = false, canReturn = false }: Rev
             value={weight.weight}
             onChange={(e) => setWeight((w) => ({ ...w, weight: Number(e.target.value) }))}
           />
-          <WeightMeter current={Number(weight.weight) || 0} />
+          <WeightMeter current={otherWeight + (Number(weight.weight) || 0)} />
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setWeight((w) => ({ ...w, open: false }))}>Batal</Button>
             <Button onClick={submitWeight} disabled={busy || busyAny}>Simpan</Button>

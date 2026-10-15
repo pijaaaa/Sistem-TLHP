@@ -105,7 +105,8 @@ export default function ActionPlanDetailPage() {
   }
 
   const fups = followUps?.data ?? []
-  const activeFups = fups.filter((f) => f.status !== 'DITOLAK')
+  const currentRevision = ap?.current_revision ?? 0
+  const activeFups = fups.filter((f) => f.revision_no === currentRevision && f.status !== 'DITOLAK')
   const allSelesai = activeFups.length > 0 && activeFups.every((f) => f.status === 'SELESAI')
   const totalWeight = activeFups.reduce((s, f) => s + f.weight, 0)
   const weightFits = activeFups.length > 0 && totalWeight === 100
@@ -244,7 +245,7 @@ export default function ActionPlanDetailPage() {
             loading={docsLoading}
             canManage={!!perm.update && ap.status !== 'CLOSED'}
             download={(docId) => actionPlansApi.downloadDocument(apId, docId)}
-            onUpload={async (file, label) => uploadDoc.mutateAsync({ id: apId, file, label })}
+            onUpload={async (files) => { await uploadDoc.mutateAsync({ id: apId, files }) }}
             onDelete={async (docId) => deleteDoc.mutateAsync({ id: apId, documentId: docId })}
           />
         </div>

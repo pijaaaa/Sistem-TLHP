@@ -140,19 +140,21 @@ class FindingController extends Controller
     {
         $this->authorize('update', $finding);
 
-        $file = $request->file('document');
-        $path = $file->store('findings', config('upload.disk'));
+        $documents = collect($request->validated()['document'])->map(function (array $item) use ($finding) {
+            $file = $item['file'];
+            $path = $file->store('findings', config('upload.disk'));
 
-        $document = $finding->documents()->create([
-            'label' => $request->input('label'),
-            'name' => $file->getClientOriginalName(),
-            'path' => $path,
-            'mime' => $file->getMimeType(),
-            'size' => $file->getSize(),
-            'uploaded_by' => auth()->id(),
-        ]);
+            return $finding->documents()->create([
+                'label' => $item['label'],
+                'name' => $file->getClientOriginalName(),
+                'path' => $path,
+                'mime' => $file->getMimeType(),
+                'size' => $file->getSize(),
+                'uploaded_by' => auth()->id(),
+            ]);
+        });
 
-        return ApiResponse::success(new DocumentResource($document), 'Dokumen berhasil diunggah.', 201);
+        return ApiResponse::success(DocumentResource::collection($documents), 'Dokumen berhasil diunggah.', 201);
     }
 
     public function deleteDocument(Finding $finding, Document $document): JsonResponse

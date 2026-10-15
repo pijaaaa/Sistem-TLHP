@@ -88,8 +88,8 @@ export const useActionPlanDocuments = (id: number) =>
 export const useUploadActionPlanDocument = () => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (payload: { id: number; file: File; label: string }) =>
-      actionPlansApi.uploadDocument(payload.id, payload.file, payload.label),
+    mutationFn: (payload: { id: number; files: { file: File; label: string }[] }) =>
+      actionPlansApi.uploadDocument(payload.id, payload.files),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['action-plan-documents', variables.id] })
     },

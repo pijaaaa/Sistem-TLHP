@@ -239,6 +239,12 @@ class FollowUpController extends Controller
             404
         );
 
-        return Storage::disk(config('upload.disk'))->download($document->path, $document->name);
+        $disk = Storage::disk(config('upload.disk'));
+        
+        if (!$disk->exists($document->path)) {
+            abort(404, 'File not found.');
+        }
+
+        return $disk->download($document->path, $document->name);
     }
 }

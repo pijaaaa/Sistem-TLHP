@@ -30,7 +30,6 @@ const FollowUpRow = ({ fu, isManager }: { fu: FollowUp; isManager: boolean }) =>
         <ReviewActionBar
           followUp={fu}
           canDecide={fu.status === 'DIAJUKAN' || fu.status === 'MENUNGGU_PERSETUJUAN_SELESAI'}
-          canReturn={fu.status === 'DISETUJUI'}
         />
       )}
 

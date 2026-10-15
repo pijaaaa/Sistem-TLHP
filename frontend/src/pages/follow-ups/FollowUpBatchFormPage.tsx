@@ -7,6 +7,7 @@ import { useActionPlan } from '@/hooks/useActionPlans'
 import { useCreateFollowUps, useSubmitFollowUps, useFollowUpsByActionPlan } from '@/hooks/useFollowUps'
 import { isAxiosError } from 'axios'
 import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 
 export default function FollowUpBatchFormPage() {
   const { id } = useParams<{ id: string }>()
@@ -19,11 +20,19 @@ export default function FollowUpBatchFormPage() {
   const submit = useSubmitFollowUps()
 
   const { data: allFups } = useFollowUpsByActionPlan(apId)
-  const linkCandidates = (ap?.current_revision ?? 0) > 0
+  const currentRevision = ap?.current_revision ?? 0
+  const linkCandidates = currentRevision > 0
     ? (allFups?.data ?? [])
-        .filter((f) => f.revision_no < (ap?.current_revision ?? 0))
+        .filter((f) => f.revision_no < currentRevision)
         .map((f) => ({ id: f.id, label: `TL #${f.id} · ${f.description.slice(0, 60)}` }))
     : undefined
+  
+  // Calculate total weight of existing follow-ups in the CURRENT revision (not being created in this form)
+  const existingWeight = useMemo(() => {
+    return (allFups?.data ?? [])
+      .filter((f) => f.revision_no === currentRevision && f.status !== 'DITOLAK')
+      .reduce((sum, f) => sum + (Number(f.weight) || 0), 0)
+  }, [allFups, currentRevision])
 
   const handleSubmit = async (rows: Parameters<typeof create.mutateAsync>[0]['rows'], mode: SubmitMode) => {
     if (!ap) return
@@ -80,6 +89,7 @@ export default function FollowUpBatchFormPage() {
                 linkCandidates={linkCandidates}
                 submitting={create.isPending || submit.isPending}
                 onSubmit={handleSubmit}
+                existingWeight={existingWeight}
               />
             </motion.div>
           )}

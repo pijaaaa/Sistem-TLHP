@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { DocumentFile } from '@/types/finding'
-import { Button, Input, FormField, Spinner } from '@/components/ui'
+import { Button, Spinner } from '@/components/ui'
+import { FileUploader } from '@/components/shared/file-uploader'
 import { useToast } from '@/components/ui/toast'
 import { confirmDownload } from '@/lib/utils'
 
@@ -9,7 +10,7 @@ interface DocumentPanelProps {
   loading?: boolean
   canManage?: boolean
   download: (docId: number) => string
-  onUpload: (file: File, label: string) => Promise<void>
+  onUpload: (files: { file: File; label: string }[]) => Promise<void>
   onDelete?: (docId: number) => Promise<void>
 }
 
@@ -20,21 +21,25 @@ const formatSize = (bytes: number) => {
 
 const DocumentPanel = ({ documents, loading, canManage, download, onUpload, onDelete }: DocumentPanelProps) => {
   const { showToast } = useToast()
-  const [file, setFile] = useState<File | null>(null)
-  const [label, setLabel] = useState('')
+  const [files, setFiles] = useState<{ file: File; label: string }[]>([])
+  const [uploaderKey, setUploaderKey] = useState(0)
   const [uploading, setUploading] = useState(false)
 
   const submit = async () => {
-    if (!file || !label.trim()) {
-      showToast('Pilih file dan isi label dokumen.', 'error')
+    if (files.length === 0) {
+      showToast('Pilih minimal satu file.', 'error')
+      return
+    }
+    if (files.some((f) => !f.label.trim())) {
+      showToast('Setiap file wajib diberi label.', 'error')
       return
     }
     try {
       setUploading(true)
-      await onUpload(file, label.trim())
+      await onUpload(files.map((f) => ({ file: f.file, label: f.label.trim() })))
       showToast('Dokumen berhasil diunggah.', 'success')
-      setFile(null)
-      setLabel('')
+      setFiles([])
+      setUploaderKey((k) => k + 1)
     } catch {
       showToast('Gagal mengunggah dokumen.', 'error')
     } finally {
@@ -46,21 +51,10 @@ const DocumentPanel = ({ documents, loading, canManage, download, onUpload, onDe
     <div className="space-y-4">
       {canManage && (
         <div className="bg-gray-50 border border-gray-200 rounded p-4 space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <FormField label="Label *">
-              <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="contoh: LHP, Bukti Perbaikan" />
-            </FormField>
-            <FormField label="File *">
-              <Input
-                type="file"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
-              />
-            </FormField>
-          </div>
+          <FileUploader key={uploaderKey} onFilesChange={setFiles} labelPlaceholder="contoh: LHP, Bukti Perbaikan" />
           <div className="flex items-center gap-3">
             <Button onClick={submit} disabled={uploading}>{uploading ? 'Mengunggah...' : 'Unggah'}</Button>
-            {file && <span className="text-sm text-gray-500 truncate">{file.name}</span>}
+            <span className="text-sm text-gray-500">{files.length} file dipilih</span>
           </div>
         </div>
       )}

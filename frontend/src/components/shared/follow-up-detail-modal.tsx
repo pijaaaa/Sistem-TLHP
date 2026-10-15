@@ -1,15 +1,18 @@
 import { useState } from 'react'
 import { Modal, Button, Input, Textarea, FormField, Spinner } from '@/components/ui'
 import { ProgressBar } from '@/components/shared/progress-bar'
+import { ReviewTimeline } from '@/components/shared/review-timeline'
 import { CommentThread } from '@/components/shared/comment-thread'
 import { FollowUpStatusBadge } from '@/components/shared/follow-up-status-badge'
 import { FileUploader, type FileWithLabel } from '@/components/shared/file-uploader'
 import { useToast } from '@/components/ui/toast'
 import { useAuth } from '@/contexts/AuthContext'
+import { usePermission } from '@/hooks/usePermission'
 import { confirmDownload } from '@/lib/utils'
 import {
   useFollowUpProgressReports,
   useReportFollowUpProgress,
+  useUpdateFollowUp,
 } from '@/hooks/useFollowUps'
 import { followUpsApi } from '@/api/findings'
 import type { FollowUp } from '@/types/finding'
@@ -25,20 +28,59 @@ const FollowUpDetailModal = ({ followUp, onClose }: FollowUpDetailModalProps) =>
   const { showToast } = useToast()
   const { data: reports, isLoading } = useFollowUpProgressReports(followUp?.id ?? 0)
   const report = useReportFollowUpProgress()
+  const update = useUpdateFollowUp()
 
   const [value, setValue] = useState('')
   const [note, setNote] = useState('')
   const [files, setFiles] = useState<FileWithLabel[]>([])
 
+  const perm = usePermission('follow_ups')
+  const editableStatus = followUp?.status === 'DRAFT' || followUp?.status === 'REVISI'
+  const [editing, setEditing] = useState(false)
+  const [editForm, setEditForm] = useState({
+    description: followUp?.description ?? '',
+    target_date: followUp?.target_date ?? '',
+    weight: followUp?.weight ?? '',
+  })
+
+  const openEdit = () => {
+    setEditForm({
+      description: followUp?.description ?? '',
+      target_date: followUp?.target_date ?? '',
+      weight: followUp?.weight ?? '',
+    })
+    setEditing(true)
+  }
+
+  const submitEdit = async () => {
+    if (!editForm.description.trim()) {
+      showToast('Deskripsi wajib diisi.', 'error')
+      return
+    }
+    try {
+      await update.mutateAsync({
+        id: followUp.id,
+        description: editForm.description,
+        target_date: editForm.target_date,
+        weight: Number(editForm.weight) || undefined,
+      })
+      showToast('Tindak lanjut diperbarui.', 'success')
+      setEditing(false)
+    } catch (e) {
+      showToast(isAxiosError(e) ? e.response?.data?.message ?? 'Gagal memperbarui.' : 'Gagal memperbarui.', 'error')
+    }
+  }
+
   if (!followUp) return null
 
   const current = Number(followUp.progress) || 0
+  const minProgress = Math.min(current + 10, 100)
   const canReport = followUp.status === 'DISETUJUI'
 
   const submit = async () => {
     const v = Number(value)
-    if (!value || Number.isNaN(v) || v < current) {
-      showToast(`Nilai tidak boleh di bawah progres terkini (${current}%).`, 'error')
+    if (!value || Number.isNaN(v) || v < minProgress) {
+      showToast(`Nilai progres minimal ${minProgress}% (progres terkini: ${current}%).`, 'error')
       return
     }
     try {
@@ -72,6 +114,49 @@ const FollowUpDetailModal = ({ followUp, onClose }: FollowUpDetailModalProps) =>
 
         <ProgressBar value={followUp.progress} />
 
+        {perm.update && editableStatus && (
+          <div className="bg-gray-50 border border-gray-200 rounded p-4 space-y-3">
+            {!editing ? (
+              <div className="flex justify-between items-center">
+                <h4 className="text-sm font-semibold">Revisi Tindak Lanjut</h4>
+                <Button size="sm" onClick={openEdit}>Edit</Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <FormField label="Deskripsi *">
+                  <Textarea
+                    rows={2}
+                    value={editForm.description}
+                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  />
+                </FormField>
+                <FormField label="Target Tanggal">
+                  <Input
+                    type="date"
+                    value={editForm.target_date}
+                    onChange={(e) => setEditForm({ ...editForm, target_date: e.target.value })}
+                  />
+                </FormField>
+                <FormField label="Bobot">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={editForm.weight}
+                    onChange={(e) => setEditForm({ ...editForm, weight: e.target.value.replace(/\D/g, '') })}
+                  />
+                </FormField>
+                <div className="flex justify-end gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setEditing(false)}>Batal</Button>
+                  <Button size="sm" onClick={submitEdit} disabled={update.isPending}>
+                    {update.isPending ? 'Menyimpan...' : 'Simpan'}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div>
           <h4 className="text-sm font-semibold mb-2">Riwayat Laporan Progres</h4>
           {isLoading ? (
@@ -89,7 +174,7 @@ const FollowUpDetailModal = ({ followUp, onClose }: FollowUpDetailModalProps) =>
                     </div>
                     {r.documents.map((d) => (
                       <Button key={d.id} size="sm" variant="outline" onClick={() => confirmDownload(followUpsApi.progressReportDownload(followUp.id, r.id, d.id))}>
-                        {d.name}
+                        {d.label}
                       </Button>
                     ))}
                   </div>
@@ -100,14 +185,19 @@ const FollowUpDetailModal = ({ followUp, onClose }: FollowUpDetailModalProps) =>
           )}
         </div>
 
+        <div>
+          <h4 className="text-sm font-semibold mb-2">Catatan Manager (Keputusan)</h4>
+          <ReviewTimeline followUpId={followUp.id} />
+        </div>
+
         {(user?.role === 'staff_dept' || user?.role === 'super_admin') && canReport && (
           <div className="bg-gray-50 border border-gray-200 rounded p-4 space-y-3">
             <h4 className="text-sm font-semibold">Lapor Progres</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <FormField label={`Progres % (min ${current})`}>
+              <FormField label={`Progres % (min ${minProgress}%)`}>
                 <Input
                   type="number"
-                  min={current}
+                  min={minProgress}
                   max={100}
                   step={1}
                   value={value}

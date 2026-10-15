@@ -38,8 +38,7 @@ function makeDraft(array $payload): Finding
 function uploadLhp(Finding $finding): void
 {
     test()->actingAs(test()->admin, 'sanctum')->postJson("/api/v1/findings/{$finding->id}/documents", [
-        'label' => 'LHP',
-        'document' => UploadedFile::fake()->create('lhp.pdf', 100, 'application/pdf'),
+        'document' => [['file' => UploadedFile::fake()->create('lhp.pdf', 100, 'application/pdf'), 'label' => 'LHP']],
     ])->assertCreated();
 }
 

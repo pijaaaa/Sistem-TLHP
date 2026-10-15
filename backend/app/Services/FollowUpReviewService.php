@@ -17,7 +17,6 @@ use App\Models\User;
 use App\Support\AuditLogger;
 use App\Services\TaskDispatcher;
 use Illuminate\Validation\ValidationException;
-
 class FollowUpReviewService
 {
     public function approve(FollowUp $followUp): FollowUp
@@ -134,6 +133,8 @@ class FollowUpReviewService
             ]);
         }
 
+        $actionPlan = $followUp->actionPlan;
+
         $followUp->update([
             'status' => FollowUpStatus::Selesai,
             'completed_at' => now(),
@@ -143,7 +144,7 @@ class FollowUpReviewService
         $this->audit('follow_up.completion_approved', $followUp, 'Penyelesaian tindak lanjut disetujui.');
         CompletionDecided::dispatch($followUp, true);
 
-        (new ProgressService())->persistApProgress($followUp->actionPlan);
+        (new ProgressService())->persistApProgress($actionPlan);
 
         return $followUp->refresh();
     }
@@ -158,11 +159,14 @@ class FollowUpReviewService
             ]);
         }
 
-        // Progres tetap 100; PIC menambah laporan/dokumen lalu melapor 100 lagi.
-        $followUp->update(['status' => FollowUpStatus::Disetujui]);
+        // Progres dikembalikan ke 0; PIC dapat melaporkan progres kembali langsung.
+        $followUp->update([
+            'status' => FollowUpStatus::Disetujui,
+            'progress' => 0,
+        ]);
 
         $this->record($followUp, ReviewDecision::RevisiSelesai, $note);
-        $this->audit('follow_up.completion_revision_requested', $followUp, 'Manager meminta revisi penyelesaian tindak lanjut.');
+        $this->audit('follow_up.completion_revision_requested', $followUp, 'Manager meminta revisi penyelesaian tindak lanjut; progres dikembalikan ke 0.');
         CompletionDecided::dispatch($followUp, false);
 
         (new ProgressService())->persistApProgress($followUp->actionPlan);

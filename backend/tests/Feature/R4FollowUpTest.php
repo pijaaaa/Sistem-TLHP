@@ -171,6 +171,21 @@ test('edit saat DIAJUKAN ditolak', function () {
         ->assertStatus(422);
 });
 
+test('edit saat REVISI diizinkan untuk PIC', function () {
+    $ap = readyActionPlan();
+    $created = $this->actingAs($this->pic, 'sanctum')->postJson("/api/v1/action-plans/{$ap->id}/follow-ups", followUpsPayload([
+        ['description' => 'A', 'target_date' => '2026-10-01', 'weight' => 40, 'pic_ids' => [$this->pic->id]],
+    ]))->assertCreated()->json('data');
+
+    $id = $created[0]['id'];
+    FollowUp::withoutGlobalScopes()->whereKey($id)->update(['status' => FollowUpStatus::Revisi->value]);
+
+    $this->actingAs($this->pic, 'sanctum')
+        ->putJson("/api/v1/follow-ups/{$id}", ['description' => 'A revisi', 'weight' => 50])
+        ->assertOk()
+        ->assertJsonPath('data.description', 'A revisi');
+});
+
 test('pemantau tidak melihat tindak lanjut sebelum disetujui manager', function () {
     $ap = readyActionPlan();
     $created = $this->actingAs($this->pic, 'sanctum')->postJson("/api/v1/action-plans/{$ap->id}/follow-ups", followUpsPayload([

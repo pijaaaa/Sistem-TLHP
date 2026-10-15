@@ -33,7 +33,7 @@ class EmployeeController extends Controller
 
     public function show(Employee $employee): JsonResponse
     {
-        return ApiResponse::success(new EmployeeResource($employee->load('department')));
+        return ApiResponse::success(new EmployeeResource($employee->load(['department', 'user'])));
     }
 
     public function update(UpdateEmployeeRequest $request, Employee $employee): JsonResponse

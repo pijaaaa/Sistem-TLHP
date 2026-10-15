@@ -224,8 +224,16 @@ class TaskDispatcher
     private static function externalStatus(ExternalStatusRecorded $event): void
     {
         $title = "Status eksternal {$event->status->value} untuk temuan {$event->finding->registration_number}";
+        if ($event->note) {
+            $title .= " — {$event->note}";
+        }
+
         foreach (self::managersOfFinding($event->finding) as $manager) {
             self::send($manager, InboxTaskType::ExternalStatusRecorded, $event->finding, $title, auth()->id());
+        }
+
+        foreach (self::picsOfFinding($event->finding) as $pic) {
+            self::send($pic, InboxTaskType::ExternalStatusRecorded, $event->finding, $title, auth()->id());
         }
     }
 
@@ -278,6 +286,21 @@ class TaskDispatcher
 
         return User::where('role', Role::ManagerDept->value)
             ->whereIn('department_id', $deptIds)
+            ->where('is_active', true)
+            ->get();
+    }
+
+    private static function picsOfFinding(Finding $finding): \Illuminate\Support\Collection
+    {
+        return User::where('role', Role::StaffDept->value)
+            ->whereIn('department_id', ActionPlan::withoutGlobalScopes()->where('finding_id', $finding->id)->pluck('department_id')->unique())
+            ->whereIn('id', function ($q) use ($finding) {
+                $q->select('follow_up_assignees.user_id')
+                    ->from('follow_up_assignees')
+                    ->join('follow_ups', 'follow_ups.id', '=', 'follow_up_assignees.follow_up_id')
+                    ->join('action_plans', 'action_plans.id', '=', 'follow_ups.action_plan_id')
+                    ->whereColumn('action_plans.finding_id', $finding->id);
+            })
             ->where('is_active', true)
             ->get();
     }

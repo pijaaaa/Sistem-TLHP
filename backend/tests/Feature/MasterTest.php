@@ -104,6 +104,29 @@ test('employee create mem-validasi department_id exists', function () {
     $response->assertStatus(422);
 });
 
+test('employee create sekaligus membuat akun dengan role wajib', function () {
+    $this->seed([DepartmentSeeder::class, MenuSeeder::class, PermissionSeeder::class]);
+    makeUser(Role::SuperAdmin);
+    $admin = User::where('role', Role::SuperAdmin->value)->first();
+    $dept = Department::first();
+
+    // role wajib: tanpa role ditolak
+    $this->actingAs($admin, 'sanctum')->postJson('/api/v1/master/employees', [
+        'nik' => 'EMP-1', 'name' => 'Budi', 'position' => 'Staff', 'department_id' => $dept->id,
+    ])->assertStatus(422)->assertJsonValidationErrors('role');
+
+    $res = $this->actingAs($admin, 'sanctum')->postJson('/api/v1/master/employees', [
+        'nik' => 'EMP-1', 'name' => 'Budi', 'position' => 'Staff', 'department_id' => $dept->id,
+        'role' => Role::StaffDept->value, 'username' => 'budi_emp',
+        'email' => 'budi_emp@example.com', 'password' => 'secret123', 'password_confirmation' => 'secret123',
+    ]);
+    $res->assertStatus(201)->assertJsonPath('data.role', Role::StaffDept->value);
+
+    $employee = Employee::where('nik', 'EMP-1')->first();
+    expect($employee->user)->not->toBeNull()
+        ->and($employee->user->role)->toBe(Role::StaffDept);
+});
+
 test('user create mem-validasi role enum dan password confirmed', function () {
     $this->seed([DepartmentSeeder::class, MenuSeeder::class, PermissionSeeder::class]);
     makeUser(Role::SuperAdmin);

@@ -43,5 +43,5 @@ export const useDepartmentsList = () =>
   useQuery({
     queryKey: ['departments-all'],
     queryFn: () => departmentsApi.list({ per_page: 100 }),
-    select: (res) => res.data,
+    select: (res) => (Array.isArray(res) ? res : res.data),
   })
