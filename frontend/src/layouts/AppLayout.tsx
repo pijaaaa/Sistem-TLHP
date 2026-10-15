@@ -55,11 +55,16 @@ const getIcon = (iconName: string) => {
 const renderMenuTree = (
   menus: MenuItem[],
   location: { pathname: string },
-  logout: () => Promise<void>,
   openDropdowns: Set<string>,
   toggleDropdown: (key: string) => void,
 ) => {
   const list: React.ReactNode[] = []
+
+  // Ensure openDropdowns is a Set
+  if (!openDropdowns || typeof openDropdowns.has !== 'function') {
+    console.error('openDropdowns is not a Set:', openDropdowns)
+    return list
+  }
 
   // Filter out the 'exports' menu entirely from the render logic
   const filteredMenus = menus.filter(m => m.code !== 'exports')
@@ -281,19 +286,6 @@ const renderMenuTree = (
     }
   })
 
-  const LogoutIcon = LucideIcons.LogOut
-  list.push(
-    <Button
-      key="logout"
-      variant="ghost"
-      onClick={() => logout()}
-      className="w-full mt-4 text-left justify-start text-red-400 hover:bg-primary-700 hover:text-red-300"
-    >
-      <LogoutIcon size={18} className="mr-3" />
-      Keluar
-    </Button>,
-  )
-
   return list
 }
 
@@ -329,17 +321,22 @@ const AppLayout = () => {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed md:fixed top-0 left-0 h-screen bg-[#1a4d3c] text-white transition-transform duration-300 z-30',
+          'fixed md:fixed top-0 left-0 h-screen bg-[#1a4d3c] text-white transition-transform duration-300 z-30 flex flex-col',
           sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 md:w-64',
         )}
       >
-        <div className="h-full overflow-y-auto p-4 flex flex-col">
-          <div className="flex items-center gap-3 mb-8 px-2">
-            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center overflow-hidden">
-               {/* Gunakan logo di sini jika sudah ada file-nya */}
-               <div className="w-8 h-8 bg-primary-600 rounded-full"></div>
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col">
+          <div className="flex flex-col items-center mb-6 px-2 py-4">
+            <img 
+              src="/skkmigas_bsp.png" 
+              alt="SKKMIGAS & PT. Bumi Siak Pusako" 
+              className="w-full max-w-[200px] h-auto mb-3"
+            />
+            <div className="text-center">
+              <h1 className="text-white font-bold text-base leading-tight">e-TLHT</h1>
+              <p className="text-gray-300 text-xs mt-1">Sistem Tindak Lanjut Hasil Temuan</p>
             </div>
-            <h1 className="text-lg font-bold">Sistem TLHP</h1>
           </div>
           
           {user && (
@@ -356,8 +353,20 @@ const AppLayout = () => {
           )}
           
           <nav className="space-y-1 flex-1">
-            {renderMenuTree(menus, location, logout, openDropdowns, toggleDropdown)}
+            {renderMenuTree(menus, location, openDropdowns, toggleDropdown)}
           </nav>
+        </div>
+
+        {/* Fixed Logout Button at Bottom */}
+        <div className="p-4 border-t border-[#164436] bg-[#1a4d3c]">
+          <Button
+            variant="ghost"
+            onClick={() => logout()}
+            className="w-full text-left justify-start text-red-400 hover:bg-[#164436] hover:text-red-300 transition-colors"
+          >
+            <LucideIcons.LogOut size={18} className="mr-3" />
+            Keluar
+          </Button>
         </div>
       </aside>
 
