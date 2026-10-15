@@ -34,6 +34,22 @@ function RoleMatrixEditor() {
     }))
   }
 
+  const toggleAll = (code: string) => {
+    const current = draft[code] ?? { view: false, create: false, update: false, delete: false }
+    // Check if all are currently checked
+    const allChecked = current.view && current.create && current.update && current.delete
+    // Toggle to opposite state
+    setDraft((prev) => ({
+      ...prev,
+      [code]: {
+        view: !allChecked,
+        create: !allChecked,
+        update: !allChecked,
+        delete: !allChecked,
+      },
+    }))
+  }
+
   const save = async () => {
     try {
       await mutate.mutateAsync({ role, permissions: draft })
@@ -69,15 +85,24 @@ function RoleMatrixEditor() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="text-left p-2">Menu</th>
+                <th className="p-2 text-center">Semua</th>
                 {ACTIONS.map((a) => <th key={a.key} className="p-2">{a.label}</th>)}
               </tr>
             </thead>
             <tbody>
               {rdata.menus.map((m: MenuOption) => {
                 const row = draft[m.code] ?? { view: false, create: false, update: false, delete: false }
+                const allChecked = row.view && row.create && row.update && row.delete
                 return (
-                  <tr key={m.id} className="border-t">
+                  <tr key={m.id} className="border-t hover:bg-gray-50">
                     <td className="p-2">{m.name}</td>
+                    <td className="p-2 text-center">
+                      <Checkbox
+                        checked={allChecked}
+                        onChange={() => toggleAll(m.code)}
+                        className="cursor-pointer"
+                      />
+                    </td>
                     {ACTIONS.map((a) => (
                       <td key={a.key} className="p-2 text-center">
                         <Checkbox
@@ -112,6 +137,23 @@ function UserOverrideEditor() {
 
   const setCell = (code: string, action: keyof OverrideMatrix, value: OverrideMatrix[string]) => {
     setDraft((prev) => ({ ...prev, [code]: { ...prev[code], [action]: value } }))
+  }
+
+  const toggleAllUser = (code: string) => {
+    const current = draft[code] ?? { view: null, create: null, update: null, delete: null }
+    // Check if all are currently set to true (allow)
+    const allAllowed = current.view === true && current.create === true && current.update === true && current.delete === true
+    // Toggle between all allowed (true) and all inherit (null)
+    const newValue = allAllowed ? null : true
+    setDraft((prev) => ({
+      ...prev,
+      [code]: {
+        view: newValue,
+        create: newValue,
+        update: newValue,
+        delete: newValue,
+      },
+    }))
   }
 
   const save = async () => {
@@ -155,15 +197,24 @@ function UserOverrideEditor() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="text-left p-2">Menu</th>
+                    <th className="p-2 text-center">Semua</th>
                     {ACTIONS.map((a) => <th key={a.key} className="p-2">{a.label}</th>)}
                   </tr>
                 </thead>
                 <tbody>
                   {udata.menus.map((m: MenuOption) => {
                     const row = draft[m.code] ?? { view: null, create: null, update: null, delete: null }
+                    const allAllowed = row.view === true && row.create === true && row.update === true && row.delete === true
                     return (
-                      <tr key={m.id} className="border-t">
+                      <tr key={m.id} className="border-t hover:bg-gray-50">
                         <td className="p-2">{m.name}</td>
+                        <td className="p-2 text-center">
+                          <Checkbox
+                            checked={allAllowed}
+                            onChange={() => toggleAllUser(m.code)}
+                            className="cursor-pointer"
+                          />
+                        </td>
                         {ACTIONS.map((a) => (
                           <td key={a.key} className="p-2">
                             <select
