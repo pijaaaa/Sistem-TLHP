@@ -2,9 +2,10 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ExternalLink, ChevronDown, ChevronUp, MessageCircle, Target, Users } from 'lucide-react'
 import { useFollowUps, useFollowUpComments } from '@/hooks/useFollowUps'
-import { PageHeader, ReviewActionBar, ReviewTimeline, FollowUpStatusBadge, CommentThread, Tabs } from '@/components/shared'
-import { Button, Spinner } from '@/components/ui'
+import { PageHeader, ReviewActionBar, ReviewTimeline, FollowUpStatusBadge, CommentThread, FilterChip } from '@/components/shared'
+import { Button, Spinner, Select } from '@/components/ui'
 import { useAuth } from '@/contexts/AuthContext'
+import { FOLLOW_UP_STATUS_OPTIONS } from '@/types/finding'
 import { motion } from 'framer-motion'
 import type { FollowUp } from '@/types/finding'
 
@@ -101,9 +102,9 @@ const FollowUpRow = ({ fu, isManager }: { fu: FollowUp; isManager: boolean }) =>
 
 export default function PersetujuanPage() {
   const { user } = useAuth()
-  const [tab, setTab] = useState('tindak-lanjut')
+  const [status, setStatus] = useState('')
 
-  const params = useMemo(() => ({ per_page: 100 }), [])
+  const params = useMemo(() => ({ per_page: 100, status: status || undefined }), [status])
   const { data, isLoading } = useFollowUps(params)
 
   const groups = useMemo(() => {
@@ -115,129 +116,79 @@ export default function PersetujuanPage() {
     return [...map.entries()]
   }, [data])
 
-  const pendingParams = useMemo(() => ({ per_page: 100, status: 'MENUNGGU_PERSETUJUAN_SELESAI' }), [])
-  const { data: pendingData, isLoading: pendingLoading } = useFollowUps(pendingParams)
-
-  const pendingGroups = useMemo(() => {
-    const map = new Map<number, FollowUp[]>()
-    for (const fu of pendingData?.data ?? []) {
-      if (!map.has(fu.action_plan_id)) map.set(fu.action_plan_id, [])
-      map.get(fu.action_plan_id)!.push(fu)
-    }
-    return [...map.entries()]
-  }, [pendingData])
-
   const isManager = user?.role === 'manager_dept' || user?.role === 'manager_ia'
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <PageHeader title="Persetujuan Manager" subtitle="Keputusan per tindak lanjut yang diajukan PIC" />
 
-      <Tabs
-        tabs={[
-          { key: 'tindak-lanjut', label: 'Tindak Lanjut' },
-          { key: 'penyelesaian', label: 'Penyelesaian' },
-        ]}
-        active={tab}
-        onChange={setTab}
-      />
+      {/* Filters */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 space-y-3">
+        <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <option value="">Semua Status</option>
+          {FOLLOW_UP_STATUS_OPTIONS.map((s) => (
+            <option key={s.value} value={s.value}>{s.label}</option>
+          ))}
+        </Select>
 
-      {tab === 'penyelesaian' && (
-        pendingLoading ? (
-          <div className="flex items-center justify-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <Spinner /> Memuat tindak lanjut...
-            </div>
+        {status && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Filter aktif:</span>
+            <FilterChip
+              label={FOLLOW_UP_STATUS_OPTIONS.find(s => s.value === status)?.label || status}
+              onRemove={() => setStatus('')}
+            />
           </div>
-        ) : pendingGroups.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center"
-          >
-            <p className="text-sm text-gray-500">Tidak ada tindak lanjut yang menunggu persetujuan penyelesaian.</p>
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
-            {pendingGroups.map(([apId, items]) => {
-              const ap = items[0].action_plan
-              return (
-                <div key={apId} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-                  <div className="px-6 py-4 bg-gradient-to-r from-primary-50 to-blue-50 border-b border-gray-200">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <Link
-                        to={`/action-plan/${apId}`}
-                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-primary-200 hover:border-primary-400 hover:bg-primary-50 transition-all font-semibold text-sm text-primary-700 hover:text-primary-800 shadow-sm"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        {ap?.code ?? `AP #${apId}`}
-                      </Link>
-                      <span className="text-sm text-gray-700">{ap?.title}</span>
-                    </div>
-                  </div>
-                  <div className="p-4 space-y-3">
-                    {items.map((fu) => (
-                      <FollowUpRow key={fu.id} fu={fu} isManager={isManager} />
-                    ))}
+        )}
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Spinner /> Memuat tindak lanjut...
+          </div>
+        </div>
+      ) : groups.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center"
+        >
+          <p className="text-sm text-gray-500">
+            {status ? "Tidak ada tindak lanjut dengan status ini." : "Belum ada tindak lanjut untuk departemen Anda."}
+          </p>
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-4"
+        >
+          {groups.map(([apId, items]) => {
+            const ap = items[0].action_plan
+            return (
+              <div key={apId} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                <div className="px-6 py-4 bg-gradient-to-r from-primary-50 to-blue-50 border-b border-gray-200">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <Link
+                      to={`/action-plan/${apId}`}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-primary-200 hover:border-primary-400 hover:bg-primary-50 transition-all font-semibold text-sm text-primary-700 hover:text-primary-800 shadow-sm"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      {ap?.code ?? `AP #${apId}`}
+                    </Link>
+                    <span className="text-sm text-gray-700">{ap?.title}</span>
                   </div>
                 </div>
-              )
-            })}
-          </motion.div>
-        )
-      )}
-
-      {tab === 'tindak-lanjut' && (
-        isLoading ? (
-          <div className="flex items-center justify-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <Spinner /> Memuat tindak lanjut...
-            </div>
-          </div>
-        ) : groups.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center"
-          >
-            <p className="text-sm text-gray-500">Belum ada tindak lanjut untuk departemen Anda.</p>
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
-            {groups.map(([apId, items]) => {
-              const ap = items[0].action_plan
-              return (
-                <div key={apId} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-                  <div className="px-6 py-4 bg-gradient-to-r from-primary-50 to-blue-50 border-b border-gray-200">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <Link
-                        to={`/action-plan/${apId}`}
-                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-primary-200 hover:border-primary-400 hover:bg-primary-50 transition-all font-semibold text-sm text-primary-700 hover:text-primary-800 shadow-sm"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        {ap?.code ?? `AP #${apId}`}
-                      </Link>
-                      <span className="text-sm text-gray-700">{ap?.title}</span>
-                    </div>
-                  </div>
-                  <div className="p-4 space-y-3">
-                    {items.map((fu) => (
-                      <FollowUpRow key={fu.id} fu={fu} isManager={isManager} />
-                    ))}
-                  </div>
+                <div className="p-4 space-y-3">
+                  {items.map((fu) => (
+                    <FollowUpRow key={fu.id} fu={fu} isManager={isManager} />
+                  ))}
                 </div>
-              )
-            })}
-          </motion.div>
-        )
+              </div>
+            )
+          })}
+        </motion.div>
       )}
     </div>
   )
