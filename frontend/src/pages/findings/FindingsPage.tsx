@@ -228,7 +228,7 @@ const FindingRow = ({ finding, onOpenFu, onDelete }: { finding: Finding; onOpenF
           {open ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
         </button>
         <button 
-          className="text-primary-600 hover:text-primary-700 font-semibold text-sm transition-colors" 
+          className="inline-flex items-center gap-2 px-3 py-1.5 text-primary-600 hover:text-primary-700 font-semibold text-sm hover:bg-primary-50 transition-all border border-primary-200 hover:border-primary-400 rounded-lg shadow-sm" 
           onClick={() => navigate(`/temuan/${finding.id}`)}
         >
           {finding.registration_number ?? `Draft #${finding.id}`}
@@ -293,7 +293,7 @@ const ApRow = ({ ap, onOpenFu }: { ap: ActionPlan; onOpenFu: (fu: FollowUp) => v
           {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </button>
         <button 
-          className="text-primary-600 hover:text-primary-700 text-sm font-medium transition-colors" 
+          className="inline-flex items-center gap-2 px-3 py-1.5 text-primary-600 hover:text-primary-700 text-sm font-medium hover:bg-primary-50 transition-all border border-primary-200 hover:border-primary-400 rounded-lg shadow-sm" 
           onClick={() => navigate(`/action-plan/${ap.id}`)}
         >
           {ap.code}

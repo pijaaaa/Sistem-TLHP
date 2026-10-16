@@ -131,34 +131,18 @@ export default function FollowUpsPage() {
                   <table className="w-full">
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-200">
+                        <th className="text-left px-6 py-3 text-xs font-semibold text-gray-700">Aksi</th>
                         <th className="text-left px-6 py-3 text-xs font-semibold text-gray-700">Uraian</th>
                         <th className="text-left px-6 py-3 text-xs font-semibold text-gray-700">Target</th>
                         <th className="text-center px-6 py-3 text-xs font-semibold text-gray-700">Bobot</th>
                         <th className="text-left px-6 py-3 text-xs font-semibold text-gray-700">Progres</th>
                         <th className="text-left px-6 py-3 text-xs font-semibold text-gray-700">Status</th>
                         <th className="text-left px-6 py-3 text-xs font-semibold text-gray-700">PIC</th>
-                        <th className="text-left px-6 py-3 text-xs font-semibold text-gray-700">Aksi</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {items.map((fu) => (
                         <tr key={fu.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4 text-sm text-gray-900">{fu.description}</td>
-                          <td className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">{fu.target_date}</td>
-                          <td className="px-6 py-4 text-center">
-                            <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-primary-100 text-xs font-medium text-primary-700">
-                              {fu.weight}%
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="w-32"><ProgressBar value={fu.progress} /></div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <FollowUpStatusBadge status={fu.status} label={fu.status_label} />
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {(fu.assignees ?? []).map((u) => u.name).join(', ') || '-'}
-                          </td>
                           <td className="px-6 py-4">
                             <div className="flex gap-2 flex-wrap">
                               <Button 
@@ -178,6 +162,22 @@ export default function FollowUpsPage() {
                                 </Button>
                               )}
                             </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900">{fu.description}</td>
+                          <td className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">{fu.target_date}</td>
+                          <td className="px-6 py-4 text-center">
+                            <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-primary-100 text-xs font-medium text-primary-700">
+                              {fu.weight}%
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="w-32"><ProgressBar value={fu.progress} /></div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <FollowUpStatusBadge status={fu.status} label={fu.status_label} />
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700">
+                            {(fu.assignees ?? []).map((u) => u.name).join(', ') || '-'}
                           </td>
                         </tr>
                       ))}

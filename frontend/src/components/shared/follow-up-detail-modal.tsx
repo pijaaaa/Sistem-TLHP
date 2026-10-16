@@ -94,6 +94,7 @@ const FollowUpDetailModal = ({ followUp, onClose }: FollowUpDetailModalProps) =>
       setValue('')
       setNote('')
       setFiles([])
+      onClose()
     } catch (e) {
       showToast(isAxiosError(e) ? e.response?.data?.message ?? 'Gagal melaporkan progres.' : 'Gagal melaporkan progres.', 'error')
     }

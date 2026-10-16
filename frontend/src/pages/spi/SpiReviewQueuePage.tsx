@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Eye } from 'lucide-react'
 import { useSpiQueue } from '@/hooks/useSpiReview'
 import { PageHeader } from '@/components/shared'
-import { StatusBadge, Spinner } from '@/components/ui'
+import { StatusBadge, Spinner, Button } from '@/components/ui'
 
 export default function SpiReviewQueuePage() {
   const { data, isLoading } = useSpiQueue()
@@ -16,35 +17,40 @@ export default function SpiReviewQueuePage() {
       ) : !data || data.data.length === 0 ? (
         <p className="text-sm text-gray-500">Belum ada action plan yang diajukan ke Admin SPI.</p>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Kode</th>
-                <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Judul</th>
-                <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Temuan</th>
-                <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Departemen</th>
-                <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Risiko</th>
-                <th className="text-left px-4 py-2 text-xs font-medium text-gray-600">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.data.map((ap) => (
-                <tr key={ap.id} className="border-t">
-                  <td className="px-4 py-2 text-sm font-medium">{ap.code}</td>
-                  <td className="px-4 py-2 text-sm">{ap.title}</td>
-                  <td className="px-4 py-2 text-sm">{ap.finding?.registration_number ?? '-'}</td>
-                  <td className="px-4 py-2 text-sm">{ap.department?.name ?? '-'}</td>
-                  <td className="px-4 py-2"><StatusBadge status={ap.risk_label ?? '-'} /></td>
-                  <td className="px-4 py-2">
-                    <Link to={`/review-spi/${ap.id}`} className="text-blue-600 hover:underline text-sm">
-                      Tinjau →
-                    </Link>
-                  </td>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gradient-to-r from-primary-50 to-blue-50 border-b border-gray-200">
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-700">Aksi</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-700">Kode</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-700">Judul</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-700">Temuan</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-700">Departemen</th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-700">Risiko</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {data.data.map((ap) => (
+                  <tr key={ap.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <Link to={`/review-spi/${ap.id}`}>
+                        <Button size="sm" variant="primary" className="flex items-center gap-2">
+                          <Eye className="w-4 h-4" />
+                          Tinjau
+                        </Button>
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{ap.code}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{ap.title}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{ap.finding?.registration_number ?? '-'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{ap.department?.name ?? '-'}</td>
+                    <td className="px-6 py-4"><StatusBadge status={ap.risk_label ?? '-'} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

@@ -96,18 +96,6 @@ export default function ActionPlansPage() {
       body: (r) => (r.status === 'DRAFT' ? <Checkbox checked={selected.includes(r.id)} onChange={() => toggleSelect(r.id)} /> : null),
     },
     {
-      key: 'code',
-      header: 'Kode',
-      body: (r) => <Link className="text-primary-600 hover:text-primary-700 font-semibold transition-colors" to={`/action-plan/${r.id}`}>{r.code}</Link>,
-    },
-    { key: 'title', header: 'Judul', body: (r) => <span className="text-sm text-gray-900">{r.title}</span> },
-    { key: 'finding', header: 'Temuan', body: (r) => <span className="text-xs text-gray-600">{r.finding?.registration_number ?? `#${r.finding_id}`}</span> },
-    { key: 'department', header: 'Departemen', body: (r) => <span className="text-xs text-gray-700 bg-gray-100 px-2 py-1 rounded">{r.department?.name ?? '-'}</span> },
-    { key: 'deadline', header: 'Deadline', body: (r) => <span className="text-xs text-gray-600">{r.deadline ?? '-'}</span> },
-    { key: 'risk', header: 'Risiko', body: (r) => <span className="text-xs text-gray-600">{r.risk_label ?? '-'}</span> },
-    { key: 'progress', header: 'Progres', body: (r) => <div className="w-32"><ProgressBar value={r.progress} /></div> },
-    { key: 'status', header: 'Status', body: (r) => <StatusBadge status={r.status_label} variant={getActionPlanStatusVariant(r.status)} /> },
-    {
       key: 'actions',
       header: 'Aksi',
       body: (r) => (
@@ -127,6 +115,18 @@ export default function ActionPlansPage() {
         </div>
       ),
     },
+    {
+      key: 'code',
+      header: 'Kode',
+      body: (r) => <Link className="text-primary-600 hover:text-primary-700 font-semibold transition-colors" to={`/action-plan/${r.id}`}>{r.code}</Link>,
+    },
+    { key: 'title', header: 'Judul', body: (r) => <span className="text-sm text-gray-900">{r.title}</span> },
+    { key: 'finding', header: 'Temuan', body: (r) => <span className="text-xs text-gray-600">{r.finding?.registration_number ?? `#${r.finding_id}`}</span> },
+    { key: 'department', header: 'Departemen', body: (r) => <span className="text-xs text-gray-700 bg-gray-100 px-2 py-1 rounded">{r.department?.name ?? '-'}</span> },
+    { key: 'deadline', header: 'Deadline', body: (r) => <span className="text-xs text-gray-600">{r.deadline ?? '-'}</span> },
+    { key: 'risk', header: 'Risiko', body: (r) => <span className="text-xs text-gray-600">{r.risk_label ?? '-'}</span> },
+    { key: 'progress', header: 'Progres', body: (r) => <div className="w-32"><ProgressBar value={r.progress} /></div> },
+    { key: 'status', header: 'Status', body: (r) => <StatusBadge status={r.status_label} variant={getActionPlanStatusVariant(r.status)} /> },
   ]
 
   return (

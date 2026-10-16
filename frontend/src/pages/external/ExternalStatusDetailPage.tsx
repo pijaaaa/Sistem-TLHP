@@ -14,7 +14,7 @@ export default function ExternalStatusDetailPage() {
   if (!finding) return null
 
   return (
-    <div className="space-y-4 max-w-3xl">
+    <div className="space-y-4 max-w-3xl mx-auto">
       <PageHeader
         title={finding.registration_number ?? `#${finding.id}`}
         subtitle={finding.title}
