@@ -7,7 +7,7 @@ import { useActionPlan } from '@/hooks/useActionPlans'
 import { useCreateFollowUps, useSubmitFollowUps, useFollowUpsByActionPlan } from '@/hooks/useFollowUps'
 import { isAxiosError } from 'axios'
 import { motion } from 'framer-motion'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 export default function FollowUpBatchFormPage() {
   const { id } = useParams<{ id: string }>()
@@ -27,15 +27,25 @@ export default function FollowUpBatchFormPage() {
         .map((f) => ({ id: f.id, label: `TL #${f.id} · ${f.description.slice(0, 60)}` }))
     : undefined
   
-  // Calculate total weight of existing follow-ups in the CURRENT revision (not being created in this form)
   const existingWeight = useMemo(() => {
     return (allFups?.data ?? [])
       .filter((f) => f.revision_no === currentRevision && f.status !== 'DITOLAK')
       .reduce((sum, f) => sum + (Number(f.weight) || 0), 0)
   }, [allFups, currentRevision])
 
+  const [isSaving, setIsSaving] = useState(false)
+  const [frozenWeight, setFrozenWeight] = useState(existingWeight)
+  useEffect(() => {
+    if (!isSaving) {
+      setFrozenWeight(existingWeight)
+    }
+  }, [existingWeight, isSaving])
+  const displayWeight = isSaving ? frozenWeight : existingWeight
+
   const handleSubmit = async (rows: Parameters<typeof create.mutateAsync>[0]['rows'], mode: SubmitMode) => {
     if (!ap) return
+    setFrozenWeight(existingWeight)
+    setIsSaving(true)
     try {
       const created = await create.mutateAsync({ actionPlanId: ap.id, rows })
 
@@ -48,6 +58,7 @@ export default function FollowUpBatchFormPage() {
 
       navigate(`/action-plan/${ap.id}#tindak-lanjut`)
     } catch (e) {
+      setIsSaving(false)
       showToast(isAxiosError(e) ? e.response?.data?.message ?? 'Gagal menyimpan tindak lanjut.' : 'Gagal menyimpan tindak lanjut.', 'error')
     }
   }
@@ -87,9 +98,9 @@ export default function FollowUpBatchFormPage() {
               <FollowUpBatchForm
                 actionPlan={ap}
                 linkCandidates={linkCandidates}
-                submitting={create.isPending || submit.isPending}
+                submitting={isSaving}
                 onSubmit={handleSubmit}
-                existingWeight={existingWeight}
+                existingWeight={displayWeight}
               />
             </motion.div>
           )}

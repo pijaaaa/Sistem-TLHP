@@ -50,7 +50,15 @@ class FindingController extends Controller
             });
         }
 
-        return ApiResponse::success($query->paginate($perPage));
+        $pagination = $query->paginate($perPage);
+
+        return ApiResponse::success([
+            'data' => FindingResource::collection($pagination->items())->resolve(),
+            'current_page' => $pagination->currentPage(),
+            'last_page' => $pagination->lastPage(),
+            'per_page' => $pagination->perPage(),
+            'total' => $pagination->total(),
+        ]);
     }
 
     public function store(StoreFindingRequest $request): JsonResponse

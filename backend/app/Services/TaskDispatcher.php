@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\InboxTaskStatus;
 use App\Enums\InboxTaskType;
+use App\Enums\FindingStatus;
 use App\Enums\Role;
 use App\Events\ActionPlanSent;
 use App\Events\ActionPlanSubmittedToSpi;
@@ -269,7 +270,7 @@ class TaskDispatcher
             $finding = $subject->actionPlan?->finding;
         }
 
-        return !($finding && $finding->status === \App\Enums\FindingStatus::Closed->value);
+        return !($finding && $finding->status === FindingStatus::Closed);
     }
 
     private static function managerOfDept(int $departmentId): \Illuminate\Support\Collection
@@ -299,7 +300,7 @@ class TaskDispatcher
                     ->from('follow_up_assignees')
                     ->join('follow_ups', 'follow_ups.id', '=', 'follow_up_assignees.follow_up_id')
                     ->join('action_plans', 'action_plans.id', '=', 'follow_ups.action_plan_id')
-                    ->whereColumn('action_plans.finding_id', $finding->id);
+                    ->where('action_plans.finding_id', $finding->id);
             })
             ->where('is_active', true)
             ->get();
