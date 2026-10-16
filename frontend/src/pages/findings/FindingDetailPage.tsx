@@ -4,6 +4,8 @@ import { useFinding, useRegisterFinding, useActivateFinding, useDeleteFinding, u
 import { useActionPlans, useSendActionPlans } from '@/hooks/useActionPlans'
 import { useFollowUps } from '@/hooks/useFollowUps'
 import { useAuditeeDepartments } from '@/hooks/useLookups'
+import { useAuditTrail } from '@/hooks/useDashboard'
+import { Clock, User, Shield, Activity } from 'lucide-react'
 import { findingsApi } from '@/api/findings'
 import { PageHeader, DataTable, Can, DocumentPanel, Tabs, DepartmentMultiSelect, FollowUpStatusBadge, ExternalStatusTimeline } from '@/components/shared'
 import type { Column } from '@/components/shared/data-table'
@@ -44,6 +46,7 @@ export default function FindingDetailPage() {
 
   const fuParams = useMemo(() => ({ per_page: 100, finding_id: findingId }), [findingId])
   const { data: fuPage } = useFollowUps(fuParams)
+  const { data: auditData, isLoading: auditLoading } = useAuditTrail({ entity_type: 'finding', entity_id: findingId, per_page: 50 })
 
   const tabs = [
     { key: 'ringkasan', label: 'Ringkasan' },
@@ -255,11 +258,59 @@ export default function FindingDetailPage() {
           )}
 
           {tab === 'riwayat' && (
-            <div className="bg-white rounded-lg shadow p-6 space-y-2 text-sm">
-              <p>Dibuat: {finding.created_at ? new Date(finding.created_at).toLocaleString('id-ID') : '-'}</p>
-              {finding.activated_at && <p>Aktif: {new Date(finding.activated_at).toLocaleString('id-ID')}</p>}
-              {finding.closed_at && <p>Ditutup: {new Date(finding.closed_at).toLocaleString('id-ID')}</p>}
-              {!auditPerm.view && <p className="text-gray-500">Log aktivitas rinci tersedia untuk role dengan akses Log Aktivitas.</p>}
+            <div className="bg-white rounded-lg shadow p-6 space-y-4">
+              <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-2 mb-4">
+                <Activity className="w-4 h-4 text-primary-600" />
+                Riwayat Proses & Aktivitas Temuan
+              </h3>
+
+              {auditLoading ? (
+                <p className="text-sm text-gray-500">Memuat riwayat...</p>
+              ) : !auditData?.data || auditData.data.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-sm text-gray-500">Belum ada riwayat aktivitas untuk temuan ini.</p>
+                  <p className="text-xs text-gray-400 mt-1">Dibuat: {finding.created_at ? new Date(finding.created_at).toLocaleString('id-ID') : '-'}</p>
+                </div>
+              ) : (
+                <div className="relative border-l-2 border-primary-100 ml-4 space-y-6 pb-2">
+                  {auditData.data.map((log) => (
+                    <div key={log.id} className="relative pl-6">
+                      {/* Dot icon */}
+                      <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-primary-600 border-2 border-white shadow-sm flex items-center justify-center" />
+                      
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 shadow-sm space-y-1.5">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-primary-100 text-primary-800">
+                            {log.action}
+                          </span>
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-gray-400" />
+                            {log.created_at ? new Date(log.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-'}
+                          </span>
+                        </div>
+
+                        <p className="text-sm font-medium text-gray-900 mt-1">{log.description || 'Aktivitas sistem tercatat.'}</p>
+
+                        <div className="flex items-center gap-4 pt-2 mt-2 border-t border-gray-200 text-xs text-gray-600 flex-wrap">
+                          <span className="flex items-center gap-1">
+                            <User className="w-3.5 h-3.5 text-gray-400" />
+                            {log.user?.name ?? 'Sistem / Otomatis'}
+                          </span>
+                          {log.user?.role && (
+                            <span className="flex items-center gap-1">
+                              <Shield className="w-3.5 h-3.5 text-blue-500" />
+                              <strong className="capitalize">{log.user.role.replace('_', ' ')}</strong>
+                            </span>
+                          )}
+                          {log.ip_address && (
+                            <span className="text-gray-400">IP: {log.ip_address}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </>
